@@ -21,8 +21,8 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <Arduino.h>
+#include <hardware/dma.h>
 #include "hardware/spi.h"
-#include "pico/multicore.h"
 
 
 // SPI1 slave pins (SPI0 module at the RP2040)
@@ -37,16 +37,38 @@
 #define SPI_MISO2  11   //SPI-2 slave OUT, we are slave
 #define SPI_CLK2   14  //was 10   //SPI-2 clock IN, we are slave  (must be changed in HW to 14)
 #define SPI_CS2     9   //SPI-2 chip select IN, we are slave
-#define TRANSFER_SIZE  256
+#define TRANSFER_SIZE  30
 
-namespace kaleidoscope {
-namespace device {
-namespace dygma {
-namespace wired {
-
+namespace kaleidoscope::device::dygma::wired {
 
 class SPII {
  public:
+  explicit SPII(bool side);
+
+  void initSide();
+
+  uint8_t writeTo(uint8_t *data, size_t length);
+
+  uint8_t readFrom(uint8_t *data, size_t length);
+
+  void disable();
+
+  uint8_t crc_errors();
+  virtual ~SPII();
+
+ private:
+
+  struct spi_side {
+    spi_inst *port;
+    uint8_t mosi;
+    uint8_t miso;
+    uint8_t clock;
+    uint8_t cs;
+    bool side;
+  };
+
+  const spi_side spi_right_{SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, 1};
+  const spi_side spi_left_{SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, 0};
 
   enum SPI_COMUNICATIONS {
     SPI_CMD_DEFAULT,
@@ -66,74 +88,20 @@ class SPII {
 
   union Message {
     Context context;
-    uint8_t buf[256];
+    uint8_t buf[50];
   };
-  inline static Message tx_message;
-  inline static Message rx_message;
-  static void comunicationSPI() {
-    sleep_ms(4000);
-    // Enable UART so we can print
-    Serial.printf("SPI slave example\n");
 
-    // Enable SPI 0 at 1 MHz and connect to GPIOs
-    spi_init(SPI_PORT2, 1000 * 1000);
-    spi_set_format(SPI_PORT2, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
-    spi_set_slave(SPI_PORT2, true);
-    gpio_set_function(SPI_MOSI2, GPIO_FUNC_SPI);
-    gpio_set_function(SPI_MISO2, GPIO_FUNC_SPI);
-    gpio_set_function(SPI_CLK2, GPIO_FUNC_SPI);
-    gpio_set_function(SPI_CS2, GPIO_FUNC_SPI);
-    // Make the SPI pins available to picotool
-    for (size_t i = 0;; ++i) {
-      // Write the output buffer to MISO, and at the same time read from MOSI.
-      spi_write_read_blocking(SPI_PORT2, tx_message.buf, rx_message.buf, 256);
-      if (rx_message.context.cmd == SPI_CMD_KEYS) {
-        Serial.printf("We have new message woooo \n");
-        Serial.printf("cmd=%d\n"
-                      "bit_arr=%d\n"
-                      "sync=%d\n"
-                      "size=%d\n",
-                      rx_message.context.cmd,
-                      rx_message.context.bit_arr,
-                      rx_message.context.sync,
-                      rx_message.context.size);
+  uint8_t crc_errors_{};
+  spi_side side_{spi_left_};
+  uint32_t clock_khz_{1000 * 1000};
+  int dma_tx;
+  dma_channel_config config_tx;
+  dma_channel_config config_rx;
+  int dma_rx;
+  volatile Message tx_message;
+  volatile Message rx_message;
 
-        for (int j = sizeof(Context); j < sizeof(Context) + rx_message.context.size; ++j) {
-          Serial.printf("%02X, ", rx_message.buf[j]);
-        }
-        Serial.printf("\n");
-      }
-    }
-  }
-  inline static bool init_ = false;
-
-  explicit SPII(bool side) : side_(side), crc_errors_(0) {
-    if (!init_) {
-      multicore_launch_core1(comunicationSPI);
-      init_ = true;
-    }
-    //dma_tx = dma_claim_unused_channel(true);
-    //dma_rx = dma_claim_unused_channel(true);
-    //init(12000 * 1000);
-  }
-
-  uint8_t writeTo(uint8_t *data, size_t length) { return 0; };
-  uint8_t readFrom(uint8_t *data, size_t length) { return 0; };
-  void disable() {};
-  uint8_t crc_errors() {
-    return crc_errors_;
-  }
-
- private:
-  bool side_;
-  spi_inst_t *spi_;
-  uint8_t crc_errors_;
-  uint16_t clock_khz_;
-  // Grab some unused dma channels
 };
 
-}
-}
-}
 }
 #endif
