@@ -88,7 +88,7 @@ class SPII {
 
   union Message {
     Context context;
-    uint8_t buf[50];
+    uint8_t buf[32];
   };
 
   uint8_t crc_errors_{};
