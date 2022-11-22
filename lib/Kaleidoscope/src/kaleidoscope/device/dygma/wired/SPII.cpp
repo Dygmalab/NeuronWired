@@ -36,7 +36,6 @@ SPII::~SPII() {
 
 void SPII::initSide() {
   // Enable SPI 0 at 1 MHz and connect to GPIOs
-  //Serial.printf("init Serial");
   spi_init(side_.port, clock_khz_);
   spi_set_format(side_.port, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
   spi_set_slave(side_.port, true);
@@ -79,6 +78,7 @@ uint8_t SPII::crc_errors() {
 uint8_t SPII::writeTo(uint8_t *data, size_t length) { return 0; }
 uint8_t SPII::readFrom(uint8_t *data, size_t length) {
   if(dma_channel_is_busy(dma_tx)||dma_channel_is_busy(dma_rx)) return 0;
+  //dma_channel_wait_for_finish_blocking(dma_rx);
   if(rx_message.context.cmd == SPI_CMD_KEYS){
     Serial.printf("It's me the side %i\n",side_.side);
     Serial.printf("cmd=%d\n"
@@ -89,7 +89,7 @@ uint8_t SPII::readFrom(uint8_t *data, size_t length) {
                   rx_message.context.bit_arr,
                   rx_message.context.sync,
                   rx_message.context.size);
-  }
+ }
   dma_channel_configure(dma_tx, &config_tx,
                         &spi_get_hw(side_.port)->dr, // write address
                         tx_message.buf, // read address

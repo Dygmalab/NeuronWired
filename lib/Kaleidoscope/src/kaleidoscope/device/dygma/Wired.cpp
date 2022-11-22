@@ -318,9 +318,7 @@ void WiredLEDDriver::setup() {
   analogWriteResolution(16);
   updateNeuronLED();
 
-  delay(100);
   WiredHands::setSidePower(true);
-  delay(500);  // wait for sides to power up and finish bootloader
 }
 
 /********* Key scanner *********/
