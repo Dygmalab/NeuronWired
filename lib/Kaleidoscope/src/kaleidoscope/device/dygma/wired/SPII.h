@@ -95,9 +95,9 @@ class SPII {
   spi_side side_{spi_left_};
   uint32_t clock_khz_{1000 * 1000};
   int dma_tx;
+  int dma_rx;
   dma_channel_config config_tx;
   dma_channel_config config_rx;
-  int dma_rx;
   volatile Message tx_message;
   volatile Message rx_message;
 
