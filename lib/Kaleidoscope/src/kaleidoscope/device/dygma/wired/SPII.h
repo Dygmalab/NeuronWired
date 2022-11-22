@@ -36,8 +36,8 @@
 #define SPI_MOSI2   8   //SPI-2 slave IN, we are slave
 #define SPI_MISO2  11   //SPI-2 slave OUT, we are slave
 #define SPI_CLK2   14  //was 10   //SPI-2 clock IN, we are slave  (must be changed in HW to 14)
-#define SPI_CS2     9   //SPI-2 chip select IN, we are slave
-#define TRANSFER_SIZE  30
+#define SPI_CS2     9   //SPI-2 chip select IN, we are slave1
+#define TRANSFER_SIZE  32
 
 namespace kaleidoscope::device::dygma::wired {
 
@@ -88,7 +88,7 @@ class SPII {
 
   union Message {
     Context context;
-    uint8_t buf[32];
+    uint8_t buf[TRANSFER_SIZE];
   };
 
   uint8_t crc_errors_{};
