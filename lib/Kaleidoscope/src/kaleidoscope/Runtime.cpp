@@ -27,16 +27,6 @@ Runtime_::Runtime_(void) {
 
 void
 Runtime_::setup(void) {
-  // We are explicitly initializing the Serial port as early as possible to
-  // (temporarily, hopefully) work around an issue on OSX. If we initialize
-  // Serial too late, no matter what we do, we'll end up reading garbage from
-  // the serial port. For more information, see the following issue:
-  //   https://github.com/keyboardio/Kaleidoscope-Bundle-Keyboardio/pull/7
-  //
-  // TODO(anyone): Figure out a way we can get rid of this, and fix the bug
-  // properly.
-  device().serialPort().begin(9600);
-
   kaleidoscope::sketch_exploration::pluginsExploreSketch();
   kaleidoscope::Hooks::onSetup();
 

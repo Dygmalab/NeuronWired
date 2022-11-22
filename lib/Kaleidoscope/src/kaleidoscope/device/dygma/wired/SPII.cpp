@@ -18,6 +18,7 @@
 
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
+#include "Keyboard.h"
 #include "SPII.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
@@ -53,7 +54,7 @@ void SPII::initSide() {
   dma_channel_configure(dma_tx, &config_tx,
                         &spi_get_hw(side_.port)->dr, // write address
                         tx_message.buf, // read address
-                        sizeof (Message), // element count (each element is of size transfer_data_size)
+                        sizeof(Message), // element count (each element is of size transfer_data_size)
                         false); // don't start yet
 
   // We set the inbound DMA to transfer from the SPI receive FIFO to a memory buffer paced by the SPI RX FIFO DREQ
@@ -78,10 +79,9 @@ uint8_t SPII::crc_errors() {
 }
 uint8_t SPII::writeTo(uint8_t *data, size_t length) { return 0; }
 uint8_t SPII::readFrom(uint8_t *data, size_t length) {
-  uint8_t rtn = 0;
-  if(dma_channel_is_busy(dma_tx)||dma_channel_is_busy(dma_rx)) return 0;
-  if(rx_message.context.cmd == SPI_CMD_KEYS){
-    Serial.printf("It's me the side %i\n",side_.side);
+  if (dma_channel_is_busy(dma_tx) || dma_channel_is_busy(dma_rx)) return 0;
+  if (rx_message.context.cmd == SPI_CMD_KEYS) {
+    Serial.printf("It's me the side %i\n", side_.side);
     Serial.printf("cmd=%d\n"
                   "bit_arr=%d\n"
                   "sync=%d\n"
@@ -90,13 +90,20 @@ uint8_t SPII::readFrom(uint8_t *data, size_t length) {
                   rx_message.context.bit_arr,
                   rx_message.context.sync,
                   rx_message.context.size);
-    data[0] = rx_message.buf[0];
-    data[1] = rx_message.buf[4];
-    data[2] = rx_message.buf[5];
-    data[3] = rx_message.buf[6];
-    data[4] = rx_message.buf[7];
-    data[5] = rx_message.buf[8];
-    rtn = 6;
+    Serial.printf("0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n", rx_message.buf[sizeof(Context)],
+           rx_message.buf[sizeof(Context) + 1],
+           rx_message.buf[sizeof(Context) + 2],
+           rx_message.buf[sizeof(Context) + 3],
+           rx_message.buf[sizeof(Context) + 4],
+           rx_message.buf[sizeof(Context) + 5]);
+    Keyboard_2 keyboard_2;
+    keyboard_2._keyReport.keys[0] = rx_message.buf[sizeof(Context)];
+    keyboard_2._keyReport.keys[1] = rx_message.buf[sizeof(Context) + 1];
+    keyboard_2._keyReport.keys[2] = rx_message.buf[sizeof(Context) + 2];
+    keyboard_2._keyReport.keys[3] = rx_message.buf[sizeof(Context) + 3];
+    keyboard_2._keyReport.keys[4] = rx_message.buf[sizeof(Context) + 4];
+    keyboard_2._keyReport.keys[5] = rx_message.buf[sizeof(Context) + 5];
+    keyboard_2.sendReport(&keyboard_2._keyReport);
   }
   dma_channel_configure(dma_tx, &config_tx,
                         &spi_get_hw(side_.port)->dr, // write address
@@ -106,10 +113,10 @@ uint8_t SPII::readFrom(uint8_t *data, size_t length) {
   dma_channel_configure(dma_rx, &config_rx,
                         rx_message.buf, // write address
                         &spi_get_hw(side_.port)->dr, // read address
-                        sizeof (Message), // element count (each element is of size transfer_data_size)
+                        sizeof(Message), // element count (each element is of size transfer_data_size)
                         false); // don't start yet
   dma_start_channel_mask((1u << dma_tx) | (1u << dma_rx));
-  return rtn;
+  return 0;
 }
 }
 

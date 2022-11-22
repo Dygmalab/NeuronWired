@@ -217,7 +217,6 @@ KALEIDOSCOPE_INIT_PLUGINS(
 void setup()
 {
   // First start the serial communications to avoid restarting unnecesarily
-  Kaleidoscope.serialPort().begin(9600);
   Kaleidoscope.setup();
 
   // Reserve space in the keyboard's EEPROM for the keymaps

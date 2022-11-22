@@ -1,5 +1,6 @@
 add_definitions(-DKALEIDOSCOPE_HARDWARE_H="Kaleidoscope-Hardware-Dygma-Wired.h")
 add_definitions(-DARDUINO_RASPBERRY_PI_PICO)
 add_definitions(-DEEPROM_EMULATION_SIZE=8192)
+add_definitions(-DDYGMA_USE_TINYUSB)
 include_directories("lib/Kaleidoscope/src")
 include_directories("lib/KeyboardioHID/src")
