@@ -51,7 +51,7 @@ void Keyboard_2::sendReport(KeyReport* keys)
 {
     CoreMutex m(&__usb_mutex);
     tud_task();
-    if (tud_hid_ready()) {eaaaeeeeeeeeeeeeeeeeeeeemeamme3ameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+    if (tud_hid_ready()) {
         tud_hid_keyboard_report(__USBGetKeyboardReportID(), keys->modifiers, keys->keys);
     }
     tud_task();
