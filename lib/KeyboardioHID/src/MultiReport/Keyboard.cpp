@@ -262,6 +262,8 @@ Keyboard_ Keyboard;
 
 #else   // DYGMA_USE_TINYUSB
 
+void __USBInstallKeyboard() { /* noop */ }
+
 Keyboard_::Keyboard_() {}
 
 void Keyboard_::begin(void) 

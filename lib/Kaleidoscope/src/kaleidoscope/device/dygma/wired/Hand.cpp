@@ -190,7 +190,7 @@ bool Hand::readKeys() {
   // perform blocking read into buffer
   uint8_t result = spi_.readFrom(rxBuffer, ELEMENTS(rxBuffer));
   // if result isn't 6? this can happens if slave nacks while trying to read
-  Hand::online = (result == 6) ? true : false;
+  Hand::online = (result == 6);
 
   if (result != 6)
     // could also try reset pressed keys here
