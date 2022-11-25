@@ -35,6 +35,37 @@ namespace kaleidoscope {
 namespace device {
 namespace dygma {
 
+struct WiredHands {
+  static wired::Hand leftHand;
+  static wired::Hand rightHand;
+
+  static void setup();
+  static void initializeSides();
+
+  static uint8_t layout;
+
+  static void setSidePower(bool power);
+  static bool getSidePower() { return side_power_; }
+
+  static void keyscanInterval(uint16_t interval);
+  static uint16_t keyscanInterval() { return keyscan_interval_; }
+
+  static String getChipID();
+
+  static void ledBrightnessCorrection(uint8_t brightness);
+  static uint8_t ledBrightnessCorrection() {
+    return led_brightness_correction_;
+  }
+
+ private:
+  static uint16_t keyscan_interval_;
+  static uint8_t led_brightness_correction_;
+  static bool side_power_;
+  static uint16_t settings_base_;
+  static uint16_t settings_brightness_;
+  static constexpr uint8_t iso_only_led_ = 19;
+};
+
 // LHK = Left Hand Keys
 #define LHK 35
 

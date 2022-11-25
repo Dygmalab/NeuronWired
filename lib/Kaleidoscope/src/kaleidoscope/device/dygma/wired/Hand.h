@@ -92,12 +92,13 @@ class Hand {
 
   LEDData_t led_data;
   bool online = false;
+  keydata_t key_data_;
+  bool new_key;
 
  private:
   uint8_t brightness_adjustment_ = 0;
   int ad01_;
   SPII spi_;
-  keydata_t key_data_;
   uint8_t next_led_bank_ = 0;
   uint8_t red_max_fraction_ = (LED_RED_CHANNEL_MAX * 100) / 255;
 

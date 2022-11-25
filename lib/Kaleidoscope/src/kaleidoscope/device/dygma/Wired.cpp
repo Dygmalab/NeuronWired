@@ -70,38 +70,6 @@ namespace device {
 namespace dygma {
 
 /********* WiredHands *********/
-
-struct WiredHands {
-  static wired::Hand leftHand;
-  static wired::Hand rightHand;
-
-  static void setup();
-  static void initializeSides();
-
-  static uint8_t layout;
-
-  static void setSidePower(bool power);
-  static bool getSidePower() { return side_power_; }
-
-  static void keyscanInterval(uint16_t interval);
-  static uint16_t keyscanInterval() { return keyscan_interval_; }
-
-  static String getChipID();
-
-  static void ledBrightnessCorrection(uint8_t brightness);
-  static uint8_t ledBrightnessCorrection() {
-    return led_brightness_correction_;
-  }
-
- private:
-  static uint16_t keyscan_interval_;
-  static uint8_t led_brightness_correction_;
-  static bool side_power_;
-  static uint16_t settings_base_;
-  static uint16_t settings_brightness_;
-  static constexpr uint8_t iso_only_led_ = 19;
-};
-
 wired::Hand WiredHands::leftHand(0);
 wired::Hand WiredHands::rightHand(1);
 uint8_t WiredHands::layout;
@@ -307,9 +275,9 @@ cRGB WiredLEDDriver::getCrgbAt(uint8_t i) {
 }
 
 void WiredLEDDriver::setup() {
-  pinMode(SIDE_nRESET_1, OUTPUT);
-  pinMode(SIDE_nRESET_2, OUTPUT);
-  WiredHands::setSidePower(false);
+//  pinMode(SIDE_nRESET_1, OUTPUT);
+//  pinMode(SIDE_nRESET_2, OUTPUT);
+//  WiredHands::setSidePower(false);
 
   // arduino zero analogWrite(255) isn't fully on as its actually working with a
   // 16bit counter and the mapping is a bit shift.
@@ -318,7 +286,7 @@ void WiredLEDDriver::setup() {
   analogWriteResolution(16);
   updateNeuronLED();
 
-  WiredHands::setSidePower(true);
+//  WiredHands::setSidePower(true);
 }
 
 /********* Key scanner *********/

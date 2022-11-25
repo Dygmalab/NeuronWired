@@ -185,27 +185,10 @@ int Hand::readRegister(uint8_t cmd) {
 
 // gives information on the key that was just pressed or released.
 bool Hand::readKeys() {
-  uint8_t rxBuffer[6] = {0, 0, 0, 0, 0, 0};
-
-  // perform blocking read into buffer
-  uint8_t result = spi_.readFrom(rxBuffer, ELEMENTS(rxBuffer));
   // if result isn't 6? this can happens if slave nacks while trying to read
-  Hand::online = (result == 6);
-
-  if (result != 6)
-    // could also try reset pressed keys here
-    return false;
-
-  if (rxBuffer[0] == spi_REPLY_KEYDATA) {
-    key_data_.rows[0] = rxBuffer[1];
-    key_data_.rows[1] = rxBuffer[2];
-    key_data_.rows[2] = rxBuffer[3];
-    key_data_.rows[3] = rxBuffer[4];
-    key_data_.rows[4] = rxBuffer[5];
-    return true;
-  } else {
-    return false;
-  }
+  //TODO: Make this online variable
+  Hand::online = 1;
+  return new_key;
 }
 
 keydata_t Hand::getKeyData() {

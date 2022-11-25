@@ -55,6 +55,7 @@
 #include "EEPROMPadding.h"
 
 #include "EEPROMUpgrade.h"
+#include "SPIComunications.h"
 
 #include "RP2040_firmware.h"
 
@@ -218,7 +219,7 @@ void setup()
 {
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
-
+  Serial.begin();
   // Reserve space in the keyboard's EEPROM for the keymaps
   EEPROMKeymap.setup(10);
 
@@ -241,4 +242,8 @@ void loop()
   Kaleidoscope.loop();
   protocolBreathe();
   watchdog_update();
+}
+
+void setup1(){
+  SPIComunications::init();
 }

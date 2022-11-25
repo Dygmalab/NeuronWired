@@ -35,42 +35,6 @@ SPII::~SPII() {
 }
 
 void SPII::initSide() {
-  // Enable SPI 0 at 1 MHz and connect to GPIOs
-  //Serial.printf("init Serial");
-  spi_init(side_.port, clock_khz_);
-  spi_set_format(side_.port, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
-  spi_set_slave(side_.port, true);
-  gpio_set_function(side_.mosi, GPIO_FUNC_SPI);
-  gpio_set_function(side_.miso, GPIO_FUNC_SPI);
-  gpio_set_function(side_.clock, GPIO_FUNC_SPI);
-  gpio_set_function(side_.cs, GPIO_FUNC_SPI);
-
-  dma_tx = dma_claim_unused_channel(true);
-  dma_rx = dma_claim_unused_channel(true);
-  config_tx = dma_channel_get_default_config(dma_tx);
-  channel_config_set_transfer_data_size(&config_tx, DMA_SIZE_8);
-  channel_config_set_dreq(&config_tx, spi_get_dreq(side_.port, true));
-  dma_channel_configure(dma_tx, &config_tx,
-                        &spi_get_hw(side_.port)->dr, // write address
-                        tx_message.buf, // read address
-                        sizeof(Message), // element count (each element is of size transfer_data_size)
-                        false); // don't start yet
-
-  // We set the inbound DMA to transfer from the SPI receive FIFO to a memory buffer paced by the SPI RX FIFO DREQ
-  // We configure the read address to remain unchanged for each element, but the write
-  // address to increment (so data is written throughout the buffer)
-  config_rx = dma_channel_get_default_config(dma_rx);
-  channel_config_set_transfer_data_size(&config_rx, DMA_SIZE_8);
-  channel_config_set_dreq(&config_rx, spi_get_dreq(side_.port, false));
-  channel_config_set_read_increment(&config_rx, false);
-  channel_config_set_write_increment(&config_rx, true);
-  dma_channel_configure(dma_rx, &config_rx,
-                        rx_message.buf, // write address
-                        &spi_get_hw(side_.port)->dr, // read address
-                        sizeof(Message), // element count (each element is of size transfer_data_size)
-                        false); // don't start yet
-
-  dma_start_channel_mask((1u << dma_tx) | (1u << dma_rx));
 }
 
 uint8_t SPII::crc_errors() {
@@ -78,30 +42,7 @@ uint8_t SPII::crc_errors() {
 }
 uint8_t SPII::writeTo(uint8_t *data, size_t length) { return 0; }
 uint8_t SPII::readFrom(uint8_t *data, size_t length) {
-  data[0] = 0;    //As a default there is not a response!
-  if (!dma_channel_is_busy(dma_tx) && !dma_channel_is_busy(dma_rx)) {
-    dma_channel_configure(dma_tx, &config_tx,
-                          &spi_get_hw(side_.port)->dr, // write address
-                          tx_message.buf, // read address
-                          sizeof(Message), // element count (each element is of size transfer_data_size)
-                          false); // don't start yet
-    dma_channel_configure(dma_rx, &config_rx,
-                          rx_message.buf, // write address
-                          &spi_get_hw(side_.port)->dr, // read address
-                          sizeof(Message), // element count (each element is of size transfer_data_size)
-                          false); // don't start yet
-    dma_start_channel_mask((1u << dma_tx) | (1u << dma_rx));
-    if (rx_message.context.cmd == SPI_CMD_KEYS) {
-      data[0] = rx_message.context.cmd;
-      data[1] = rx_message.buf[sizeof(Context) + 0];
-      data[2] = rx_message.buf[sizeof(Context) + 1];
-      data[3] = rx_message.buf[sizeof(Context) + 2];
-      data[4] = rx_message.buf[sizeof(Context) + 3];
-      data[5] = rx_message.buf[sizeof(Context) + 4];
-    }
-  }
-  //TODO: Make timeout of for example 100ms without response return 0 to say that the keyboard it is not online.
-  return 6;
+  return 0;
 }
 }
 
