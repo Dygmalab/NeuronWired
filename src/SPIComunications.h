@@ -9,6 +9,9 @@
 
 namespace SPIComunications {
 
+#define SIDE_nRESET_1  22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
+#define SIDE_nRESET_2  10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
+
 #define SPI_PORT1 spi0
 #define SPI_SPEED 1000 * 1000
 #define SPI_MOSI1  20   //SPI-1 slave IN, we are slave
@@ -75,7 +78,11 @@ static void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side 
 
 static void updateLeds(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side);
 
+static void irqHandler(uint8_t irqNum,spi_side &side,kaleidoscope::device::dygma::wired::Hand &hand);
+
 static void dma_irq_1_handler();
+
+static void dma_irq_0_handler();
 
 void startDMA(spi_side &side) {
   channel_config_set_transfer_data_size(&side.config_tx, DMA_SIZE_8);
@@ -96,7 +103,7 @@ void startDMA(spi_side &side) {
                         &spi_get_hw(side.port)->dr, // read address
                         32, // element count (each element is of size transfer_data_size)
                         false); // don't start yet
-  dma_start_channel_mask((1u << spi_right.dma_tx) | (1u << spi_right.dma_rx));
+  dma_start_channel_mask((1u << side.dma_tx) | (1u << side.dma_rx));
 }
 
 void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) {
@@ -119,32 +126,40 @@ void updateLeds(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) 
       side.tx_message.buf[sizeof(Context) + 1 + i] = hand.led_data.bytes[side.counter][i];
     }
     if (++side.counter == 11) {
+      Serial.printf("Side %i\n",side.side);
       side.counter = 0;
       hand.new_leds = false;
     }
   }
 }
 
-void dma_irq_1_handler() {
-  irq_set_enabled(DMA_IRQ_1, false);
-  irq_clear(DMA_IRQ_1);
-  dma_channel_acknowledge_irq1(spi_right.dma_rx);
-  if (spi_right.rx_message.context.cmd == SPI_CMD_KEYS) {
-    updateHand(kaleidoscope::device::dygma::WiredHands::rightHand, spi_right);
+void irqHandler(uint8_t irqNum,spi_side &side,kaleidoscope::device::dygma::wired::Hand &hand) {
+  irq_set_enabled(irqNum, false);
+  irq_clear(irqNum);
+  side.side ? dma_channel_acknowledge_irq1(side.dma_rx) : dma_channel_acknowledge_irq0(side.dma_rx);
+  if (side.rx_message.context.cmd == SPI_CMD_KEYS) {
+    updateHand(hand, side);
   }
-  if (spi_right.rx_message.context.sync == 0) {
+  if (side.rx_message.context.sync == 0) {
     Serial.printf("Shit");
-    disableSide(spi_right);
-    gpio_put(22, false);
-    gpio_put(10, false);
-    initSide(spi_right);
-    gpio_put(22, true);
-    gpio_put(10, true);
+    disableSide(side);
+    gpio_put(side.side?SIDE_nRESET_1:SIDE_nRESET_2, false);
+    initSide(side);
+    gpio_put(side.side?SIDE_nRESET_1:SIDE_nRESET_2, true);
     return;
   }
-  updateLeds(kaleidoscope::device::dygma::WiredHands::rightHand, spi_right);
-  irq_set_enabled(DMA_IRQ_1, true);
-  startDMA(spi_right);
+  updateLeds(hand, side);
+  irq_set_enabled(irqNum, true);
+  startDMA(side);
+}
+
+void dma_irq_1_handler(){
+  irqHandler(DMA_IRQ_1,spi_right,kaleidoscope::device::dygma::WiredHands::rightHand);
+}
+
+void dma_irq_0_handler(){
+  printf("\n");
+  irqHandler(DMA_IRQ_0,spi_left,kaleidoscope::device::dygma::WiredHands::leftHand);
 }
 
 void disableSide(spi_side &side) {
@@ -168,22 +183,25 @@ void initSide(spi_side &side) {
   side.dma_rx = dma_claim_unused_channel(true);
   side.config_tx = dma_channel_get_default_config(side.dma_tx);
   side.config_rx = dma_channel_get_default_config(side.dma_rx);
-  irq_set_exclusive_handler(DMA_IRQ_1, dma_irq_1_handler);
-  irq_set_enabled(DMA_IRQ_1, true);
-  dma_channel_set_irq1_enabled(side.dma_rx, true);
+  irq_set_exclusive_handler(side.side ? DMA_IRQ_1 : DMA_IRQ_0, side.side ? dma_irq_1_handler : dma_irq_0_handler);
+  irq_set_enabled(side.side ? DMA_IRQ_1 : DMA_IRQ_0, true);
+  side.side ? dma_channel_set_irq1_enabled(side.dma_rx, true) : dma_channel_set_irq0_enabled(side.dma_rx, true);
   startDMA(side);
 }
 
 void init() {
-  gpio_set_function(22, GPIO_FUNC_SIO);  // SWe 20220719: new Neuron2 reset or no reset
-  gpio_set_function(10, GPIO_FUNC_SIO);  // SWe 20220719: new Neuron2 reset or no reset
-  gpio_put(22, false);
-  gpio_put(10, false);
+  gpio_init(SIDE_nRESET_1);  // SWe 20220719: new Neuron2 reset or no reset
+  gpio_set_dir(SIDE_nRESET_1, GPIO_OUT);
+  gpio_init(SIDE_nRESET_2);  // SWe 20220719: new Neuron2 reset or no reset
+  gpio_set_dir(SIDE_nRESET_2, GPIO_OUT);
+  gpio_put(SIDE_nRESET_1, false);
+  gpio_put(SIDE_nRESET_2, false);
   sleep_ms(1);
-  gpio_put(22, true);
-  gpio_put(10, true);
+  gpio_put(SIDE_nRESET_1, true);
+  gpio_put(SIDE_nRESET_2, true);
   sleep_ms(100);
   initSide(spi_right);
+  initSide(spi_left);
 }
 };
 
