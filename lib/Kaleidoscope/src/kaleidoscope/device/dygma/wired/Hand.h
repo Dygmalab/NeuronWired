@@ -94,6 +94,7 @@ class Hand {
   bool online = false;
   keydata_t key_data_;
   bool new_key;
+  bool new_leds;
 
  private:
   uint8_t brightness_adjustment_ = 0;

@@ -51,6 +51,7 @@ struct spi_side {
   uint8_t cs;
   uint32_t speed;
   bool side;
+  uint8_t counter;
   int dma_tx;
   int dma_rx;
   dma_channel_config config_tx;
@@ -62,7 +63,21 @@ struct spi_side {
 static spi_side spi_right{SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, SPI_SPEED, 1};
 static spi_side spi_left{SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, SPI_SPEED, 0};
 
-static void startDMA(spi_side &side) {
+static void init();
+
+static void initSide(spi_side &side);
+
+static void disableSide(spi_side &side);
+
+static void startDMA(spi_side &side);
+
+static void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side);
+
+static void updateLeds(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side);
+
+static void dma_irq_1_handler();
+
+void startDMA(spi_side &side) {
   channel_config_set_transfer_data_size(&side.config_tx, DMA_SIZE_8);
   channel_config_set_dreq(&side.config_tx, spi_get_dreq(side.port, true));
 
@@ -84,7 +99,7 @@ static void startDMA(spi_side &side) {
   dma_start_channel_mask((1u << spi_right.dma_tx) | (1u << spi_right.dma_rx));
 }
 
-static void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) {
+void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) {
   //mutex_enter_blocking(&hand.mutex);
   hand.key_data_.rows[0] = side.rx_message.buf[sizeof(Context) + 0];
   hand.key_data_.rows[1] = side.rx_message.buf[sizeof(Context) + 1];
@@ -95,18 +110,51 @@ static void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side 
   //mutex_exit(&hand.mutex);
 }
 
-static void dma_irq_1_handler() {
+void updateLeds(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) {
+  side.tx_message.context.cmd = 0;
+  if (hand.new_leds) {
+    side.tx_message.context.cmd = 1;
+    side.tx_message.buf[sizeof(Context) + 0] = side.counter;
+    for (uint8_t i = 0; i < 24; ++i) {
+      side.tx_message.buf[sizeof(Context) + 1 + i] = hand.led_data.bytes[side.counter][i];
+    }
+    if (++side.counter == 11) {
+      side.counter = 0;
+      hand.new_leds = false;
+    }
+  }
+}
+
+void dma_irq_1_handler() {
   irq_set_enabled(DMA_IRQ_1, false);
   irq_clear(DMA_IRQ_1);
   dma_channel_acknowledge_irq1(spi_right.dma_rx);
   if (spi_right.rx_message.context.cmd == SPI_CMD_KEYS) {
-    updateHand(kaleidoscope::device::dygma::WiredHands::leftHand ,spi_right);
+    updateHand(kaleidoscope::device::dygma::WiredHands::rightHand, spi_right);
   }
+  if (spi_right.rx_message.context.sync == 0) {
+    Serial.printf("Shit");
+    disableSide(spi_right);
+    gpio_put(22, false);
+    gpio_put(10, false);
+    initSide(spi_right);
+    gpio_put(22, true);
+    gpio_put(10, true);
+    return;
+  }
+  updateLeds(kaleidoscope::device::dygma::WiredHands::rightHand, spi_right);
   irq_set_enabled(DMA_IRQ_1, true);
   startDMA(spi_right);
 }
 
-static void initSide(spi_side &side) {
+void disableSide(spi_side &side) {
+  // Enable SPI 0 at 1 MHz and connect to GPIOs
+  spi_deinit(side.port);
+  dma_channel_unclaim(side.dma_tx);
+  dma_channel_unclaim(side.dma_rx);
+}
+
+void initSide(spi_side &side) {
   // Enable SPI 0 at 1 MHz and connect to GPIOs
   spi_init(side.port, side.speed);
   spi_set_format(side.port, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
@@ -126,33 +174,17 @@ static void initSide(spi_side &side) {
   startDMA(side);
 }
 
-static void init() {
+void init() {
   gpio_set_function(22, GPIO_FUNC_SIO);  // SWe 20220719: new Neuron2 reset or no reset
   gpio_set_function(10, GPIO_FUNC_SIO);  // SWe 20220719: new Neuron2 reset or no reset
+  gpio_put(22, false);
+  gpio_put(10, false);
+  sleep_ms(1);
   gpio_put(22, true);
   gpio_put(10, true);
   sleep_ms(100);
   initSide(spi_right);
 }
-
-//static void updateLed(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) {
-//  mutex_enter_blocking(&hand.mutex);
-//  for (int i = 0; i < 11; ++i) {
-//    if (hand.bankUpdated[i]) {
-//      side.tx_message.buf[sizeof(Context)] = i;
-//      for (int j = 0; j < 24; j++) {
-//        side.tx_message.buf[sizeof(Context) + j + 1] = hand.led_data_spi.bytes[i][j];
-//      }
-//      hand.bankUpdated[i] = 0;
-//      side.tx_message.context.cmd = SPI_CMD_LED_SET_BANK_TO;
-//      mutex_exit(&hand.mutex);
-//      return;
-//    }
-//  }
-//  mutex_exit(&hand.mutex);
-//  side.tx_message.context.cmd = 0;
-//}
-
 };
 
 #endif //NEURONWIRED_SRC_SPICOMUNICATIONS_H_

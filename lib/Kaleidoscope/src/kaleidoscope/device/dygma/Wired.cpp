@@ -80,16 +80,15 @@ uint8_t WiredHands::led_brightness_correction_ = 255;
 uint16_t WiredHands::keyscan_interval_ = 50;
 
 void WiredHands::setSidePower(bool power) {
-    //digitalWrite(SIDE_POWER, power ? HIGH : LOW);  // SWe 20220719: old Neuron power on/off
+  //digitalWrite(SIDE_POWER, power ? HIGH : LOW);  // SWe 20220719: old Neuron power on/off
   digitalWrite(SIDE_nRESET_1, power ? HIGH : LOW);  // SWe 20220719: new Neuron2 reset or no reset
   digitalWrite(SIDE_nRESET_2, power ? HIGH : LOW);  // SWe 20220719: new Neuron2 reset or no reset
   side_power_ = power;
 }
 
 void WiredHands::setup() {
-  uint8_t NCS[6] = {NC5,NC12,NC13,NC19,NC24,NC25};
-  for (size_t i = 0; i < 6; i++)
-  {
+  uint8_t NCS[6] = {NC5, NC12, NC13, NC19, NC24, NC25};
+  for (size_t i = 0; i < 6; i++) {
     pinMode(NCS[i], INPUT);      // set pin to input
   }
 
@@ -210,6 +209,9 @@ void WiredLEDDriver::syncLeds() {
     }
   }
 
+  WiredHands::leftHand.new_leds = true;
+  WiredHands::rightHand.new_leds = true;
+
   if (isLEDChangedNeuron) {
     updateNeuronLED();
     isLEDChangedNeuron = false;
@@ -219,7 +221,7 @@ void WiredLEDDriver::syncLeds() {
 void WiredLEDDriver::updateNeuronLED() {
   static constexpr struct {
     uint8_t r, g, b, w;
-  } pins = { RGBW_LED_RED, RGBW_LED_GREEN, RGBW_LED_BLUE, RGBW_LED_WHITE };
+  } pins = {RGBW_LED_RED, RGBW_LED_GREEN, RGBW_LED_BLUE, RGBW_LED_WHITE};
   auto constexpr gamma8 = kaleidoscope::driver::color::gamma_correction;
 
   // invert as these are common anode, and make sure we reach 65535 to be able
@@ -236,7 +238,7 @@ void WiredLEDDriver::setCrgbAt(uint8_t i, cRGB crgb) {
   // neuron LED
   if (i == WiredLEDDriverProps::led_count - 1) {
     isLEDChangedNeuron |= !(neuronLED.r == crgb.r && neuronLED.g == crgb.g &&
-                            neuronLED.b == crgb.b);
+        neuronLED.b == crgb.b);
     neuronLED = crgb;
     return;
   }
@@ -352,13 +354,13 @@ void WiredKeyScanner::actOnMatrixScan() {
 
       // left
       keyState = (bitRead(previousLeftHandState.all, keynum) << 0) |
-                 (bitRead(leftHandState.all, keynum) << 1);
+          (bitRead(leftHandState.all, keynum) << 1);
       if (keyState)
         ThisType::handleKeyswitchEvent(Key_NoKey, KeyAddr(row, col), keyState);
 
       // right
       keyState = (bitRead(previousRightHandState.all, keynum) << 0) |
-                 (bitRead(rightHandState.all, keynum) << 1);
+          (bitRead(rightHandState.all, keynum) << 1);
       if (keyState)
         ThisType::handleKeyswitchEvent(
             Key_NoKey, KeyAddr(row, (Props_::matrix_columns - 1) - col),
@@ -444,12 +446,12 @@ bool WiredKeyScanner::wasKeyswitchPressed(KeyAddr key_addr) {
 
 uint8_t WiredKeyScanner::pressedKeyswitchCount() {
   return __builtin_popcountll(leftHandState.all) +
-         __builtin_popcountll(rightHandState.all);
+      __builtin_popcountll(rightHandState.all);
 }
 
 uint8_t WiredKeyScanner::previousPressedKeyswitchCount() {
   return __builtin_popcountll(previousLeftHandState.all) +
-         __builtin_popcountll(previousRightHandState.all);
+      __builtin_popcountll(previousRightHandState.all);
 }
 
 void WiredKeyScanner::setKeyscanInterval(uint8_t interval) {
@@ -459,7 +461,7 @@ void WiredKeyScanner::setKeyscanInterval(uint8_t interval) {
 
 void WiredKeyScanner::setup() {
   static constexpr uint8_t keyscanner_pins[] = {
-      2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+      2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
       15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30,
       31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42};
   for (int i = 0; i < sizeof(keyscanner_pins); i++) {
