@@ -25,20 +25,16 @@
 namespace kaleidoscope::device::dygma::wired {
 
 SPII::SPII(bool side) {
-  side_ = side == 0 ? spi_left_ : spi_right_;
-  initSide();
 }
 
 SPII::~SPII() {
-  dma_channel_unclaim(dma_tx);
-  dma_channel_unclaim(dma_rx);
 }
 
 void SPII::initSide() {
 }
 
 uint8_t SPII::crc_errors() {
-  return crc_errors_;
+  return 0;
 }
 uint8_t SPII::writeTo(uint8_t *data, size_t length) { return 0; }
 uint8_t SPII::readFrom(uint8_t *data, size_t length) {
