@@ -13,7 +13,7 @@ namespace SPIComunications {
 #define SIDE_nRESET_2  10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
 
 #define SPI_PORT1 spi0
-#define SPI_SPEED 1000 * 1000
+#define SPI_SPEED (1000 * 1000)
 #define SPI_MOSI1  20   //SPI-1 slave IN, we are slave
 #define SPI_MISO1  23   //SPI-1 slave OUT, we are slave
 #define SPI_CLK1   18  //was 22   //SPI-1 clock IN, we are slave (must be changed in HW to 18)
