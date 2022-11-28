@@ -132,7 +132,7 @@ void updateLeds(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) 
   }
 }
 
-void irqHandler(uint8_t irqNum,spi_side &side,kaleidoscope::device::dygma::wired::Hand &hand) {
+void  __no_inline_not_in_flash_func(irqHandler)(uint8_t irqNum,spi_side &side,kaleidoscope::device::dygma::wired::Hand &hand) {
   irq_set_enabled(irqNum, false);
   irq_clear(irqNum);
   side.side ? dma_channel_acknowledge_irq1(side.dma_rx) : dma_channel_acknowledge_irq0(side.dma_rx);
@@ -141,6 +141,7 @@ void irqHandler(uint8_t irqNum,spi_side &side,kaleidoscope::device::dygma::wired
   }
   if (side.rx_message.context.sync == 0) {
     //Something happened lest restart the communication
+    Serial.printf("Shit\n");
     disableSide(side);
     gpio_put(side.side?SIDE_nRESET_1:SIDE_nRESET_2, false);
     initSide(side);
@@ -152,12 +153,11 @@ void irqHandler(uint8_t irqNum,spi_side &side,kaleidoscope::device::dygma::wired
   startDMA(side);
 }
 
-void dma_irq_1_handler(){
+void __no_inline_not_in_flash_func(dma_irq_1_handler)(){
   irqHandler(DMA_IRQ_1,spi_right,kaleidoscope::device::dygma::WiredHands::rightHand);
 }
 
-void dma_irq_0_handler(){
-  printf("\n");
+void __no_inline_not_in_flash_func(dma_irq_0_handler)(){
   irqHandler(DMA_IRQ_0,spi_left,kaleidoscope::device::dygma::WiredHands::leftHand);
 }
 
