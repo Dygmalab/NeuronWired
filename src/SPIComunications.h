@@ -126,7 +126,6 @@ void updateLeds(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) 
       side.tx_message.buf[sizeof(Context) + 1 + i] = hand.led_data.bytes[side.counter][i];
     }
     if (++side.counter == 11) {
-      Serial.printf("Side %i\n",side.side);
       side.counter = 0;
       hand.new_leds = false;
     }
@@ -141,7 +140,7 @@ void irqHandler(uint8_t irqNum,spi_side &side,kaleidoscope::device::dygma::wired
     updateHand(hand, side);
   }
   if (side.rx_message.context.sync == 0) {
-    Serial.printf("Shit");
+    //Something happened lest restart the communication
     disableSide(side);
     gpio_put(side.side?SIDE_nRESET_1:SIDE_nRESET_2, false);
     initSide(side);
