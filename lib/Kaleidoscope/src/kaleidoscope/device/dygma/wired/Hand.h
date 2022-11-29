@@ -21,7 +21,7 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <Arduino.h>
-#include "SPIComms.h"
+#include "SPII.h"
 
 struct cRGB {
   uint8_t r;
@@ -29,7 +29,10 @@ struct cRGB {
   uint8_t b;
 };
 
-namespace kaleidoscope::device::dygma::wired {
+namespace kaleidoscope {
+namespace device {
+namespace dygma {
+namespace wired {
 
 #define LED_BANKS 11
 
@@ -55,11 +58,7 @@ typedef union {
 
 class Hand {
  public:
-  enum Side {
-    LEFT,
-    RIGHT,
-  };
-  explicit Hand(Side side) : spi_(static_cast<SPIComms::Side>(side)) {}
+  explicit Hand(byte ad01) : ad01_(ad01), spi_(ad01) {}
 
   int readVersion();
   int readSLEDVersion();
@@ -79,12 +78,9 @@ class Hand {
   void sendLEDBank(uint8_t bank);
   keydata_t getKeyData();
   bool readKeys();
+  uint8_t controllerAddress();
   uint8_t crc_errors() {
     return spi_.crc_errors();
-  }
-
-  void initSPI() {
-    spi_.initSPI();
   }
 
   void setBrightness(uint8_t brightness) {
@@ -97,16 +93,22 @@ class Hand {
   LEDData_t led_data;
   bool online = false;
   keydata_t key_data_;
+  bool new_key;
+  bool new_leds;
 
  private:
-  SPIComms spi_;
   uint8_t brightness_adjustment_ = 0;
+  int ad01_;
+  SPII spi_;
   uint8_t next_led_bank_ = 0;
   uint8_t red_max_fraction_ = (LED_RED_CHANNEL_MAX * 100) / 255;
 
   int readRegister(uint8_t cmd);
 };
 
+}
+}
+}
 }
 
 #endif
