@@ -32,8 +32,7 @@
 #include "kaleidoscope/util/flasher/KeyboardioI2CBootloader.h"
 
 namespace kaleidoscope {
-namespace device {
-namespace dygma {
+namespace device::dygma {
 
 struct WiredHands {
   static wired::Hand leftHand;
@@ -66,13 +65,11 @@ struct WiredHands {
   static constexpr uint8_t iso_only_led_ = 19;
 };
 
-// LHK = Left Hand Keys
-#define LHK 35
-
 using kaleidoscope::driver::led::no_led;
 
 struct WiredLEDDriverProps : public kaleidoscope::driver::led::BaseProps {
   static constexpr uint8_t led_count = 177;
+  static constexpr uint8_t LHK = 35;
   static constexpr uint8_t key_led_map[] = {
     // ISO & ANSI (ANSI has no LED at 20, but this key can never be pressed so we can have just one map).
     0,   1,  2,  3,  4,  5,      6, no_led,   no_led,  6 + LHK,  5 + LHK,  4 + LHK,  3 + LHK,  2 + LHK,  1 + LHK,  0 + LHK,
@@ -82,7 +79,6 @@ struct WiredLEDDriverProps : public kaleidoscope::driver::led::BaseProps {
     27, 28, 29, 30, 31, 32,     33,     34, 34 + LHK, 33 + LHK, 32 + LHK, 31 + LHK, 30 + LHK, 29 + LHK, 28 + LHK, 27 + LHK
   };
 };
-#undef LHK
 
 class WiredLEDDriver : public kaleidoscope::driver::led::Base<WiredLEDDriverProps> {
  public:
@@ -210,7 +206,7 @@ struct WiredProps : kaleidoscope::device::BaseProps {
   static constexpr const char *short_name = "wired";
 };
 
-class Wired: public kaleidoscope::device::Base<WiredProps> {
+class Wired : public kaleidoscope::device::Base<WiredProps> {
  private:
   static WiredProps::SideFlasher SideFlasher;
  public:
@@ -222,6 +218,14 @@ class Wired: public kaleidoscope::device::Base<WiredProps> {
 
   auto sideFlasher() -> decltype(SideFlasher) & {
     return SideFlasher;
+  }
+
+  auto getHandLeft() {
+    return WiredHands::leftHand;
+  }
+
+  auto getHandRight() {
+    return WiredHands::rightHand;
   }
 
   struct side {
@@ -263,7 +267,6 @@ class Wired: public kaleidoscope::device::Base<WiredProps> {
 };
 
 
-}
 }
 
 typedef kaleidoscope::device::dygma::Wired Device;

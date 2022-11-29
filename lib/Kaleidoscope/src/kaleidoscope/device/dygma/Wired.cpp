@@ -70,8 +70,8 @@ namespace device {
 namespace dygma {
 
 /********* WiredHands *********/
-wired::Hand WiredHands::leftHand(0);
-wired::Hand WiredHands::rightHand(1);
+wired::Hand WiredHands::leftHand(wired::Hand::Side::LEFT);
+wired::Hand WiredHands::rightHand(wired::Hand::Side::RIGHT);
 uint8_t WiredHands::layout;
 bool WiredHands::side_power_;
 uint16_t WiredHands::settings_base_;
@@ -209,9 +209,6 @@ void WiredLEDDriver::syncLeds() {
     }
   }
 
-  WiredHands::leftHand.new_leds = true;
-  WiredHands::rightHand.new_leds = true;
-
   if (isLEDChangedNeuron) {
     updateNeuronLED();
     isLEDChangedNeuron = false;
@@ -279,7 +276,6 @@ cRGB WiredLEDDriver::getCrgbAt(uint8_t i) {
 void WiredLEDDriver::setup() {
 //  pinMode(SIDE_nRESET_1, OUTPUT);
 //  pinMode(SIDE_nRESET_2, OUTPUT);
-//  WiredHands::setSidePower(false);
 
   // arduino zero analogWrite(255) isn't fully on as its actually working with a
   // 16bit counter and the mapping is a bit shift.
@@ -287,8 +283,6 @@ void WiredLEDDriver::setup() {
   // ourselves in updateHubleLED() to ensure LEDs can be set fully off
   analogWriteResolution(16);
   updateNeuronLED();
-
-//  WiredHands::setSidePower(true);
 }
 
 /********* Key scanner *********/
