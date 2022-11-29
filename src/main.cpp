@@ -222,7 +222,7 @@ void setup()
   Serial.begin();
   // Reserve space in the keyboard's EEPROM for the keymaps
   EEPROMKeymap.setup(10);
-
+;
   // Reserve space for the number of Colormap layers we will use
   ColormapEffect.max_layers(10);
   LEDRainbowEffect.brightness(255);
