@@ -19,18 +19,20 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include "SPII.h"
+#include "SPIComunications.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
 
 namespace kaleidoscope::device::dygma::wired {
 
 SPII::SPII(bool side) {
+  if (!initSPII_){
+    multicore_launch_core1(SPIComunications::init);
+    initSPII_= true;
+  }
 }
 
 SPII::~SPII() {
-}
-
-void SPII::initSide() {
 }
 
 uint8_t SPII::crc_errors() {

@@ -26,12 +26,12 @@
 
 
 namespace kaleidoscope::device::dygma::wired {
-
+static bool initSPII_;
 class SPII {
  public:
   explicit SPII(bool side);
 
-  void initSide();
+  void initSPI();
 
   uint8_t writeTo(uint8_t *data, size_t length);
 

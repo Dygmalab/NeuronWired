@@ -55,7 +55,7 @@
 #include "EEPROMPadding.h"
 
 #include "EEPROMUpgrade.h"
-#include "SPIComunications.h"
+#include "kaleidoscope/device/dygma/wired/SPIComunications.h"
 
 #include "RP2040_firmware.h"
 
@@ -244,6 +244,3 @@ void loop()
   watchdog_update();
 }
 
-void setup1(){
-  SPIComunications::init();
-}
