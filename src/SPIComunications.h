@@ -113,23 +113,23 @@ void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) 
   hand.key_data_.rows[2] = side.rx_message.buf[sizeof(Context) + 2];
   hand.key_data_.rows[3] = side.rx_message.buf[sizeof(Context) + 3];
   hand.key_data_.rows[4] = side.rx_message.buf[sizeof(Context) + 4];
-  hand.new_key = true;
+  //hand.new_key = true;
   //mutex_exit(&hand.mutex);
 }
 
 void updateLeds(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) {
-  side.tx_message.context.cmd = 0;
-  if (hand.new_leds) {
-    side.tx_message.context.cmd = 1;
-    side.tx_message.buf[sizeof(Context) + 0] = side.counter;
-    for (uint8_t i = 0; i < 24; ++i) {
-      side.tx_message.buf[sizeof(Context) + 1 + i] = hand.led_data.bytes[side.counter][i];
-    }
-    if (++side.counter == 11) {
-      side.counter = 0;
-      hand.new_leds = false;
-    }
-  }
+//  side.tx_message.context.cmd = 0;
+//  if (hand.new_leds) {
+//    side.tx_message.context.cmd = 1;
+//    side.tx_message.buf[sizeof(Context) + 0] = side.counter;
+//    for (uint8_t i = 0; i < 24; ++i) {
+//      side.tx_message.buf[sizeof(Context) + 1 + i] = hand.led_data.bytes[side.counter][i];
+//    }
+//    if (++side.counter == 11) {
+//      side.counter = 0;
+//      hand.new_leds = false;
+//    }
+//  }
 }
 
 void __no_inline_not_in_flash_func(irqHandler)(uint8_t irqNum,

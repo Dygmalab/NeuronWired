@@ -67,11 +67,6 @@ namespace wired {
 
 #define ELEMENTS(arr)  (sizeof(arr) / sizeof((arr)[0]))
 
-// Returns the relative controller addresss. The expected range is 0-3
-uint8_t Hand::controllerAddress() {
-  return ad01_;
-}
-
 // Sets the keyscan interval. We currently do three reads.
 // before declaring a key event debounced.
 //
@@ -185,10 +180,27 @@ int Hand::readRegister(uint8_t cmd) {
 
 // gives information on the key that was just pressed or released.
 bool Hand::readKeys() {
+  uint8_t rxBuffer[6] = {0, 0, 0, 0, 0, 0};
+
+  // perform blocking read into buffer
+  uint8_t result = spi_.readFrom(rxBuffer, ELEMENTS(rxBuffer));
   // if result isn't 6? this can happens if slave nacks while trying to read
-  //TODO: Make this online variable
-  Hand::online = 1;
-  return new_key;
+  Hand::online = (result == 6);
+
+  if (result != 6)
+    // could also try reset pressed keys here
+    return false;
+
+  if (rxBuffer[0] == spi_REPLY_KEYDATA) {
+    key_data_.rows[0] = rxBuffer[1];
+    key_data_.rows[1] = rxBuffer[2];
+    key_data_.rows[2] = rxBuffer[3];
+    key_data_.rows[3] = rxBuffer[4];
+    key_data_.rows[4] = rxBuffer[5];
+    return true;
+  } else {
+    return false;
+  }
 }
 
 keydata_t Hand::getKeyData() {
@@ -206,8 +218,8 @@ auto constexpr gamma8 = kaleidoscope::driver::color::gamma_correction;
 
 void Hand::sendLEDBank(uint8_t bank) {
   uint8_t data[LED_BYTES_PER_BANK + 1]; // + 1 for the update LED command itself
-  data[0]  = spi_CMD_LED_BASE + bank;
-  for (uint8_t i = 0 ; i < LED_BYTES_PER_BANK; i++) {
+  data[0] = spi_CMD_LED_BASE + bank;
+  for (uint8_t i = 0; i < LED_BYTES_PER_BANK; i++) {
     uint8_t c = led_data.bytes[bank][i];
     if (c > brightness_adjustment_)
       c -= brightness_adjustment_;
