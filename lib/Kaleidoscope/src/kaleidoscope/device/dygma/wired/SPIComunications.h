@@ -6,8 +6,7 @@
 #include "hardware/spi.h"
 #include "kaleidoscope/device/dygma/wired/Hand.h"
 #include "kaleidoscope/device/dygma/Wired.h"
-
-namespace SPIComunications {
+namespace kaleidoscope::device::dygma::wired::SPIComunications {
 
 #define SIDE_nRESET_1  22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
 #define SIDE_nRESET_2  10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
@@ -139,7 +138,7 @@ void __no_inline_not_in_flash_func(irqHandler)(uint8_t irqNum,
   side.side ? dma_channel_acknowledge_irq1(side.dma_rx) : dma_channel_acknowledge_irq0(side.dma_rx);
   if (side.rx_message.context.sync == 0) {
     //Something happened lest restart the communication
-    Serial.printf("Shit\n");
+    Serial.printf("Lost Connections with hand %i\n",side.side);
     disableSide(side);
     gpio_put(side.side ? SIDE_nRESET_1 : SIDE_nRESET_2, false);
     initSide(side);
@@ -193,7 +192,7 @@ void initSide(spi_side &side) {
   startDMA(side);
 }
 
-void init() {
+static void init() {
   gpio_init(SIDE_nRESET_1);  // SWe 20220719: new Neuron2 reset or no reset
   gpio_set_dir(SIDE_nRESET_1, GPIO_OUT);
   gpio_init(SIDE_nRESET_2);  // SWe 20220719: new Neuron2 reset or no reset
@@ -206,6 +205,9 @@ void init() {
   sleep_ms(100);
   initSide(spi_right);
   initSide(spi_left);
+  while(1){
+    tight_loop_contents();
+  }
 }
 };
 
