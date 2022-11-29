@@ -49,7 +49,7 @@ EventHandlerResult PersistentLEDMode::onLEDModeChange() {
 
   cached_mode_index_ = ::LEDControl.get_mode_index();
   Runtime.storage().put(settings_base_, cached_mode_index_);
-  Runtime.storage().commit();
+  //Runtime.storage().commit();
   return EventHandlerResult::OK;
 }
 
