@@ -24,11 +24,11 @@
 #include <hardware/dma.h>
 #include "hardware/spi.h"
 
-
 namespace kaleidoscope::device::dygma::wired {
 static bool initSPII_;
 class SPII {
  public:
+  bool side_;
   explicit SPII(bool side);
 
   void initSPI();
@@ -41,7 +41,6 @@ class SPII {
 
   uint8_t crc_errors();
   virtual ~SPII();
-
 
 };
 

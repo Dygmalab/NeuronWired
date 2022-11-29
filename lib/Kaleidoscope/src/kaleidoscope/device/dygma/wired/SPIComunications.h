@@ -2,6 +2,7 @@
 #define NEURONWIRED_SRC_SPICOMUNICATIONS_H_
 
 #include <Arduino.h>
+#include <memory>
 #include <hardware/dma.h>
 #include "hardware/spi.h"
 #include "kaleidoscope/device/dygma/wired/Hand.h"
@@ -62,6 +63,9 @@ struct spi_side {
   Message rx_message;
 };
 
+static std::queue<Message> tx_messages_right;
+static std::queue<Message> tx_messages_left;
+
 static spi_side spi_right{SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, SPI_SPEED, 1};
 static spi_side spi_left{SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, SPI_SPEED, 0};
 
@@ -75,7 +79,7 @@ static void startDMA(spi_side &side);
 
 static void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side);
 
-static void updateLeds(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side);
+static void updateLeds(spi_side &side);
 
 static void irqHandler(uint8_t irqNum, spi_side &side);
 
@@ -116,18 +120,15 @@ void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) 
   //mutex_exit(&hand.mutex);
 }
 
-void updateLeds(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) {
-  side.tx_message.context.cmd = 0;
-  if (hand.new_leds) {
-    side.tx_message.context.cmd = 1;
-    side.tx_message.buf[sizeof(Context) + 0] = side.counter;
-    for (uint8_t i = 0; i < 24; ++i) {
-      side.tx_message.buf[sizeof(Context) + 1 + i] = hand.led_data.bytes[side.counter][i];
-    }
-    if (++side.counter == 11) {
-      side.counter = 0;
-      hand.new_leds = false;
-    }
+void updateLeds(spi_side &side) {
+  bool sideCom = side.rx_message.context.bit_arr & 0b00000001;
+  auto tx_messages = sideCom ? &tx_messages_right : &tx_messages_left;
+
+  if (!tx_messages->empty()) {
+    memcpy(side.tx_message.buf, tx_messages->front().buf, sizeof(Message));
+    tx_messages->pop();
+  } else {
+    side.tx_message.context.cmd = 0;
   }
 }
 
@@ -138,7 +139,7 @@ void __no_inline_not_in_flash_func(irqHandler)(uint8_t irqNum,
   side.side ? dma_channel_acknowledge_irq1(side.dma_rx) : dma_channel_acknowledge_irq0(side.dma_rx);
   if (side.rx_message.context.sync == 0) {
     //Something happened lest restart the communication
-    Serial.printf("Lost Connections with hand %i\n",side.side);
+    Serial.printf("Lost Connections with hand %i\n", side.side);
     disableSide(side);
     gpio_put(side.side ? SIDE_nRESET_1 : SIDE_nRESET_2, false);
     initSide(side);
@@ -151,8 +152,7 @@ void __no_inline_not_in_flash_func(irqHandler)(uint8_t irqNum,
                        : kaleidoscope::device::dygma::WiredHands::leftHand,
                side);
   }
-  updateLeds(sideCom ? kaleidoscope::device::dygma::WiredHands::rightHand
-                     : kaleidoscope::device::dygma::WiredHands::leftHand, side);
+  updateLeds(side);
   irq_set_enabled(irqNum, true);
   startDMA(side);
 }
@@ -205,7 +205,7 @@ static void init() {
   sleep_ms(100);
   initSide(spi_right);
   initSide(spi_left);
-  while(1){
+  while (1) {
     tight_loop_contents();
   }
 }

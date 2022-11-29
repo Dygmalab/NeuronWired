@@ -25,10 +25,10 @@
 
 namespace kaleidoscope::device::dygma::wired {
 
-SPII::SPII(bool side) {
-  if (!initSPII_){
+SPII::SPII(bool side) : side_(side) {
+  if (!initSPII_) {
     multicore_launch_core1(SPIComunications::init);
-    initSPII_= true;
+    initSPII_ = true;
   }
 }
 
@@ -38,7 +38,21 @@ SPII::~SPII() {
 uint8_t SPII::crc_errors() {
   return 0;
 }
-uint8_t SPII::writeTo(uint8_t *data, size_t length) { return 0; }
+uint8_t SPII::writeTo(uint8_t *data, size_t length) {
+  auto tx_messages = side_ ? &SPIComunications::tx_messages_right : &SPIComunications::tx_messages_left;
+  if (data[0] >= 0x80) {
+    Serial.printf("Filling %i",side_);
+    SPIComunications::Message m;
+    m.context.cmd = 1;
+    m.context.size = length;
+    for (uint8_t i = 1; i < length; ++i) {
+      m.buf[sizeof(SPIComunications::Context) + i] = data[i];
+    }
+    m.buf[sizeof(SPIComunications::Context)] = data[0] - 0x80;
+    tx_messages->push(m);
+  }
+  return 0;
+}
 uint8_t SPII::readFrom(uint8_t *data, size_t length) {
   return 0;
 }
