@@ -40,7 +40,13 @@ uint8_t SPII::crc_errors() {
 }
 uint8_t SPII::writeTo(uint8_t *data, size_t length) {
   auto tx_messages = side_ ? &SPIComunications::tx_messages_right : &SPIComunications::tx_messages_left;
+  auto lastTime = side_ ? SPIComunications::lastTime_right : SPIComunications::lastTime_left;
   if (data[0] >= 0x80) {
+    //The device is not online
+    if (millis() - lastTime > 1000) {
+      *tx_messages = {};
+      return 0;
+    }
     SPIComunications::Message m;
     m.context.cmd = 1;
     m.context.size = length;
@@ -55,12 +61,14 @@ uint8_t SPII::writeTo(uint8_t *data, size_t length) {
 uint8_t SPII::readFrom(uint8_t *data, size_t length) {
   auto key_data = side_ ? SPIComunications::right_keys : SPIComunications::left_keys;
   auto new_key = side_ ? SPIComunications::new_key_right : SPIComunications::new_key_left;
+  auto lastTime = side_ ? SPIComunications::lastTime_right : SPIComunications::lastTime_left;
   data[0] = new_key;
   data[1] = key_data[0];
   data[2] = key_data[1];
   data[3] = key_data[2];
   data[4] = key_data[3];
   data[5] = key_data[4];
+  if (millis() - lastTime > 1000) return 0;
   return 6;
 }
 }

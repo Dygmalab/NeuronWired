@@ -69,6 +69,8 @@ static uint8_t left_keys[5];
 static uint8_t right_keys[5];
 static bool new_key_left;
 static bool new_key_right;
+static uint32_t lastTime_left = 0;
+static uint32_t lastTime_right = 0;
 
 static spi_side spi_right{SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, SPI_SPEED, 1};
 static spi_side spi_left{SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, SPI_SPEED, 0};
@@ -142,6 +144,9 @@ void __no_inline_not_in_flash_func(irqHandler)(uint8_t irqNum,
   irq_set_enabled(irqNum, false);
   irq_clear(irqNum);
   side.side ? dma_channel_acknowledge_irq1(side.dma_rx) : dma_channel_acknowledge_irq0(side.dma_rx);
+  bool sideCom = side.rx_message.context.bit_arr & 0b00000001;
+  uint32_t &lastTime = sideCom ? lastTime_right : lastTime_left;
+  lastTime = millis();
   if (side.rx_message.context.sync == 0) {
     //Something happened lest restart the communication
     Serial.printf("Lost Connections with hand %i\n", side.side);
