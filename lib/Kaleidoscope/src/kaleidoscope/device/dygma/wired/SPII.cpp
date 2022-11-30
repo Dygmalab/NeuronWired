@@ -41,7 +41,6 @@ uint8_t SPII::crc_errors() {
 uint8_t SPII::writeTo(uint8_t *data, size_t length) {
   auto tx_messages = side_ ? &SPIComunications::tx_messages_right : &SPIComunications::tx_messages_left;
   if (data[0] >= 0x80) {
-    Serial.printf("Filling %i",side_);
     SPIComunications::Message m;
     m.context.cmd = 1;
     m.context.size = length;

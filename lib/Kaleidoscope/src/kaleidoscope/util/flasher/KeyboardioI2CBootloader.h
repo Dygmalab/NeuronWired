@@ -29,6 +29,7 @@
 
 #define WIRE_ Wire1
 
+#define DEBUG_BOOTLOADER
 #ifdef DEBUG_BOOTLOADER
 #define DBG_PRINTF(...) Serial.printf(__VA_ARGS__)
 #else
@@ -74,9 +75,9 @@ class KeyboardioI2CBootloader : kaleidoscope::util::flasher::Base<_Props> {
 
   template<typename T>
   static bool flash(uint8_t address, T &firmware) {
-	if (verify(address, firmware)) {
-	  return true;
-	}
+	//if (verify(address, firmware)) {
+    // return true;
+	//}
 
 	if (!erase_program(address, firmware)) {
 	  return false;
