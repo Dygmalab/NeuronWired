@@ -53,7 +53,15 @@ uint8_t SPII::writeTo(uint8_t *data, size_t length) {
   return 0;
 }
 uint8_t SPII::readFrom(uint8_t *data, size_t length) {
-  return 0;
+  auto key_data = side_ ? SPIComunications::right_keys : SPIComunications::left_keys;
+  auto new_key = side_ ? SPIComunications::new_key_right : SPIComunications::new_key_left;
+  data[0] = new_key;
+  data[1] = key_data[0];
+  data[2] = key_data[1];
+  data[3] = key_data[2];
+  data[4] = key_data[3];
+  data[5] = key_data[4];
+  return 6;
 }
 }
 
