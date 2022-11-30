@@ -65,6 +65,10 @@ struct spi_side {
 
 static std::queue<Message> tx_messages_right;
 static std::queue<Message> tx_messages_left;
+static uint8_t left_keys[5];
+static uint8_t right_keys[5];
+static bool new_key_left;
+static bool new_key_right;
 
 static spi_side spi_right{SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, SPI_SPEED, 1};
 static spi_side spi_left{SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, SPI_SPEED, 0};
@@ -77,7 +81,7 @@ static void disableSide(spi_side &side);
 
 static void startDMA(spi_side &side);
 
-static void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side);
+static void updateHand(spi_side &side);
 
 static void updateLeds(spi_side &side);
 
@@ -109,15 +113,16 @@ void startDMA(spi_side &side) {
   dma_start_channel_mask((1u << side.dma_tx) | (1u << side.dma_rx));
 }
 
-void updateHand(kaleidoscope::device::dygma::wired::Hand &hand, spi_side &side) {
-  //mutex_enter_blocking(&hand.mutex);
-  hand.key_data_.rows[0] = side.rx_message.buf[sizeof(Context) + 0];
-  hand.key_data_.rows[1] = side.rx_message.buf[sizeof(Context) + 1];
-  hand.key_data_.rows[2] = side.rx_message.buf[sizeof(Context) + 2];
-  hand.key_data_.rows[3] = side.rx_message.buf[sizeof(Context) + 3];
-  hand.key_data_.rows[4] = side.rx_message.buf[sizeof(Context) + 4];
-  hand.new_key = true;
-  //mutex_exit(&hand.mutex);
+void updateHand(spi_side &side) {
+  bool sideCom = side.rx_message.context.bit_arr & 0b00000001;
+  uint8_t (&key_data)[5] = sideCom ? right_keys : left_keys;
+  bool &new_key = sideCom ? new_key_right : new_key_left;
+  key_data[0] = side.rx_message.buf[sizeof(Context) + 0];
+  key_data[1] = side.rx_message.buf[sizeof(Context) + 1];
+  key_data[2] = side.rx_message.buf[sizeof(Context) + 2];
+  key_data[3] = side.rx_message.buf[sizeof(Context) + 3];
+  key_data[4] = side.rx_message.buf[sizeof(Context) + 4];
+  new_key = true;
 }
 
 void updateLeds(spi_side &side) {
@@ -146,11 +151,8 @@ void __no_inline_not_in_flash_func(irqHandler)(uint8_t irqNum,
     gpio_put(side.side ? SIDE_nRESET_1 : SIDE_nRESET_2, true);
     return;
   }
-  bool sideCom = side.rx_message.context.bit_arr & 0b00000001;
   if (side.rx_message.context.cmd == SPI_CMD_KEYS) {
-    updateHand(sideCom ? kaleidoscope::device::dygma::WiredHands::rightHand
-                       : kaleidoscope::device::dygma::WiredHands::leftHand,
-               side);
+    updateHand(side);
   }
   updateLeds(side);
   irq_set_enabled(irqNum, true);
