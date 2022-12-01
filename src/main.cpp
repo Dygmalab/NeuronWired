@@ -58,9 +58,9 @@
 #include "kaleidoscope/device/dygma/wired/SPIComunications.h"
 
 #include "RP2040_firmware.h"
+#include "arch/RP2040USB.h"
 
-enum
-{
+enum {
   QWERTY,
   NUMPAD,
   _LAYER_MAX
@@ -74,36 +74,36 @@ enum
 KEYMAPS(
 [QWERTY] = KEYMAP_STACKED
 (
-    Key_Escape      ,Key_1         ,Key_2       ,Key_3         ,Key_4     ,Key_5, Key_6
-,Key_Tab         ,Key_Q         ,Key_W       ,Key_E         ,Key_R     ,Key_T, Key_VolumeUp
-,Key_CapsLock    ,Key_A         ,Key_S       ,Key_D         ,Key_F     ,Key_G, Key_VolumeDown
-,Key_Backslash   ,Key_Z         ,Key_X       ,Key_C         ,Key_V     ,Key_B
-,Key_LeftControl ,Key_LeftGui   ,Key_Backspace,Key_Delete
-,Key_LeftShift   ,Key_LeftAlt   ,Key_Enter   ,Key_Space
+    Key_Escape, Key_1, Key_2, Key_3, Key_4, Key_5, Key_6
+    , Key_Tab, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_VolumeUp
+    , Key_CapsLock, Key_A, Key_S, Key_D, Key_F, Key_G, Key_VolumeDown
+    , Key_Backslash, Key_Z, Key_X, Key_C, Key_V, Key_B
+    , Key_LeftControl, Key_LeftGui, Key_Backspace, Key_Delete
+    , Key_LeftShift, Key_LeftAlt, Key_Enter, Key_Space
 
-,Key_7               ,Key_8      ,Key_9        ,Key_0        ,Key_Minus         ,Key_Equals       ,Key_Backspace
-,Key_Y               ,Key_U      ,Key_I        ,Key_O        ,Key_P             ,Key_LeftBracket  ,Key_RightBracket
-,Key_H               ,Key_J      ,Key_K        ,Key_L        ,Key_Semicolon     ,Key_Quote        ,Key_RightShift
-,Key_N               ,Key_M      ,Key_Comma    ,Key_Period   ,Key_Slash         ,Key_RightShift
-,Key_LEDEffectNext   ,Key_Home   ,Key_UpArrow  ,Key_End
-,Key_RightArrow      ,Key_DownArrow            ,Key_LeftArrow,Key_Enter
+    , Key_7, Key_8, Key_9, Key_0, Key_Minus, Key_Equals, Key_Backspace
+    , Key_Y, Key_U, Key_I, Key_O, Key_P, Key_LeftBracket, Key_RightBracket
+    , Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Quote, Key_RightShift
+    , Key_N, Key_M, Key_Comma, Key_Period, Key_Slash, Key_RightShift
+    , Key_LEDEffectNext, Key_Home, Key_UpArrow, Key_End
+    , Key_RightArrow, Key_DownArrow, Key_LeftArrow, Key_Enter
 ),
 
 [NUMPAD] = KEYMAP_STACKED
 (
-    Key_Escape      ,Key_F1        ,Key_F2        ,Key_F3         ,Key_F4       ,Key_F5       ,Key_F6
-,Key_Tab         ,Key_NoKey     ,Key_UpArrow   ,Key_NoKey      ,Key_NoKey    ,Key_NoKey    ,Key_NoKey
-,Key_CapsLock    ,Key_LeftArrow ,Key_DownArrow ,Key_RightArrow ,Key_NoKey    ,Key_NoKey    ,Key_NoKey
-,Key_LeftShift   ,Key_Backslash ,Key_NoKey     ,Key_NoKey      ,Key_NoKey    ,Key_NoKey
-,Key_LeftControl ,Key_LeftGui   ,Key_LeftAlt   ,Key_Space
-,Key_Space       ,Key_Backspace ,Key_Enter     ,Key_Delete
+    Key_Escape, Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_F6
+    , Key_Tab, Key_NoKey, Key_UpArrow, Key_NoKey, Key_NoKey, Key_NoKey, Key_NoKey
+    , Key_CapsLock, Key_LeftArrow, Key_DownArrow, Key_RightArrow, Key_NoKey, Key_NoKey, Key_NoKey
+    , Key_LeftShift, Key_Backslash, Key_NoKey, Key_NoKey, Key_NoKey, Key_NoKey
+    , Key_LeftControl, Key_LeftGui, Key_LeftAlt, Key_Space
+    , Key_Space, Key_Backspace, Key_Enter, Key_Delete
 
-,Key_F7              ,Key_F8    ,Key_F9        ,Key_F10       ,Key_F11            ,Key_F12         ,Key_Backspace
-,Key_KeypadSubtract  ,Key_7     ,Key_8         ,Key_9         ,Key_KeypadDivide   ,Key_NoKey       ,Key_Enter
-,Key_KeypadAdd       ,Key_4     ,Key_5         ,Key_6         ,Key_KeypadMultiply ,Key_NoKey       ,Key_Backslash
-,Key_KeypadDot       ,Key_1     ,Key_2         ,Key_3         ,Key_UpArrow        ,Key_RightShift
-,Key_0               ,Key_Space ,Key_LeftArrow ,Key_DownArrow
-,Key_RightArrow      ,Key_RightControl         ,Key_Delete    ,MoveToLayer(QWERTY)
+    , Key_F7, Key_F8, Key_F9, Key_F10, Key_F11, Key_F12, Key_Backspace
+    , Key_KeypadSubtract, Key_7, Key_8, Key_9, Key_KeypadDivide, Key_NoKey, Key_Enter
+    , Key_KeypadAdd, Key_4, Key_5, Key_6, Key_KeypadMultiply, Key_NoKey, Key_Backslash
+    , Key_KeypadDot, Key_1, Key_2, Key_3, Key_UpArrow, Key_RightShift
+    , Key_0, Key_Space, Key_LeftArrow, Key_DownArrow
+    , Key_RightArrow, Key_RightControl, Key_Delete, MoveToLayer(QWERTY)
 )
 );
 /* Re-enable astyle's indent enforcement */
@@ -114,18 +114,13 @@ kaleidoscope::device::dygma::wired::SideFlash<RP2040Firmware> SideFlash;
 /** toggleLedsOnSuspendResume toggles the LEDs off when the host goes to sleep,
  * and turns them back on when it wakes up.
  */
-void toggleLedsOnSuspendResume(kaleidoscope::plugin::HostPowerManagement::Event event)
-{
-  switch (event)
-  {
-    case kaleidoscope::plugin::HostPowerManagement::Suspend:
-      LEDControl.disable();
+void toggleLedsOnSuspendResume(kaleidoscope::plugin::HostPowerManagement::Event event) {
+  switch (event) {
+    case kaleidoscope::plugin::HostPowerManagement::Suspend:LEDControl.disable();
       break;
-    case kaleidoscope::plugin::HostPowerManagement::Resume:
-      LEDControl.enable();
+    case kaleidoscope::plugin::HostPowerManagement::Resume:LEDControl.enable();
       break;
-    case kaleidoscope::plugin::HostPowerManagement::Sleep:
-      break;
+    case kaleidoscope::plugin::HostPowerManagement::Sleep:break;
   }
 }
 
@@ -133,36 +128,30 @@ void toggleLedsOnSuspendResume(kaleidoscope::plugin::HostPowerManagement::Event 
  * resume, and sleep) to other functions that perform action based on these
  * events.
  */
-void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::Event event)
-{
+void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::Event event) {
   toggleLedsOnSuspendResume(event);
 }
 
-enum
-{
+enum {
   COMBO_TOGGLE_NKRO_MODE
 };
 
 static uint32_t protocol_toggle_start = 0;
 
-static void toggleKeyboardProtocol(uint8_t combo_index)
-{
+static void toggleKeyboardProtocol(uint8_t combo_index) {
   USBQuirks.toggleKeyboardProtocol();
   protocol_toggle_start = Kaleidoscope.millisAtCycleStart();
 }
 
-static void protocolBreathe()
-{
-  if (Kaleidoscope.hasTimeExpired(protocol_toggle_start, uint16_t(10000)))
-  {
+static void protocolBreathe() {
+  if (Kaleidoscope.hasTimeExpired(protocol_toggle_start, uint16_t(10000))) {
     protocol_toggle_start = 0;
   }
   if (protocol_toggle_start == 0)
     return;
 
   uint8_t hue = 120;
-  if (Kaleidoscope.hid().keyboard().getProtocol() == HID_BOOT_PROTOCOL)
-  {
+  if (Kaleidoscope.hid().keyboard().getProtocol() == HID_BOOT_PROTOCOL) {
     hue = 0;
   }
 
@@ -175,9 +164,11 @@ static void protocolBreathe()
 }
 
 USE_MAGIC_COMBOS(
-{.action = toggleKeyboardProtocol,
+    {
+      .action = toggleKeyboardProtocol,
 // Left Ctrl + Left Shift + Left Alt + 6
-.keys = {R4C0, R3C0, R4C2, R0C6}});
+      .keys = {R4C0, R3C0, R4C2, R0C6}
+    });
 
 kaleidoscope::plugin::EEPROMPadding JointPadding(8);
 static kaleidoscope::plugin::LEDSolidColor solidRed(255, 0, 0);
@@ -215,14 +206,14 @@ KALEIDOSCOPE_INIT_PLUGINS(
     EEPROMUpgrade,
     HostPowerManagement);
 
-void setup()
-{
+void setup() {
+  __USBStart();
+  Serial.begin(115200);
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
   Serial.begin();
   // Reserve space in the keyboard's EEPROM for the keymaps
-  EEPROMKeymap.setup(10);
-;
+  EEPROMKeymap.setup(10);;
   // Reserve space for the number of Colormap layers we will use
   ColormapEffect.max_layers(10);
   LEDRainbowEffect.brightness(255);
@@ -236,8 +227,7 @@ void setup()
   watchdog_enable(2000, 1);
 }
 
-void loop()
-{
+void loop() {
   // Application code goes here...
   Kaleidoscope.loop();
   protocolBreathe();
