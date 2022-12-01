@@ -209,9 +209,6 @@ void WiredLEDDriver::syncLeds() {
     }
   }
 
-  WiredHands::leftHand.new_leds = true;
-  WiredHands::rightHand.new_leds = true;
-
   if (isLEDChangedNeuron) {
     updateNeuronLED();
     isLEDChangedNeuron = false;

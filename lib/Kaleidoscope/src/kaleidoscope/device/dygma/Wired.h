@@ -31,6 +31,7 @@
 #include "kaleidoscope/device/Base.h"
 #include "kaleidoscope/util/flasher/KeyboardioI2CBootloader.h"
 
+
 namespace kaleidoscope {
 namespace device {
 namespace dygma {
