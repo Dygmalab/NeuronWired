@@ -42,29 +42,34 @@ namespace kaleidoscope::device::dygma::wired {
 #define SPI_MISO2  11   //SPI-2 slave OUT, we are slave
 #define SPI_CLK2   14  //was 10   //SPI-2 clock IN, we are slave  (must be changed in HW to 14)
 #define SPI_CS2     9   //SPI-2 chip select IN, we are slave1
+#define SIZE_TRANSFER    32
 
 class SPII {
  public:
-  enum SPI_COMUNICATIONS {
-    SPI_CMD_DEFAULT,
-    SPI_CMD_KEYS,
-    SPI_CMD_VERSION,
-    SPI_CMD_BATT_STATE,
-    SPI_CMD_KEYSCAN_INTERVAL,
-    SPI_CMD_LED_SET_BANK_TO,
+
+  enum SPI_COMMUNICATION {
+    IS_ALIVE = 1,
+    HAS_KEYS,
+    SET_MODE_LED,
+    SYNC_MODE_LED,
+    UPDATE_LED_BANK,
   };
 
   struct Context {
     uint8_t cmd;
     uint8_t bit_arr;
-    uint8_t sync;
     uint8_t size;
   };
 
   union Message {
-    Context context;
-    uint8_t buf[32];
+    struct {
+      Context context;
+      uint8_t data[SIZE_TRANSFER - sizeof(context)];
+    };
+    uint8_t buf[SIZE_TRANSFER];
   };
+
+  static_assert(sizeof(Message) == SIZE_TRANSFER);
 
   explicit SPII(bool side);
 
