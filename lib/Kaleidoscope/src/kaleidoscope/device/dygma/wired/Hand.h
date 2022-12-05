@@ -60,7 +60,6 @@ class Hand {
  public:
   explicit Hand(byte ad01) : ad01_(ad01) {
     spi_ = ad01 ? &communication_right : &communication_left;
-    spi_->initSPI();
   }
 
   int readVersion();
