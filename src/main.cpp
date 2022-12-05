@@ -237,6 +237,6 @@ void loop() {
 }
 
 void setup1(){
-  irq_set_enabled(DMA_IRQ_1, true);
-  irq_set_enabled(DMA_IRQ_0, true);
+  kaleidoscope::device::dygma::wired::port_right.initCommunications();
+  kaleidoscope::device::dygma::wired::port_left.initCommunications();
 }

@@ -139,24 +139,24 @@ String WiredHands::getChipID() {
 
 void WiredHands::initializeSides() {
   // key scan interval from eeprom
-  leftHand.setKeyscanInterval(keyscan_interval_);
-  rightHand.setKeyscanInterval(keyscan_interval_);
-
-  // led brightness from eeprom
-  leftHand.setBrightness(led_brightness_correction_);
-  rightHand.setBrightness(led_brightness_correction_);
+//  leftHand.setKeyscanInterval(keyscan_interval_);
+//  rightHand.setKeyscanInterval(keyscan_interval_);
+//
+//  // led brightness from eeprom
+//  leftHand.setBrightness(led_brightness_correction_);
+//  rightHand.setBrightness(led_brightness_correction_);
 
   // get ANSI/ISO at every side replug
-  uint8_t l_layout = leftHand.readLayout();
-  uint8_t r_layout = rightHand.readLayout();
+//  uint8_t l_layout = leftHand.readLayout();
+//  uint8_t r_layout = rightHand.readLayout();
 
   // setup layout variable, this will affect led mapping - defaults to ISO if
   // nothing reported
-  // FIXME
-  if (l_layout == 1 || r_layout == 1)
-    layout = 1;
-  else
-    layout = 0;
+//  // FIXME
+//  if (l_layout == 1 || r_layout == 1)
+//    layout = 1;
+//  else
+//    layout = 0;
 
   /*
    * if the neuron starts up with no sides connected, it will assume ISO. This

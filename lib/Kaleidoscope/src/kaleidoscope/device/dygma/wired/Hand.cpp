@@ -241,7 +241,9 @@ void Hand::sendLEDBank(uint8_t bank) {
       data[i + 1] = data[i + 1] * red_max_fraction_ / 100;
     }
   }
-  uint8_t result = spi_->writeTo(data, ELEMENTS(data));
+  if(online){
+    uint8_t result = spi_->writeTo(data, ELEMENTS(data));
+  }
 }
 
 }
