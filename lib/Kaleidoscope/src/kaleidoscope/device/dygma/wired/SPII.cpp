@@ -19,173 +19,185 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <pico/time.h>
-#include "SPII.h"
+#include "SpiPort.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
 
 namespace kaleidoscope::device::dygma::wired {
 
-SPII port_left(0);
-SPII port_right(1);
+SpiPort portLeft(0);
+SpiPort portRight(1);
 
 void __no_inline_not_in_flash_func(dma_irq_1_handler)() {
-  port_right.irq();
+  portRight.irq();
 }
 
 void __no_inline_not_in_flash_func(dma_irq_0_handler)() {
-  port_left.irq();
+  portLeft.irq();
 }
 
-void SPII::startDMA() {
-  channel_config_set_transfer_data_size(&spi_settings_.config_tx, DMA_SIZE_8);
-  channel_config_set_dreq(&spi_settings_.config_tx, spi_get_dreq(spi_settings_.port, true));
+void SpiPort::startDMA() {
+  channel_config_set_transfer_data_size(&spiSettings.channelConfigTx, DMA_SIZE_8);
+  channel_config_set_dreq(&spiSettings.channelConfigTx, spi_get_dreq(spiSettings.port, true));
 
-  channel_config_set_transfer_data_size(&spi_settings_.config_rx, DMA_SIZE_8);
-  channel_config_set_dreq(&spi_settings_.config_rx, spi_get_dreq(spi_settings_.port, false));
-  channel_config_set_read_increment(&spi_settings_.config_rx, false);
-  channel_config_set_write_increment(&spi_settings_.config_rx, true);
+  channel_config_set_transfer_data_size(&spiSettings.channelConfigRx, DMA_SIZE_8);
+  channel_config_set_dreq(&spiSettings.channelConfigRx, spi_get_dreq(spiSettings.port, false));
+  channel_config_set_read_increment(&spiSettings.channelConfigRx, false);
+  channel_config_set_write_increment(&spiSettings.channelConfigRx, true);
 
-  dma_channel_configure(spi_settings_.dma_tx, &spi_settings_.config_tx,
-                        &spi_get_hw(spi_settings_.port)->dr, // write address
-                        spi_settings_.tx_message.buf, // read address
-                        32, // element count (each element is of size transfer_data_size)
-                        false); // don't start yet
-  dma_channel_configure(spi_settings_.dma_rx, &spi_settings_.config_rx,
-                        spi_settings_.rx_message.buf, // write address
-                        &spi_get_hw(spi_settings_.port)->dr, // read address
-                        32, // element count (each element is of size transfer_data_size)
-                        false); // don't start yet
-  dma_start_channel_mask((1u << spi_settings_.dma_tx) | (1u << spi_settings_.dma_rx));
+  dma_channel_configure(spiSettings.dmaIndexTx, &spiSettings.channelConfigTx,
+						&spi_get_hw(spiSettings.port)->dr, // write address
+						spiSettings.txMessage.buf, // read address
+						32, // element count (each element is of size transfer_data_size)
+						false); // don't start yet
+  dma_channel_configure(spiSettings.dmaIndexRx, &spiSettings.channelConfigRx,
+						spiSettings.rxMessage.buf, // write address
+						&spi_get_hw(spiSettings.port)->dr, // read address
+						32, // element count (each element is of size transfer_data_size)
+						false); // don't start yet
+  dma_start_channel_mask((1u << spiSettings.dmaIndexTx) | (1u << spiSettings.dmaIndexRx));
 }
 
-void SPII::initInterrupt() {
+void SpiPort::initInterrupt() {
   // Enable SPI 0 at 1 MHz and connect to GPIOs
-  spi_init(spi_settings_.port, spi_settings_.speed);
-  spi_set_format(spi_settings_.port, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
-  spi_set_slave(spi_settings_.port, true);
-  gpio_set_function(spi_settings_.mosi, GPIO_FUNC_SPI);
-  gpio_set_function(spi_settings_.miso, GPIO_FUNC_SPI);
-  gpio_set_function(spi_settings_.clock, GPIO_FUNC_SPI);
-  gpio_set_function(spi_settings_.cs, GPIO_FUNC_SPI);
+  spi_init(spiSettings.port, spiSettings.speed);
+  spi_set_format(spiSettings.port, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
+  spi_set_slave(spiSettings.port, true);
+  gpio_set_function(spiSettings.mosi, GPIO_FUNC_SPI);
+  gpio_set_function(spiSettings.miso, GPIO_FUNC_SPI);
+  gpio_set_function(spiSettings.clock, GPIO_FUNC_SPI);
+  gpio_set_function(spiSettings.cs, GPIO_FUNC_SPI);
 
-  spi_settings_.dma_tx = dma_claim_unused_channel(true);
-  spi_settings_.dma_rx = dma_claim_unused_channel(true);
-  spi_settings_.config_tx = dma_channel_get_default_config(spi_settings_.dma_tx);
-  spi_settings_.config_rx = dma_channel_get_default_config(spi_settings_.dma_rx);
-  irq_set_exclusive_handler(spi_settings_.irq, port_ ? dma_irq_1_handler : dma_irq_0_handler);
-  irq_set_enabled(spi_settings_.irq, true);
-  port_ ? dma_channel_set_irq1_enabled(spi_settings_.dma_rx, true) : dma_channel_set_irq0_enabled(spi_settings_.dma_rx,
-                                                                                                  true);
+  spiSettings.dmaIndexTx = dma_claim_unused_channel(true);
+  spiSettings.dmaIndexRx = dma_claim_unused_channel(true);
+  spiSettings.channelConfigTx = dma_channel_get_default_config(spiSettings.dmaIndexTx);
+  spiSettings.channelConfigRx = dma_channel_get_default_config(spiSettings.dmaIndexRx);
+  irq_set_exclusive_handler(spiSettings.irq, portUSB ? dma_irq_1_handler : dma_irq_0_handler);
+  irq_set_enabled(spiSettings.irq, true);
+  portUSB ? dma_channel_set_irq1_enabled(spiSettings.dmaIndexRx, true) : dma_channel_set_irq0_enabled(spiSettings
+																										  .dmaIndexRx,
+																									  true);
   startDMA();
 }
 
-SPII::SPII(bool side) : port_(side) {
+SpiPort::SpiPort(bool side) : portUSB(side) {
   if (side) {
-    spi_settings_ = {SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, SPI_SPEED, SIDE_nRESET_1, DMA_IRQ_1};
+	spiSettings = {SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, SPI_SPEED, SIDE_nRESET_1, DMA_IRQ_1};
   } else {
-    spi_settings_ = {SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, SPI_SPEED, SIDE_nRESET_2, DMA_IRQ_0};
+	spiSettings = {SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, SPI_SPEED, SIDE_nRESET_2, DMA_IRQ_0};
   }
-  gpio_init(spi_settings_.reset);
-  gpio_set_dir(spi_settings_.reset, GPIO_OUT);
-  gpio_put(spi_settings_.reset, false);
+  gpio_init(spiSettings.reset);
+  gpio_set_dir(spiSettings.reset, GPIO_OUT);
+  gpio_put(spiSettings.reset, false);
   sleep_us(1);
-  gpio_put(spi_settings_.reset, true);
-  queue_init(&tx_messages, sizeof(Message), 40);
-  queue_init(&rx_messages, sizeof(Message), 40);
+  gpio_put(spiSettings.reset, true);
+  queue_init(&txMessages, sizeof(Message), 40);
+  queue_init(&rxMessages, sizeof(Message), 40);
 }
 
-void SPII::initCommunications() {
+void SpiPort::initCommunications() {
   initInterrupt();
 }
 
-SPII::~SPII() {
+SpiPort::~SpiPort() {
   disableSide();
 }
 
-uint8_t SPII::crc_errors() {
+uint8_t SpiPort::crc_errors() {
   return 0;
 }
-uint8_t SPII::writeTo(uint8_t *data, size_t length) {
+uint8_t SpiPort::writeTo(uint8_t *data, size_t length) {
   if (data[0] >= 0x80) {
-    Message message;
-    if (queue_is_full(&tx_messages)) {
-      return 0;
-    }
-    message.context.cmd = UPDATE_LED_BANK;
-    message.context.size = length;
-    for (uint8_t i = 1; i < length; ++i) {
-      message.data[i] = data[i];
-    }
-    message.data[0] = data[0] - 0x80;
-    queue_add_blocking(&tx_messages, &message);
+	Message message;
+	if (queue_is_full(&txMessages)) {
+	  return 0;
+	}
+	message.context.cmd = UPDATE_LED_BANK;
+	message.context.size = length;
+	for (uint8_t i = 1; i < length; ++i) {
+	  message.data[i] = data[i];
+	}
+	message.data[0] = data[0] - 0x80;
+	queue_add_blocking(&txMessages, &message);
   }
   return 0;
 }
-uint8_t SPII::readFrom(uint8_t *data, size_t length) {
-  if (queue_is_empty(&rx_messages)) {
-    data[0] = 0;
-    return 6;
+
+bool SpiPort::sendMessage(SpiPort::Message *data) {
+  if (queue_is_full(&txMessages)) {
+	return false;
+  }
+  queue_add_blocking(&txMessages, data);
+  return true;
+}
+
+uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
+  if (queue_is_empty(&rxMessages)) {
+	data[0] = 0;
+	return 6;
   }
   Message message;
-  queue_remove_blocking(&rx_messages, &message);
+  queue_remove_blocking(&rxMessages, &message);
   data[0] = 1;
   data[1] = message.data[0];
   data[2] = message.data[1];
   data[3] = message.data[2];
   data[4] = message.data[3];
   data[5] = message.data[4];
-  if (millis() - last_time_communication_ > 1000) return 0;
+  if (millis() - lasTimeCommunication > 1000)
+	return 0;
   return 6;
 }
 
-void SPII::irq() {
-  irq_set_enabled(spi_settings_.irq, false);
-  irq_clear(spi_settings_.irq);
-  port_ ? dma_channel_acknowledge_irq1(spi_settings_.dma_rx)
-        : dma_channel_acknowledge_irq0(spi_settings_.dma_rx);
-  if (spi_settings_.rx_message.context.cmd == 0) {
-    //Something happened lest restart the communication
-    if (Serial.available())
-      Serial.printf("Lost Connections with hand %i\n", port_);
-    disableSide();
-    gpio_put(spi_settings_.reset, false);
-    initInterrupt();
-    gpio_put(spi_settings_.reset, true);
-    return;
+void SpiPort::irq() {
+  irq_set_enabled(spiSettings.irq, false);
+  irq_clear(spiSettings.irq);
+  portUSB ? dma_channel_acknowledge_irq1(spiSettings.dmaIndexRx)
+		  : dma_channel_acknowledge_irq0(spiSettings.dmaIndexRx);
+  if (spiSettings.rxMessage.context.cmd==0) {
+	//Something happened lest restart the communication
+	if (Serial.available())
+	  Serial.printf("Lost Connections with hand %i\n", portUSB);
+	disableSide();
+	gpio_put(spiSettings.reset, false);
+	initInterrupt();
+	gpio_put(spiSettings.reset, true);
+	return;
   }
-  last_time_communication_ = millis();
-  bool sideCom = spi_settings_.rx_message.context.bit_arr & 0b00000001;
-  if (spi_settings_.rx_message.context.cmd != 1) {
-    if (sideCom) {
-      queue_add_blocking(&port_right.rx_messages, &spi_settings_.rx_message);
-      if (!queue_is_empty(&port_right.tx_messages)) {
-        queue_remove_blocking(&port_right.tx_messages, &spi_settings_.tx_message);
-      }
-    } else {
-      queue_add_blocking(&port_left.rx_messages, &spi_settings_.rx_message);
-      if (!queue_is_empty(&port_left.tx_messages)) {
-        queue_remove_blocking(&port_left.tx_messages, &spi_settings_.tx_message);
-      }
-    }
+  lasTimeCommunication = millis();
+  bool sideCom = spiSettings.rxMessage.context.bit_arr & 0b00000001;
+  if (spiSettings.rxMessage.context.cmd!=1) {
+	if (sideCom) {
+	  queue_add_blocking(&portRight.rxMessages, &spiSettings.rxMessage);
+	  if (!queue_is_empty(&portRight.txMessages)) {
+		queue_remove_blocking(&portRight.txMessages, &spiSettings.txMessage);
+	  }
+	} else {
+	  queue_add_blocking(&portLeft.rxMessages, &spiSettings.rxMessage);
+	  if (!queue_is_empty(&portLeft.txMessages)) {
+		queue_remove_blocking(&portLeft.txMessages, &spiSettings.txMessage);
+	  }
+	}
   }
   if (sideCom) {
-    if (!queue_is_empty(&port_right.tx_messages)) {
-      queue_remove_blocking(&port_right.tx_messages, &spi_settings_.tx_message);
-    }
+	if (!queue_is_empty(&portRight.txMessages)) {
+	  queue_remove_blocking(&portRight.txMessages, &spiSettings.txMessage);
+	}
   } else {
-    if (!queue_is_empty(&port_left.tx_messages)) {
-      queue_remove_blocking(&port_left.tx_messages, &spi_settings_.tx_message);
-    }
+	if (!queue_is_empty(&portLeft.txMessages)) {
+	  queue_remove_blocking(&portLeft.txMessages, &spiSettings.txMessage);
+	}
   }
-  irq_set_enabled(spi_settings_.irq, true);
+  irq_set_enabled(spiSettings.irq, true);
   startDMA();
 }
 
-void SPII::disableSide() {
-  spi_deinit(spi_settings_.port);
-  dma_channel_unclaim(spi_settings_.dma_tx);
-  dma_channel_unclaim(spi_settings_.dma_rx);
+void SpiPort::disableSide() {
+  spi_deinit(spiSettings.port);
+  dma_channel_unclaim(spiSettings.dmaIndexTx);
+  dma_channel_unclaim(spiSettings.dmaIndexRx);
 }
+
 }
 
 #endif

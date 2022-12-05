@@ -44,78 +44,80 @@ namespace kaleidoscope::device::dygma::wired {
 #define SPI_CS2     9   //SPI-2 chip select IN, we are slave1
 #define SIZE_TRANSFER    32
 
-class SPII {
- public:
+class SpiPort {
+public:
 
   enum SPI_COMMUNICATION {
-    IS_ALIVE = 1,
-    HAS_KEYS,
-    SET_MODE_LED,
-    SYNC_MODE_LED,
-    UPDATE_LED_BANK,
+	IS_ALIVE = 1,
+	HAS_KEYS,
+	SET_MODE_LED,
+	SYNC_MODE_LED,
+	UPDATE_LED_BANK,
   };
 
   struct Context {
-    uint8_t cmd;
-    uint8_t bit_arr;
-    uint8_t size;
+	uint8_t cmd;
+	uint8_t bit_arr;
+	uint8_t size;
   };
 
   union Message {
-    struct {
-      Context context;
-      uint8_t data[SIZE_TRANSFER - sizeof(context)];
-    };
-    uint8_t buf[SIZE_TRANSFER];
+	struct {
+	  Context context;
+	  uint8_t data[SIZE_TRANSFER - sizeof(context)];
+	};
+	uint8_t buf[SIZE_TRANSFER];
   };
 
-  static_assert(sizeof(Message) == SIZE_TRANSFER);
+  static_assert(sizeof(Message)==SIZE_TRANSFER);
 
-  explicit SPII(bool side);
+  explicit SpiPort(bool side);
 
   void initCommunications();
 
   uint8_t writeTo(uint8_t *data, size_t length);
+
+  bool sendMessage(Message *data);
 
   uint8_t readFrom(uint8_t *data, size_t length);
 
   void disable();
 
   uint8_t crc_errors();
-  virtual ~SPII();
+  virtual ~SpiPort();
   void irq();
-  queue_t tx_messages;
-  queue_t rx_messages;
+  queue_t txMessages;
+  queue_t rxMessages;
 
- private:
+private:
   void initInterrupt();
   void startDMA();
   void disableSide();
 
   struct Spi_settings {
-    spi_inst *port;
-    uint8_t mosi;
-    uint8_t miso;
-    uint8_t clock;
-    uint8_t cs;
-    uint32_t speed;
-    uint8_t reset;
-    uint8_t irq;
-    int dma_tx;
-    int dma_rx;
-    dma_channel_config config_tx;
-    dma_channel_config config_rx;
-    Message tx_message;
-    Message rx_message;
+	spi_inst *port;
+	uint8_t mosi;
+	uint8_t miso;
+	uint8_t clock;
+	uint8_t cs;
+	uint32_t speed;
+	uint8_t reset;
+	uint8_t irq;
+	uint8_t dmaIndexTx;
+	uint8_t dmaIndexRx;
+	dma_channel_config channelConfigTx;
+	dma_channel_config channelConfigRx;
+	Message txMessage;
+	Message rxMessage;
   };
 
-  Spi_settings spi_settings_;
-  bool port_;
-  uint32_t last_time_communication_;
+  Spi_settings spiSettings;
+  bool portUSB;
+  uint32_t lasTimeCommunication;
 };
 
-extern SPII port_left;
-extern SPII port_right;
+extern SpiPort portLeft;
+extern SpiPort portRight;
 
 }
 #endif
