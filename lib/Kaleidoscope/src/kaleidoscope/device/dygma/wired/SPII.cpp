@@ -18,14 +18,15 @@
 
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
+#include <pico/time.h>
 #include "SPII.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
 
 namespace kaleidoscope::device::dygma::wired {
 
-SPII communication_left(0);
-SPII communication_right(1);
+SPII port_left(0);
+SPII port_right(1);
 
 //void updateHand(spi_side &spi_settings_) {
 //  bool sideCom = spi_settings_.rx_message.context.bit_arr & 0b00000001;
@@ -57,11 +58,11 @@ SPII communication_right(1);
 //}
 
 void __no_inline_not_in_flash_func(dma_irq_1_handler)() {
-  communication_right.irq();
+  port_right.irq();
 }
 
 void __no_inline_not_in_flash_func(dma_irq_0_handler)() {
-  communication_left.irq();
+  port_left.irq();
 }
 
 void SPII::startDMA() {
@@ -118,36 +119,39 @@ SPII::SPII(bool side) : port_(side) {
   gpio_put(spi_settings_.reset, false);
   sleep_us(1);
   gpio_put(spi_settings_.reset, true);
-  initInterrupt();
   queue_init(&tx_messages, sizeof(Message), 40);
   queue_init(&rx_messages, sizeof(Message), 40);
 }
 
-SPII::~SPII() {
+void SPII::initCommunications() {
+  initInterrupt();
+}
 
+SPII::~SPII() {
+  disableSide();
 }
 
 uint8_t SPII::crc_errors() {
   return 0;
 }
 uint8_t SPII::writeTo(uint8_t *data, size_t length) {
-//  auto tx_messages = side_ ? &tx_messages_right : &tx_messages_left;
-//  auto lastTime = side_ ? lastTime_right : lastTime_left;
-//  if (data[0] >= 0x80) {
-//    //The device is not online
-//    if (millis() - lastTime > 1000) {
-//      *tx_messages = {};
+  if (data[0] >= 0x80) {
+    //The device is not online
+//    if (millis() - last_time_communication_ > 1000) {
 //      return 0;
 //    }
-//    Message m;
-//    m.context.cmd = 1;
-//    m.context.size = length;
-//    for (uint8_t i = 1; i < length; ++i) {
-//      m.buf[sizeof(Context) + i] = data[i];
-//    }
-//    m.buf[sizeof(Context)] = data[0] - 0x80;
-//    tx_messages->push(m);
-//  }
+    Message message;
+    if (queue_is_full(&tx_messages)) {
+      queue_remove_blocking(&tx_messages,&message);
+    }
+    message.context.cmd = 1;
+    message.context.size = length;
+    for (uint8_t i = 1; i < length; ++i) {
+      message.buf[sizeof(Context) + i] = data[i];
+    }
+    message.buf[sizeof(Context)] = data[0] - 0x80;
+    queue_add_blocking(&tx_messages, &message);
+  }
   return 0;
 }
 uint8_t SPII::readFrom(uint8_t *data, size_t length) {
@@ -163,7 +167,7 @@ uint8_t SPII::readFrom(uint8_t *data, size_t length) {
   data[3] = message.buf[sizeof(Context) + 2];
   data[4] = message.buf[sizeof(Context) + 3];
   data[5] = message.buf[sizeof(Context) + 4];
-//  if (millis() - lastTime > 1000) return 0;
+  if (millis() - last_time_communication_ > 1000) return 0;
   return 6;
 }
 
@@ -172,19 +176,39 @@ void SPII::irq() {
   irq_clear(spi_settings_.irq);
   port_ ? dma_channel_acknowledge_irq1(spi_settings_.dma_rx)
         : dma_channel_acknowledge_irq0(spi_settings_.dma_rx);
-  bool sideCom = spi_settings_.rx_message.context.bit_arr & 0b00000001;
   if (spi_settings_.rx_message.context.sync == 0) {
     //Something happened lest restart the communication
-    Serial.printf("Lost Connections with hand %i\n", port_);
+    if (Serial.available())
+      Serial.printf("Lost Connections with hand %i\n", port_);
     disableSide();
     gpio_put(spi_settings_.reset, false);
     initInterrupt();
     gpio_put(spi_settings_.reset, true);
     return;
   }
+  last_time_communication_ = millis();
+  bool sideCom = spi_settings_.rx_message.context.bit_arr & 0b00000001;
   if (spi_settings_.rx_message.context.cmd != 0) {
-    Serial.printf("New key");
-    queue_add_blocking(&rx_messages, &spi_settings_.rx_message);
+    if (sideCom) {
+      queue_add_blocking(&port_right.rx_messages, &spi_settings_.rx_message);
+      if (!queue_is_empty(&port_right.tx_messages)) {
+        queue_remove_blocking(&port_right.tx_messages, &spi_settings_.tx_message);
+      }
+    } else {
+      queue_add_blocking(&port_left.rx_messages, &spi_settings_.rx_message);
+      if (!queue_is_empty(&port_left.tx_messages)) {
+        queue_remove_blocking(&port_left.tx_messages, &spi_settings_.tx_message);
+      }
+    }
+  }
+  if (sideCom) {
+    if (!queue_is_empty(&port_right.tx_messages)) {
+      queue_remove_blocking(&port_right.tx_messages, &spi_settings_.tx_message);
+    }
+  } else {
+    if (!queue_is_empty(&port_left.tx_messages)) {
+      queue_remove_blocking(&port_left.tx_messages, &spi_settings_.tx_message);
+    }
   }
   irq_set_enabled(spi_settings_.irq, true);
   startDMA();

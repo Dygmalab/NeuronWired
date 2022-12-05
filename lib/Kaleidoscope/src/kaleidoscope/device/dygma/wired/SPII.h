@@ -68,7 +68,7 @@ class SPII {
 
   explicit SPII(bool side);
 
-  void initSPI();
+  void initCommunications();
 
   uint8_t writeTo(uint8_t *data, size_t length);
 
@@ -78,11 +78,15 @@ class SPII {
 
   uint8_t crc_errors();
   virtual ~SPII();
-
-//  queue_t tx_message;
-//  queue_t rx_message;
   void irq();
+  queue_t tx_messages;
+  queue_t rx_messages;
+
  private:
+  void initInterrupt();
+  void startDMA();
+  void disableSide();
+
   struct Spi_settings {
     spi_inst *port;
     uint8_t mosi;
@@ -102,15 +106,11 @@ class SPII {
 
   Spi_settings spi_settings_;
   bool port_;
-  void initInterrupt();
-  void startDMA();
-  void disableSide();
-  queue_t tx_messages;
-  queue_t rx_messages;
+  uint32_t last_time_communication_;
 };
 
-extern SPII communication_left;
-extern SPII communication_right;
+extern SPII port_left;
+extern SPII port_right;
 
 }
 #endif
