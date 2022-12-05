@@ -20,7 +20,6 @@
 
 #include <Arduino.h>
 #include "Hand.h"
-
 #include "kaleidoscope/driver/color/GammaCorrection.h"
 
 namespace kaleidoscope {
@@ -91,7 +90,7 @@ uint8_t Hand::controllerAddress() {
 // https://www.arduino.cc/en/Reference/WireEndTransmission
 byte Hand::setKeyscanInterval(byte delay) {
   uint8_t data[] = {spi_CMD_KEYSCAN_INTERVAL, delay};
-  return spi_.writeTo(data, ELEMENTS(data));
+  return spi_->writeTo(data, ELEMENTS(data));
 }
 
 // returns -1 on error, otherwise returns the scanner version integer
@@ -110,7 +109,7 @@ int Hand::readSLEDCurrent() {
 
 byte Hand::setSLEDCurrent(byte current) {
   uint8_t data[] = {spi_CMD_SLED_CURRENT, current};
-  return spi_.writeTo(data, ELEMENTS(data));
+  return spi_->writeTo(data, ELEMENTS(data));
 }
 
 // returns -1 on error, otherwise returns the scanner keyscan interval
@@ -135,7 +134,7 @@ int Hand::readLEDSPIFrequency() {
 // https://www.arduino.cc/en/Reference/WireEndTransmission
 byte Hand::setLEDSPIFrequency(byte frequency) {
   uint8_t data[] = {spi_CMD_LED_SPI_FREQUENCY, frequency};
-  return spi_.writeTo(data, ELEMENTS(data));
+  return spi_->writeTo(data, ELEMENTS(data));
 }
 
 // returns -1 on error, otherwise returns the value of the hall sensor integer
@@ -143,7 +142,7 @@ int Hand::readJoint() {
   byte return_value = 0;
 
   uint8_t data[] = {spi_CMD_JOINED};
-  uint8_t result = spi_.writeTo(data, ELEMENTS(data));
+  uint8_t result = spi_->writeTo(data, ELEMENTS(data));
   if (result != 0)
     return -1;
 
@@ -153,7 +152,7 @@ int Hand::readJoint() {
   uint8_t rxBuffer[2];
 
   // perform blocking read into buffer
-  uint8_t read = spi_.readFrom(rxBuffer, ELEMENTS(rxBuffer));
+  uint8_t read = spi_->readFrom(rxBuffer, ELEMENTS(rxBuffer));
   if (read == 2) {
     return rxBuffer[0] + (rxBuffer[1] << 8);
   } else {
@@ -165,7 +164,7 @@ int Hand::readRegister(uint8_t cmd) {
   byte return_value = 0;
 
   uint8_t data[] = {cmd};
-  uint8_t result = spi_.writeTo(data, ELEMENTS(data));
+  uint8_t result = spi_->writeTo(data, ELEMENTS(data));
   if (result != 0)
     return -1;
 
@@ -175,7 +174,7 @@ int Hand::readRegister(uint8_t cmd) {
   uint8_t rxBuffer[1];
 
   // perform blocking read into buffer
-  uint8_t read = spi_.readFrom(rxBuffer, ELEMENTS(rxBuffer));
+  uint8_t read = spi_->readFrom(rxBuffer, ELEMENTS(rxBuffer));
   if (read > 0) {
     return rxBuffer[0];
   } else {
@@ -188,7 +187,7 @@ bool Hand::readKeys() {
   uint8_t rxBuffer[6] = {0, 0, 0, 0, 0, 0};
 
   // perform blocking read into buffer
-  uint8_t result = spi_.readFrom(rxBuffer, ELEMENTS(rxBuffer));
+  uint8_t result = spi_->readFrom(rxBuffer, ELEMENTS(rxBuffer));
   // if result isn't 6? this can happens if slave nacks while trying to read
   Hand::online = (result == 6);
 
@@ -242,7 +241,7 @@ void Hand::sendLEDBank(uint8_t bank) {
       data[i + 1] = data[i + 1] * red_max_fraction_ / 100;
     }
   }
-  uint8_t result = spi_.writeTo(data, ELEMENTS(data));
+  uint8_t result = spi_->writeTo(data, ELEMENTS(data));
 }
 
 }

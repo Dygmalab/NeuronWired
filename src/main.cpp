@@ -55,7 +55,6 @@
 #include "EEPROMPadding.h"
 
 #include "EEPROMUpgrade.h"
-#include "kaleidoscope/device/dygma/wired/SPIComunications.h"
 
 #include "RP2040_firmware.h"
 #include "arch/RP2040USB.h"
@@ -206,9 +205,12 @@ KALEIDOSCOPE_INIT_PLUGINS(
     EEPROMUpgrade,
     HostPowerManagement);
 
-void setup() {
+void initVariant(){
   __USBStart();
   Serial.begin(115200);
+}
+
+void setup() {
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
   Serial.begin();
@@ -234,3 +236,7 @@ void loop() {
   watchdog_update();
 }
 
+void setup1(){
+  irq_set_enabled(DMA_IRQ_1, true);
+  irq_set_enabled(DMA_IRQ_0, true);
+}
