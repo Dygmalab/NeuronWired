@@ -43,60 +43,29 @@ namespace kaleidoscope::device::dygma::wired {
 #define SPI_CLK2   14  //was 10   //SPI-2 clock IN, we are slave  (must be changed in HW to 14)
 #define SPI_CS2     9   //SPI-2 chip select IN, we are slave1
 
-enum SPI_COMUNICATIONS {
-  SPI_CMD_DEFAULT,
-  SPI_CMD_KEYS,
-  SPI_CMD_VERSION,
-  SPI_CMD_BATT_STATE,
-  SPI_CMD_KEYSCAN_INTERVAL,
-  SPI_CMD_LED_SET_BANK_TO,
-};
-
-struct Context {
-  uint8_t cmd;
-  uint8_t bit_arr;
-  uint8_t sync;
-  uint8_t size;
-};
-
-union Message {
-  Context context;
-  uint8_t buf[32];
-};
-
-struct spi_side {
-  spi_inst *port;
-  uint8_t mosi;
-  uint8_t miso;
-  uint8_t clock;
-  uint8_t cs;
-  uint32_t speed;
-  bool side;
-  uint8_t counter;
-  int dma_tx;
-  int dma_rx;
-  dma_channel_config config_tx;
-  dma_channel_config config_rx;
-  Message tx_message;
-  Message rx_message;
-};
-
-static std::queue<Message> tx_messages_right;
-static std::queue<Message> tx_messages_left;
-static uint8_t left_keys[5];
-static uint8_t right_keys[5];
-static bool new_key_left;
-static bool new_key_right;
-static uint32_t lastTime_left = 0;
-static uint32_t lastTime_right = 0;
-
-static spi_side spi_right{SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, SPI_SPEED, 1};
-static spi_side spi_left{SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, SPI_SPEED, 0};
-
-static bool initSPII_;
 class SPII {
  public:
-  bool side_;
+  enum SPI_COMUNICATIONS {
+    SPI_CMD_DEFAULT,
+    SPI_CMD_KEYS,
+    SPI_CMD_VERSION,
+    SPI_CMD_BATT_STATE,
+    SPI_CMD_KEYSCAN_INTERVAL,
+    SPI_CMD_LED_SET_BANK_TO,
+  };
+
+  struct Context {
+    uint8_t cmd;
+    uint8_t bit_arr;
+    uint8_t sync;
+    uint8_t size;
+  };
+
+  union Message {
+    Context context;
+    uint8_t buf[32];
+  };
+
   explicit SPII(bool side);
 
   void initSPI();
@@ -112,6 +81,32 @@ class SPII {
 
 //  queue_t tx_message;
 //  queue_t rx_message;
+  void irq();
+ private:
+  struct Spi_settings {
+    spi_inst *port;
+    uint8_t mosi;
+    uint8_t miso;
+    uint8_t clock;
+    uint8_t cs;
+    uint32_t speed;
+    uint8_t reset;
+    uint8_t irq;
+    int dma_tx;
+    int dma_rx;
+    dma_channel_config config_tx;
+    dma_channel_config config_rx;
+    Message tx_message;
+    Message rx_message;
+  };
+
+  Spi_settings spi_settings_;
+  bool port_;
+  void initInterrupt();
+  void startDMA();
+  void disableSide();
+  queue_t tx_messages;
+  queue_t rx_messages;
 };
 
 extern SPII communication_left;
