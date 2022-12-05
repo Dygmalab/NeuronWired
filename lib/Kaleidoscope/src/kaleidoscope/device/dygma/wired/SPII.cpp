@@ -28,35 +28,6 @@ namespace kaleidoscope::device::dygma::wired {
 SPII port_left(0);
 SPII port_right(1);
 
-//void updateHand(spi_side &spi_settings_) {
-//  bool sideCom = spi_settings_.rx_message.context.bit_arr & 0b00000001;
-//  uint8_t (&key_data)[5] = sideCom ? right_keys : left_keys;
-//  bool &new_key = sideCom ? new_key_right : new_key_left;
-//  key_data[0] = spi_settings_.rx_message.buf[sizeof(Context) + 0];
-//  key_data[1] = spi_settings_.rx_message.buf[sizeof(Context) + 1];
-//  key_data[2] = spi_settings_.rx_message.buf[sizeof(Context) + 2];
-//  key_data[3] = spi_settings_.rx_message.buf[sizeof(Context) + 3];
-//  key_data[4] = spi_settings_.rx_message.buf[sizeof(Context) + 4];
-//  new_key = true;
-//}
-//
-//void updateLeds(spi_side &spi_settings_) {
-//  bool sideCom = spi_settings_.rx_message.context.bit_arr & 0b00000001;
-//  auto tx_messages = sideCom ? &tx_messages_right : &tx_messages_left;
-//
-//  if (!tx_messages->empty()) {
-//    memcpy(spi_settings_.tx_message.buf, tx_messages->front().buf, sizeof(Message));
-//    tx_messages->pop();
-//  } else {
-//    spi_settings_.tx_message.context.cmd = 0;
-//  }
-//}
-//
-//void __no_inline_not_in_flash_func(irqHandler)(uint8_t irqNum,
-//                                               spi_side &spi_settings_) {
-
-//}
-
 void __no_inline_not_in_flash_func(dma_irq_1_handler)() {
   port_right.irq();
 }
@@ -136,20 +107,16 @@ uint8_t SPII::crc_errors() {
 }
 uint8_t SPII::writeTo(uint8_t *data, size_t length) {
   if (data[0] >= 0x80) {
-    //The device is not online
-//    if (millis() - last_time_communication_ > 1000) {
-//      return 0;
-//    }
     Message message;
     if (queue_is_full(&tx_messages)) {
-      queue_remove_blocking(&tx_messages,&message);
+      return 0;
     }
-    message.context.cmd = 1;
+    message.context.cmd = UPDATE_LED_BANK;
     message.context.size = length;
     for (uint8_t i = 1; i < length; ++i) {
-      message.buf[sizeof(Context) + i] = data[i];
+      message.data[i] = data[i];
     }
-    message.buf[sizeof(Context)] = data[0] - 0x80;
+    message.data[0] = data[0] - 0x80;
     queue_add_blocking(&tx_messages, &message);
   }
   return 0;
@@ -162,11 +129,11 @@ uint8_t SPII::readFrom(uint8_t *data, size_t length) {
   Message message;
   queue_remove_blocking(&rx_messages, &message);
   data[0] = 1;
-  data[1] = message.buf[sizeof(Context) + 0];
-  data[2] = message.buf[sizeof(Context) + 1];
-  data[3] = message.buf[sizeof(Context) + 2];
-  data[4] = message.buf[sizeof(Context) + 3];
-  data[5] = message.buf[sizeof(Context) + 4];
+  data[1] = message.data[0];
+  data[2] = message.data[1];
+  data[3] = message.data[2];
+  data[4] = message.data[3];
+  data[5] = message.data[4];
   if (millis() - last_time_communication_ > 1000) return 0;
   return 6;
 }
@@ -176,7 +143,7 @@ void SPII::irq() {
   irq_clear(spi_settings_.irq);
   port_ ? dma_channel_acknowledge_irq1(spi_settings_.dma_rx)
         : dma_channel_acknowledge_irq0(spi_settings_.dma_rx);
-  if (spi_settings_.rx_message.context.sync == 0) {
+  if (spi_settings_.rx_message.context.cmd == 0) {
     //Something happened lest restart the communication
     if (Serial.available())
       Serial.printf("Lost Connections with hand %i\n", port_);
@@ -188,7 +155,7 @@ void SPII::irq() {
   }
   last_time_communication_ = millis();
   bool sideCom = spi_settings_.rx_message.context.bit_arr & 0b00000001;
-  if (spi_settings_.rx_message.context.cmd != 0) {
+  if (spi_settings_.rx_message.context.cmd != 1) {
     if (sideCom) {
       queue_add_blocking(&port_right.rx_messages, &spi_settings_.rx_message);
       if (!queue_is_empty(&port_right.tx_messages)) {
