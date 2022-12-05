@@ -21,7 +21,7 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <Arduino.h>
-#include "SPII.h"
+#include "SpiPort.h"
 
 struct cRGB {
   uint8_t r;
@@ -59,7 +59,7 @@ typedef union {
 class Hand {
  public:
   explicit Hand(byte ad01) : ad01_(ad01) {
-    spi_ = ad01 ? &port_right : &port_left;
+	spiPort = ad01 ? &portRight : &portLeft;
   }
 
   int readVersion();
@@ -82,7 +82,7 @@ class Hand {
   bool readKeys();
   uint8_t controllerAddress();
   uint8_t crc_errors() {
-    return spi_->crc_errors();
+    return spiPort->crc_errors();
   }
 
   void setBrightness(uint8_t brightness) {
@@ -99,7 +99,7 @@ class Hand {
  private:
   uint8_t brightness_adjustment_ = 0;
   int ad01_;
-  SPII *spi_;
+  SpiPort *spiPort;
   uint8_t next_led_bank_ = 0;
   uint8_t red_max_fraction_ = (LED_RED_CHANNEL_MAX * 100) / 255;
 
