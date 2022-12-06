@@ -1,6 +1,6 @@
 #pragma once
 
-cRGB HSItoRGBW(float hue, float saturation, float intensity) {
+static cRGB HSItoRGBW(float hue, float saturation, float intensity) {
   cRGB result = {0,0,0,0};        // the RGBW result you'll return
   hue = constrain(hue, 0, 360);              // constrain hue to 0-360
   hue = hue * PI / 180;                      // Convert to radians.

@@ -21,23 +21,7 @@ namespace kaleidoscope {
 namespace plugin {
 
 void LEDRainbowEffectDefy::TransientLEDMode::update(void) {
-  if (!Runtime.has_leds)
-	return;
-
-  if (!Runtime.hasTimeExpired(rainbow_last_update,
-							  parent_->led_mode.base_settings.delay_ms)) {
-	return;
-  } else {
-	rainbow_last_update += parent_->led_mode.base_settings.delay_ms;
-  }
-
-  cRGB rainbow = HSItoRGBW(rainbow_hue, rainbow_saturation, parent_->led_mode.base_settings.brightness);
-
-  rainbow_hue += rainbow_steps;
-  if (rainbow_hue >= 255) {
-	rainbow_hue -= 255;
-  }
-  ::LEDControl.set_all_leds_to(rainbow);
+  parent_->led_mode.update();
 }
 void LEDRainbowEffectDefy::TransientLEDMode::onActivate() {
   Runtime.device().setLedMode(&(parent_->led_mode));

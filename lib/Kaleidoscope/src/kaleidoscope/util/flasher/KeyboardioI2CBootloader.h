@@ -24,7 +24,6 @@
 #include <Wire.h>
 #include "hardware/dma.h"
 #include "kaleidoscope/util/flasher/Base.h"
-#include "kaleidoscope/util/crc16.h"
 #include "hardware/watchdog.h"
 
 #define WIRE_ Wire1

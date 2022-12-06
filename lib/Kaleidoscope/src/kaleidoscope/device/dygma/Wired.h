@@ -91,9 +91,8 @@ class WiredLEDDriver : public kaleidoscope::driver::led::Base<WiredLEDDriverProp
 
   static void syncLeds();
   static void setCrgbAt(uint8_t i, cRGB crgb);
-  static void setCrgbwAt(uint8_t i, cRGB crgb);
+  static void setCrgbNeuron(cRGB crgb);
   static cRGB getCrgbAt(uint8_t i);
-  static cRGB getCrgbwAt(uint8_t i);
   static void setBrightness(uint8_t brightness);
   static uint8_t getBrightness();
 
@@ -228,6 +227,8 @@ class Wired: public kaleidoscope::device::Base<WiredProps> {
   }
 
   //Led Stuff
+
+  void setCrgbNeuron(cRGB crgb);
 
   void setLedMode(LedModeSerializable* serializable);
 
