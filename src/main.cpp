@@ -58,6 +58,7 @@
 
 #include "RP2040_firmware.h"
 #include "arch/RP2040USB.h"
+#include "LEDEffect-Rainbow-Defy.h"
 
 enum {
   QWERTY,
@@ -190,7 +191,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
     LEDPaletteTheme,
     JointPadding,
     ColormapEffect,
-    LEDRainbowWaveEffect, LEDRainbowEffect, StalkerEffect, solidRed, solidGreen, solidBlue,
+    LEDRainbowWaveEffectDefy, LEDRainbowEffectDefy, StalkerEffect, solidRed, solidGreen, solidBlue,
     PersistentIdleLEDs,
     WiredFocus,
     Qukeys,
@@ -213,7 +214,6 @@ void initVariant(){
 void setup() {
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
-  Serial.begin();
   // Reserve space in the keyboard's EEPROM for the keymaps
   EEPROMKeymap.setup(10);;
   // Reserve space for the number of Colormap layers we will use

@@ -48,12 +48,12 @@ void SpiPort::startDMA() {
   dma_channel_configure(spiSettings.dmaIndexTx, &spiSettings.channelConfigTx,
 						&spi_get_hw(spiSettings.port)->dr, // write address
 						spiSettings.txMessage.buf, // read address
-						32, // element count (each element is of size transfer_data_size)
+						SIZE_TRANSFER, // element count (each element is of size transfer_data_size)
 						false); // don't start yet
   dma_channel_configure(spiSettings.dmaIndexRx, &spiSettings.channelConfigRx,
 						spiSettings.rxMessage.buf, // write address
 						&spi_get_hw(spiSettings.port)->dr, // read address
-						32, // element count (each element is of size transfer_data_size)
+						SIZE_TRANSFER, // element count (each element is of size transfer_data_size)
 						false); // don't start yet
   dma_start_channel_mask((1u << spiSettings.dmaIndexTx) | (1u << spiSettings.dmaIndexRx));
 }

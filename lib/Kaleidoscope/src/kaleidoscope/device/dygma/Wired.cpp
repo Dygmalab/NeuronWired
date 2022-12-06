@@ -28,6 +28,7 @@
 #include "kaleidoscope/util/crc16.h"
 #include "kaleidoscope/driver/color/GammaCorrection.h"
 #include "kaleidoscope/driver/keyscanner/Base_Impl.h"
+#include "Wired.h"
 
 #define I2C_SDA_PIN 26  // SWe 20220719: I2C1 data out-/in-put, MASTER role
 #define I2C_SCL_PIN 27  // SWe 20220719: I2C1 clock output, MASTER role
@@ -260,6 +261,10 @@ void WiredLEDDriver::setCrgbAt(uint8_t i, cRGB crgb) {
   }
 }
 
+void WiredLEDDriver::setCrgbwAt(uint8_t i, cRGB crgb) {
+
+}
+
 cRGB WiredLEDDriver::getCrgbAt(uint8_t i) {
   if (i >= WiredLEDDriverProps::led_count) return {0, 0, 0};
 
@@ -488,6 +493,10 @@ void Wired::setup() {
   WIRE_.setClock(I2C_CLOCK_KHZ * 1000);
 
   WiredHands::initializeSides();
+}
+void Wired::setLedMode(LedModeSerializable* ledMode) {
+	WiredHands::leftHand.setLedMode(ledMode);
+	WiredHands::rightHand.setLedMode(ledMode);
 }
 
 void Wired::side::prepareForFlash() {

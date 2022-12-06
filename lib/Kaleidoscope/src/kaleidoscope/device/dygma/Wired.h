@@ -30,7 +30,7 @@
 #include "kaleidoscope/driver/storage/Flash.h"
 #include "kaleidoscope/device/Base.h"
 #include "kaleidoscope/util/flasher/KeyboardioI2CBootloader.h"
-
+#include "LedModeSerializable.h"
 
 namespace kaleidoscope {
 namespace device {
@@ -91,7 +91,9 @@ class WiredLEDDriver : public kaleidoscope::driver::led::Base<WiredLEDDriverProp
 
   static void syncLeds();
   static void setCrgbAt(uint8_t i, cRGB crgb);
+  static void setCrgbwAt(uint8_t i, cRGB crgb);
   static cRGB getCrgbAt(uint8_t i);
+  static cRGB getCrgbwAt(uint8_t i);
   static void setBrightness(uint8_t brightness);
   static uint8_t getBrightness();
 
@@ -224,6 +226,10 @@ class Wired: public kaleidoscope::device::Base<WiredProps> {
   auto sideFlasher() -> decltype(SideFlasher) & {
     return SideFlasher;
   }
+
+  //Led Stuff
+
+  void setLedMode(LedModeSerializable* serializable);
 
   struct side {
     uint8_t getPower();
