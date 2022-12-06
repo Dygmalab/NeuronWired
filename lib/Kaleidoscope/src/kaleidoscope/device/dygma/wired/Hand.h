@@ -22,11 +22,13 @@
 
 #include <Arduino.h>
 #include "SpiPort.h"
+#include "LedModeSerializable.h"
 
 struct cRGB {
   uint8_t r;
   uint8_t g;
   uint8_t b;
+  uint8_t w;
 };
 
 namespace kaleidoscope {
@@ -62,6 +64,8 @@ class Hand {
 	spiPort = ad01 ? &portRight : &portLeft;
   }
 
+  void setLedMode(LedModeSerializable *pSerializable);
+
   int readVersion();
   int readSLEDVersion();
   int readSLEDCurrent();
@@ -96,9 +100,10 @@ class Hand {
   bool online = false;
   keydata_t key_data_;
 
- private:
+private:
   uint8_t brightness_adjustment_ = 0;
   int ad01_;
+  LedModeSerializable* pledMode;
   SpiPort *spiPort;
   uint8_t next_led_bank_ = 0;
   uint8_t red_max_fraction_ = (LED_RED_CHANNEL_MAX * 100) / 255;
