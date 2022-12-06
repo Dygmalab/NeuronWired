@@ -182,10 +182,14 @@ void SpiPort::irq() {
   if (sideCom) {
 	if (!queue_is_empty(&portRight.txMessages)) {
 	  queue_remove_blocking(&portRight.txMessages, &spiSettings.txMessage);
+	}else{
+	  spiSettings.txMessage.context.cmd=0;
 	}
   } else {
 	if (!queue_is_empty(&portLeft.txMessages)) {
 	  queue_remove_blocking(&portLeft.txMessages, &spiSettings.txMessage);
+	}else{
+	  spiSettings.txMessage.context.cmd=0;
 	}
   }
   irq_set_enabled(spiSettings.irq, true);
