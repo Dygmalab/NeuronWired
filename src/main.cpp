@@ -29,11 +29,8 @@
 #include "Kaleidoscope-EEPROM-Settings.h"
 #include "Kaleidoscope-EEPROM-Keymap.h"
 #include "Kaleidoscope-IdleLEDs.h"
-#include "Kaleidoscope-Colormap.h"
 #include "Kaleidoscope-LED-Palette-Theme.h"
-#include "Kaleidoscope-LEDEffect-Rainbow.h"
 #include "Kaleidoscope-LED-Stalker.h"
-#include "Kaleidoscope-LEDEffect-SolidColor.h"
 #include "Kaleidoscope-DynamicSuperKeys.h"
 #include "Kaleidoscope-DynamicMacros.h"
 #include "Kaleidoscope-MagicCombo.h"
@@ -60,6 +57,7 @@
 #include "arch/RP2040USB.h"
 #include "LEDEffect-Rainbow-Defy.h"
 #include "LEDEffect-SolidColor-Defy.h"
+#include "Colormap-Defy.h"
 
 enum {
   QWERTY,
@@ -172,9 +170,6 @@ USE_MAGIC_COMBOS(
     });
 
 kaleidoscope::plugin::EEPROMPadding JointPadding(8);
-static kaleidoscope::plugin::LEDSolidColor solidRed(255, 0, 0);
-static kaleidoscope::plugin::LEDSolidColor solidGreen(0, 255, 0);
-static kaleidoscope::plugin::LEDSolidColor solidBlue(0, 0, 255);
 static kaleidoscope::plugin::LEDSolidColorDefy solidRedDefy(255, 0, 0,0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidGreenDefy(0, 255, 0,0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidBlueDefy(0, 0, 255,0);
@@ -196,7 +191,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
     FocusLEDCommand,
     LEDPaletteTheme,
     JointPadding,
-    ColormapEffect,
+    ColormapEffectDefy,
     LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
     PersistentIdleLEDs,
     WiredFocus,
@@ -223,7 +218,7 @@ void setup() {
   // Reserve space in the keyboard's EEPROM for the keymaps
   EEPROMKeymap.setup(10);
   // Reserve space for the number of Colormap layers we will use
-  ColormapEffect.max_layers(10);
+  ColormapEffectDefy.max_layers(10);
   StalkerEffect.variant = STALKER(BlazingTrail);
 
   DynamicSuperKeys.setup(0, 1024);

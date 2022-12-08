@@ -27,7 +27,6 @@ public:
 	g_ = input[index+1];
 	b_ = input[index+2];
 	w_ = input[index+3];
-	base_settings.delay_ms = 100;
 	return index;
   }
 #ifdef NEURON_WIRED
@@ -50,4 +49,4 @@ private:
 };
 
 static LedModeSerializable_SolidColor
-	ledModeSerializableSolidColor{COMPILE_TIME_CRC32_STR("LedModeSerializable_SolidColor")};
+	ledModeSerializableSolidColor{CRC32_STR("LedModeSerializable_SolidColor")};
