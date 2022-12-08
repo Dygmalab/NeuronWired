@@ -18,6 +18,7 @@
 
 #include "Kaleidoscope-LEDControl.h"
 #include "LedModeSerializable-Rainbow.h"
+#include "LedModeSerializable-RainbowWave.h"
 
 namespace kaleidoscope {
 namespace plugin {
@@ -36,6 +37,7 @@ public:
   }
 
   void update_delay(uint8_t);
+
   uint8_t update_delay(void) {
 	return led_mode.base_settings.delay_ms;
   }
@@ -67,18 +69,27 @@ public:
 private:
 };
 
-class LEDRainbowWaveEffectDefy : public Plugin, public LEDModeInterface {
+class LEDRainbowWaveEffectDefy : public Plugin,
+							 public LEDModeInterface {
 public:
-  LEDRainbowWaveEffectDefy(void) {}
+  LEDRainbowWaveEffectDefy(void) {
+	led_mode.base_settings.brightness = 50;
+	led_mode.base_settings.delay_ms = 40;
+  }
 
   void brightness(uint8_t);
-  uint8_t brightness(void) {
-	return rainbow_value;
+
+  uint8_t brightness() {
+	return led_mode.base_settings.brightness;
   }
+
   void update_delay(uint8_t);
+
   uint8_t update_delay(void) {
-	return rainbow_update_delay;
+	return led_mode.base_settings.delay_ms;
   }
+
+  LedModeSerializable_RainbowWave& led_mode = ledModeSerializableRainbowWave;
 
   // This class' instance has dynamic lifetime
   //
@@ -89,7 +100,7 @@ public:
 	// for those LED modes that require access to
 	// members of their parent class. Most LED modes can do without.
 	//
-	explicit TransientLEDMode(const LEDRainbowWaveEffectDefy *parent)
+	explicit TransientLEDMode(LEDRainbowWaveEffectDefy *parent)
 		: parent_(parent) {}
 
 	void update() final;
@@ -99,18 +110,10 @@ public:
 
   private:
 
-	const LEDRainbowWaveEffectDefy *parent_;
-
-	uint16_t rainbow_hue = 0;  //  stores 0 to 614
-
-	uint8_t rainbow_wave_steps = 1;  //  number of hues we skip in a 360 range per update
-	uint8_t rainbow_last_update = 0;
-
-	uint8_t rainbow_saturation = 255;
+	LEDRainbowWaveEffectDefy *parent_;
   };
 
-  uint8_t rainbow_update_delay = 40; // delay between updates (ms)
-  uint8_t rainbow_value = 50;
+private:
 };
 }
 }
