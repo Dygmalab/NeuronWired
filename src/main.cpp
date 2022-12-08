@@ -59,6 +59,7 @@
 #include "RP2040_firmware.h"
 #include "arch/RP2040USB.h"
 #include "LEDEffect-Rainbow-Defy.h"
+#include "LEDEffect-SolidColor-Defy.h"
 
 enum {
   QWERTY,
@@ -174,6 +175,11 @@ kaleidoscope::plugin::EEPROMPadding JointPadding(8);
 static kaleidoscope::plugin::LEDSolidColor solidRed(255, 0, 0);
 static kaleidoscope::plugin::LEDSolidColor solidGreen(0, 255, 0);
 static kaleidoscope::plugin::LEDSolidColor solidBlue(0, 0, 255);
+static kaleidoscope::plugin::LEDSolidColorDefy solidRedDefy(255, 0, 0,0);
+static kaleidoscope::plugin::LEDSolidColorDefy solidGreenDefy(0, 255, 0,0);
+static kaleidoscope::plugin::LEDSolidColorDefy solidBlueDefy(0, 0, 255,0);
+static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0,255);
+
 
 KALEIDOSCOPE_INIT_PLUGINS(
     FirmwareVersion,
@@ -191,7 +197,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
     LEDPaletteTheme,
     JointPadding,
     ColormapEffect,
-    LEDRainbowWaveEffect,LEDRainbowWaveEffectDefy, LEDRainbowEffect,LEDRainbowEffectDefy, StalkerEffect, solidRed, solidGreen, solidBlue,
+    LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
     PersistentIdleLEDs,
     WiredFocus,
     Qukeys,
