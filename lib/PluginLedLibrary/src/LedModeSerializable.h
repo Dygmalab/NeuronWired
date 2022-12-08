@@ -86,7 +86,7 @@ public:
 	return sizeof(Settings);
   };
 
-  virtual uint8_t deSerialize(uint8_t *input) {
+  virtual uint8_t deSerialize(const uint8_t *input) {
 	memcpy((uint8_t *)&base_settings, input, sizeof(Settings));
 	return sizeof(Settings);
   };
