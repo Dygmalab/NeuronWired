@@ -54,4 +54,4 @@ private:
   uint8_t rainbowLastUpdate = 0;
 };
 
-static LedModeSerializable_Rainbow ledModeSerializableRainbow{COMPILE_TIME_CRC32_STR("LedModeSerializable_Rainbow")};
+static LedModeSerializable_Rainbow ledModeSerializableRainbow{CRC32_STR("LedModeSerializable_Rainbow")};
