@@ -29,7 +29,6 @@ void LEDRainbowEffect::TransientLEDMode::update(void) {
   } else {
     rainbow_last_update += parent_->rainbow_update_delay;
   }
-
   cRGB rainbow = hsvToRgb(rainbow_hue, rainbow_saturation, parent_->rainbow_value);
 
   rainbow_hue += rainbow_steps;

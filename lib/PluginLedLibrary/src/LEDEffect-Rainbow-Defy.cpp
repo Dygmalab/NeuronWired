@@ -39,45 +39,18 @@ void LEDRainbowEffectDefy::update_delay(byte delay) {
 // ---------
 
 void LEDRainbowWaveEffectDefy::TransientLEDMode::update(void) {
-  if (!Runtime.has_leds)
-	return;
-
-  if (!Runtime.hasTimeExpired(rainbow_last_update,
-							  parent_->rainbow_update_delay)) {
-	return;
-  } else {
-	rainbow_last_update += parent_->rainbow_update_delay;
-  }
-
-  for (auto led_index : Runtime.device().LEDs().all()) {
-	uint16_t led_hue = rainbow_hue + 16*(led_index.offset()/4);
-	// We want led_hue to be capped at 255, but we do not want to clip it to
-	// that, because that does not result in a nice animation. Instead, when it
-	// is higher than 255, we simply substract 255, and repeat that until we're
-	// within cap. This lays out the rainbow in a kind of wave.
-	while (led_hue >= 255) {
-	  led_hue -= 255;
-	}
-
-	cRGB rainbow = hsvToRgb(led_hue, rainbow_saturation, parent_->rainbow_value);
-	::LEDControl.setCrgbAt(led_index.offset(), rainbow);
-  }
-  rainbow_hue += rainbow_wave_steps;
-  if (rainbow_hue >= 255) {
-	rainbow_hue -= 255;
-  }
+  parent_->led_mode.update();
 }
-
-void LEDRainbowWaveEffectDefy::TransientLEDMode::onActivate(void) {
-  Serial.printf("Wave Effect activeteee\n");
+void LEDRainbowWaveEffectDefy::TransientLEDMode::onActivate() {
+  Runtime.device().setLedMode(&(parent_->led_mode));
 }
 
 void LEDRainbowWaveEffectDefy::brightness(byte brightness) {
-  rainbow_value = brightness;
+  led_mode.base_settings.brightness = brightness;
 }
 
 void LEDRainbowWaveEffectDefy::update_delay(byte delay) {
-  rainbow_update_delay = delay;
+  led_mode.base_settings.delay_ms = delay;
 }
 
 }

@@ -191,7 +191,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
     LEDPaletteTheme,
     JointPadding,
     ColormapEffect,
-    LEDRainbowWaveEffectDefy, LEDRainbowEffectDefy, StalkerEffect, solidRed, solidGreen, solidBlue,
+    LEDRainbowWaveEffect,LEDRainbowWaveEffectDefy, LEDRainbowEffect,LEDRainbowEffectDefy, StalkerEffect, solidRed, solidGreen, solidBlue,
     PersistentIdleLEDs,
     WiredFocus,
     Qukeys,
@@ -215,11 +215,9 @@ void setup() {
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
   // Reserve space in the keyboard's EEPROM for the keymaps
-  EEPROMKeymap.setup(10);;
+  EEPROMKeymap.setup(10);
   // Reserve space for the number of Colormap layers we will use
   ColormapEffect.max_layers(10);
-  LEDRainbowEffect.brightness(255);
-  LEDRainbowWaveEffect.brightness(255);
   StalkerEffect.variant = STALKER(BlazingTrail);
 
   DynamicSuperKeys.setup(0, 1024);
