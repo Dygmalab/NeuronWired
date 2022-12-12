@@ -54,7 +54,6 @@ EventHandlerResult Qukeys::onKeyswitchEvent(Key& key, KeyAddr k, uint8_t key_sta
 
   // Deal with keyswitch state changes.
   if (keyToggledOn(key_state) || keyToggledOff(key_state)) {
-	Serial.printf("Key Press %i",key_state);
     // If the user rolled over from a non-modifier key to a qukey, let the
     // release event for that key skip the queue. This prevents unintended
     // repeat characters for the tapped key, which would otherwise have its
@@ -108,7 +107,6 @@ EventHandlerResult Qukeys::beforeReportingState() {
   // because `handleKeyswitchEvent()` didn't get called for those KeyAddrs.
   for (uint8_t i{0}; i < event_queue_.length(); ++i) {
     if (event_queue_.isRelease(i)) {
-	  Serial.printf("Is Released ");
       KeyAddr k = event_queue_.addr(i);
       // Now for the tricky bit. Before "restoring" this key hold, we need to
       // make sure that its key press event has already been flushed from the
