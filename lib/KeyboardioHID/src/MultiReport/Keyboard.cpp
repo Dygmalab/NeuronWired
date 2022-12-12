@@ -384,7 +384,6 @@ int Keyboard_::sendReport(void) {
 		de TinyUSB, este tipo está definido en Documents\Arduino\hardware\wiredDefy\rp2040\
 		pico-sdk\lib\tinyusb\src\class\hid\hid.h.
 	*/
-//	   CoreMutex m(&__usb_mutex);
 	tud_task();
 	while (tud_hid_ready()!=1) {
 	  tight_loop_contents();
