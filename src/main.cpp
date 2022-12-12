@@ -75,7 +75,7 @@ KEYMAPS(
 (
     Key_Escape, Key_1, Key_2, Key_3, Key_4, Key_5, Key_6
     , Key_Tab, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_VolumeUp
-    , Key_CapsLock, Key_A, Key_S, Key_D, Key_F, Key_G, Key_VolumeDown
+    , Key_CapsLock, Key_A, Key_S, Key_D, Key_F, Key_G, LT(1,Space)
     , Key_Backslash, Key_Z, Key_X, Key_C, Key_V, Key_B
     , Key_LeftControl, Key_LeftGui, Key_Backspace, Key_Delete
     , Key_LeftShift, Key_LeftAlt, Key_Enter, Key_Space
@@ -176,7 +176,7 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidBlueDefy(0, 0, 255,0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0,255);
 
 
-KALEIDOSCOPE_INIT_PLUGINS(
+ KALEIDOSCOPE_INIT_PLUGINS(
     FirmwareVersion,
     USBQuirks,
     MagicCombo,
@@ -233,6 +233,7 @@ void loop() {
   Kaleidoscope.loop();
   protocolBreathe();
   watchdog_update();
+  printf("Hey  it works");
 }
 
 void setup1(){
