@@ -115,16 +115,15 @@ bool EEPROMClass::commit() {
   if (!_data) {
     return false;
   }
-  unsigned long i = millis();
-  noInterrupts();
-  rp2040.idleOtherCore();
-  flash_range_erase((intptr_t) _sector - (intptr_t) XIP_BASE, 8192);
-  flash_range_program((intptr_t) _sector - (intptr_t) XIP_BASE, _data, _size);
-  rp2040.resumeOtherCore();
-  interrupts();
-  unsigned long j = millis();
-  Serial.printf("It took %llu", j - i);
-
+//  unsigned long i = millis();
+//  noInterrupts();
+//  rp2040.idleOtherCore();
+//  flash_range_erase((intptr_t) _sector - (intptr_t) XIP_BASE, 8192);
+//  flash_range_program((intptr_t) _sector - (intptr_t) XIP_BASE, _data, _size);
+//  rp2040.resumeOtherCore();
+//  interrupts();
+//  unsigned long j = millis();
+//  Serial.printf("It took %llu", j - i);
   return true;
 }
 
