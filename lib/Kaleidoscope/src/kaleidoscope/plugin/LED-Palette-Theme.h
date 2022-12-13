@@ -42,7 +42,8 @@ class LEDPaletteTheme : public kaleidoscope::Plugin {
                                      const char *expected_command,
                                      uint16_t theme_base, uint8_t max_themes);
 
- private:
+  void updatePaletteColor(uint8_t i, cRGB rgb);
+private:
   static uint16_t palette_base_;
 };
 

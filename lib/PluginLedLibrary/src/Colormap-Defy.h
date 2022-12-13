@@ -33,7 +33,7 @@ class ColormapEffectDefy : public Plugin,
 
   EventHandlerResult onLayerChange();
   EventHandlerResult onFocusEvent(const char *command);
-
+  void updateColorIndexAtPosition(uint8_t layer, uint16_t position, uint8_t palette_index);
   LedModeSerializable_Layer &led_mode = ledModeSerializableLayer;
 
   // This class' instance has dynamic lifetime
