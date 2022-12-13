@@ -232,7 +232,7 @@ void WiredLEDDriver::updateNeuronLED() {
 
 void WiredLEDDriver::setCrgbAt(uint8_t i, cRGB crgb) {
   // prevent reading off the end of the led_map array
-  if (i > WiredLEDDriverProps::led_count+1)
+  if (i >= WiredLEDDriverProps::led_count)
 	return;
 
   // neuron LED
@@ -268,7 +268,7 @@ void WiredLEDDriver::setCrgbNeuron(cRGB crgb) {
 }
 
 cRGB WiredLEDDriver::getCrgbAt(uint8_t i) {
-  if (i > WiredLEDDriverProps::led_count+1 )
+  if (i >= WiredLEDDriverProps::led_count )
 	return {0, 0, 0};
 
   uint8_t sled_num = led_map[WiredHands::layout][i];
