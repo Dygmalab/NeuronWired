@@ -47,6 +47,14 @@ void ColormapEffectDefy::TransientLEDMode::onActivate(void) {
     ::LEDPaletteTheme.updateHandler(parent_->map_base_, parent_->top_layer_);
 }
 
+
+void ColormapEffectDefy::updateColorIndexAtPosition(uint8_t layer, uint16_t position, uint8_t palette_index) {
+  if (layer >= max_layers_) return;
+
+  uint16_t index = Runtime.device().led_count * layer + position;
+  ::LEDPaletteTheme.updateColorIndexAtPosition(map_base_, index, palette_index);
+}
+
 void ColormapEffectDefy::TransientLEDMode::refreshAt(KeyAddr key_addr) {
   if (parent_->top_layer_ <= parent_->max_layers_)
     ::LEDPaletteTheme.refreshAt(parent_->map_base_, parent_->top_layer_, key_addr);

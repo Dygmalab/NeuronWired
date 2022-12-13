@@ -168,7 +168,7 @@ void WiredHands::initializeSides() {
    * weird looking colours to come on on other seemingly unrelated keys. So: on
    * a replug, set LED 19 to off to be safe.
    */
-  leftHand.led_data.leds[iso_only_led_] = {0, 0, 0};
+  leftHand.led_data.leds[iso_only_led_] = {0, 0, 0,0};
 
   // get activated LED plugin to refresh
   ::LEDControl.refreshAll();
@@ -227,17 +227,17 @@ void WiredLEDDriver::updateNeuronLED() {
   analogWrite(pins.r, (pgm_read_byte(&gamma8[neuronLED.r])) << 8);
   analogWrite(pins.g, (pgm_read_byte(&gamma8[neuronLED.g])) << 8);
   analogWrite(pins.b, (pgm_read_byte(&gamma8[neuronLED.b])) << 8);
+  analogWrite(pins.w, (pgm_read_byte(&gamma8[neuronLED.w])) << 8);
 }
 
 void WiredLEDDriver::setCrgbAt(uint8_t i, cRGB crgb) {
   // prevent reading off the end of the led_map array
-  if (i >= WiredLEDDriverProps::led_count)
+  if (i > WiredLEDDriverProps::led_count+1)
 	return;
 
   // neuron LED
   if (i==WiredLEDDriverProps::led_count - 1) {
-	isLEDChangedNeuron |= !(neuronLED.r==crgb.r && neuronLED.g==crgb.g &&
-		neuronLED.b==crgb.b);
+	isLEDChangedNeuron |= !(neuronLED.r==crgb.r && neuronLED.g==crgb.g && neuronLED.b==crgb.b && neuronLED.w==crgb.w);
 	neuronLED = crgb;
 	return;
   }
@@ -248,13 +248,13 @@ void WiredLEDDriver::setCrgbAt(uint8_t i, cRGB crgb) {
 	cRGB oldColor = WiredHands::leftHand.led_data.leds[sled_num];
 	WiredHands::leftHand.led_data.leds[sled_num] = crgb;
 	isLEDChangedLeft[uint8_t(sled_num/8)] |=
-		!(oldColor.r==crgb.r && oldColor.g==crgb.g && oldColor.b==crgb.b);
+		!(oldColor.r==crgb.r && oldColor.g==crgb.g && oldColor.b==crgb.b && oldColor.w==crgb.w);
   } else if (sled_num < 2*LEDS_PER_HAND) {
 	cRGB oldColor =
 		WiredHands::rightHand.led_data.leds[sled_num - LEDS_PER_HAND];
 	WiredHands::rightHand.led_data.leds[sled_num - LEDS_PER_HAND] = crgb;
 	isLEDChangedRight[uint8_t((sled_num - LEDS_PER_HAND)/8)] |=
-		!(oldColor.r==crgb.r && oldColor.g==crgb.g && oldColor.b==crgb.b);
+		!(oldColor.r==crgb.r && oldColor.g==crgb.g && oldColor.b==crgb.b && oldColor.w==crgb.w);
   } else {
 	// TODO(anyone):
 	// how do we want to handle debugging assertions about crazy user
@@ -268,7 +268,7 @@ void WiredLEDDriver::setCrgbNeuron(cRGB crgb) {
 }
 
 cRGB WiredLEDDriver::getCrgbAt(uint8_t i) {
-  if (i >= WiredLEDDriverProps::led_count)
+  if (i > WiredLEDDriverProps::led_count+1 )
 	return {0, 0, 0};
 
   uint8_t sled_num = led_map[WiredHands::layout][i];
@@ -277,7 +277,7 @@ cRGB WiredLEDDriver::getCrgbAt(uint8_t i) {
   } else if (sled_num < 2*LEDS_PER_HAND) {
 	return WiredHands::rightHand.led_data.leds[sled_num - LEDS_PER_HAND];
   } else {
-	return {0, 0, 0};
+	return {0, 0, 0, 0};
   }
 }
 

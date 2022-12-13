@@ -183,6 +183,15 @@ EventHandlerResult LEDPaletteTheme::themeFocusEvent(const char *command,
   return EventHandlerResult::EVENT_CONSUMED;
 }
 
+void LEDPaletteTheme::updatePaletteColor(uint8_t palette_index, cRGB color) {
+  color.r ^= 0xff;
+  color.g ^= 0xff;
+  color.b ^= 0xff;
+  color.w ^= 0xff;
+
+  Runtime.storage().put(palette_base_ + palette_index * sizeof(color), color);
+}
+
 }
 }
 
