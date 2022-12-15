@@ -138,7 +138,16 @@ String WiredHands::getChipID() {
   return String(buf);
 }
 
+void WiredHands::initializeSide(uint8_t side) {
+
+}
+
 void WiredHands::initializeSides() {
+  if(Serial.available()){
+	Serial.println("Init sides");
+  }
+  WiredHands::leftHand.setLedMode(ledMode);
+  WiredHands::rightHand.setLedMode(ledMode);
   // key scan interval from eeprom
 //  leftHand.setKeyscanInterval(keyscan_interval_);
 //  rightHand.setKeyscanInterval(keyscan_interval_);
@@ -158,20 +167,6 @@ void WiredHands::initializeSides() {
 //    layout = 1;
 //  else
 //    layout = 0;
-
-  /*
-   * if the neuron starts up with no sides connected, it will assume ISO. This
-   * turns on an extra LED (hardware LED 19 on left side). If an ANSI left is
-   * then plugged in, the keyboard will switch to ANSI, but LED 19 can't get
-   * wiped because the ANSI LED map doesn't include this LED. It will be driven
-   * from the SLED1735's memory with the same colour as before, which causes
-   * weird looking colours to come on on other seemingly unrelated keys. So: on
-   * a replug, set LED 19 to off to be safe.
-   */
-  leftHand.led_data.leds[iso_only_led_] = {0, 0, 0,0};
-
-  // get activated LED plugin to refresh
-  ::LEDControl.refreshAll();
 }
 
 /********* LED Driver *********/
@@ -505,6 +500,7 @@ void Wired::setup() {
 void Wired::setLedMode(LedModeSerializable *ledMode) {
   WiredHands::leftHand.setLedMode(ledMode);
   WiredHands::rightHand.setLedMode(ledMode);
+  WiredHands::ledMode=ledMode;
 }
 void Wired::setCrgbNeuron(cRGB crgb) {
   led_driver_.setCrgbNeuron(crgb);

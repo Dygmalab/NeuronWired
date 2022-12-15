@@ -132,6 +132,10 @@ bool SpiPort::sendMessage(SpiPort::Message *data) {
 }
 
 uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
+  if (millis() - lasTimeCommunication > 1000){
+	Serial.printf("Hand disconnected %i\n", portUSB);
+	return 0;
+  }
   if (queue_is_empty(&rxMessages)) {
 	data[0] = 0;
 	return 6;
@@ -144,8 +148,6 @@ uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
   data[3] = message.data[2];
   data[4] = message.data[3];
   data[5] = message.data[4];
-  if (millis() - lasTimeCommunication > 1000)
-	return 0;
   return 6;
 }
 

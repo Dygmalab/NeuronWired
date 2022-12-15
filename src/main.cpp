@@ -216,6 +216,7 @@ void initVariant(){
 void setup() {
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
+  SideFlash.flashSides();
   // Reserve space in the keyboard's EEPROM for the keymaps
   EEPROMKeymap.setup(10);
   // Reserve space for the number of Colormap layers we will use

@@ -33,6 +33,19 @@ class SideFlash : public kaleidoscope::Plugin {
  private:
   _Firmware firmware;
  public:
+  void flashSides(){
+	uint8_t left_boot_address = Runtime.device().side.left_boot_address;
+	uint8_t right_boot_address = Runtime.device().side.right_boot_address;
+	flashSide(left_boot_address);
+	flashSide(right_boot_address);
+  }
+  void flashSide(uint8_t address){
+	auto sideFlasher = Runtime.device().sideFlasher();
+	Runtime.device().side.prepareForFlash();
+	sideFlasher.get_info_program(address);
+	sideFlasher.flash(address, firmware);
+	sideFlasher.start_main_program(address);
+  }
   EventHandlerResult onFocusEvent(const char *command) {
 	if (::Focus.handleHelp(command,
 						   PSTR(

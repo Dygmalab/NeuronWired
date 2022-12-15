@@ -249,10 +249,9 @@ void Hand::sendLEDBank(uint8_t bank) {
 }
 
 void Hand::setLedMode(LedModeSerializable *ledMode) {
-  pledMode = ledMode;
   SpiPort::Message message;
   message.context.cmd = SpiPort::SPI_COMMUNICATION::SET_MODE_LED;
-  message.context.size = pledMode->serialize(message.data);
+  message.context.size = ledMode->serialize(message.data);
   spiPort->sendMessage(&message);
 }
 
