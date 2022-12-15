@@ -103,7 +103,6 @@ class Hand {
 private:
   uint8_t brightness_adjustment_ = 0;
   int ad01_;
-  LedModeSerializable* pledMode;
   SpiPort *spiPort;
   uint8_t next_led_bank_ = 0;
   uint8_t red_max_fraction_ = (LED_RED_CHANNEL_MAX * 100) / 255;

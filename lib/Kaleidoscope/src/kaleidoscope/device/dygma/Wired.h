@@ -40,8 +40,10 @@ namespace dygma {
 struct WiredHands {
   static wired::Hand leftHand;
   static wired::Hand rightHand;
+  inline static LedModeSerializable* ledMode;
 
   static void setup();
+  void initializeSide(uint8_t side);
   static void initializeSides();
 
   static uint8_t layout;
