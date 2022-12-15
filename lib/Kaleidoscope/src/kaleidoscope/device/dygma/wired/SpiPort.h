@@ -32,13 +32,13 @@ namespace kaleidoscope::device::dygma::wired {
 
 #define SPI_PORT1 spi0
 #define SPI_SPEED (1000 * 1000)
-#define SPI_MOSI1  20   //SPI-1 slave IN, we are slave
+#define SPI_MOSI1  20   //SPI-1 slave IN, we are slave Pin 20 -Mod Version is 16
 #define SPI_MISO1  23   //SPI-1 slave OUT, we are slave
 #define SPI_CLK1   18  //was 22   //SPI-1 clock IN, we are slave (must be changed in HW to 18)
 #define SPI_CS1    21   //SPI-1 chip select IN, we are slave
 // SPI2 slave pins (SPI1 module at the RP2040)
 #define SPI_PORT2 spi1
-#define SPI_MOSI2   8   //SPI-2 slave IN, we are slave
+#define SPI_MOSI2   8   //SPI-2 slave IN, we are slave Pin 9  --Mod Version is 12
 #define SPI_MISO2  11   //SPI-2 slave OUT, we are slave
 #define SPI_CLK2   14  //was 10   //SPI-2 clock IN, we are slave  (must be changed in HW to 14)
 #define SPI_CS2     9   //SPI-2 chip select IN, we are slave1
