@@ -29,6 +29,7 @@ public:
 	  led_hue -= 255;
 	}
 	cRGB rainbow = hsvToRgb(led_hue, rainbowSaturation, base_settings.brightness);
+	rainbow.w =0;
 	rainbowHue += 1;
 	if (rainbowHue >= 255) {
 	  rainbowHue -= 255;
