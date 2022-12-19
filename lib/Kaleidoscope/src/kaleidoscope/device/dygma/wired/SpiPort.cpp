@@ -133,7 +133,7 @@ bool SpiPort::sendMessage(SpiPort::Message *data) {
 
 uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
   if (millis() - lasTimeCommunication > 1000){
-	Serial.printf("Hand disconnected %i\n", portUSB);
+	//Serial.printf("Port disconnected %i\n", portUSB);
 	return 0;
   }
   if (queue_is_empty(&rxMessages)) {

@@ -20,6 +20,7 @@
 #include <Kaleidoscope-EEPROM-Settings.h>
 #include <Kaleidoscope-FocusSerial.h>
 #include "kaleidoscope/layers.h"
+#include "LED-Palette-Theme-Defy.h"
 
 namespace kaleidoscope {
 namespace plugin {
@@ -33,7 +34,7 @@ void ColormapEffectDefy::max_layers(uint8_t max_) {
     return;
 
   max_layers_ = max_;
-  map_base_ = ::LEDPaletteTheme.reserveThemes(max_layers_);
+  map_base_ = ::LEDPaletteThemeDefy.reserveThemes(max_layers_);
 }
 
 void ColormapEffectDefy::TransientLEDMode::onActivate(void) {
@@ -44,20 +45,20 @@ void ColormapEffectDefy::TransientLEDMode::onActivate(void) {
 
   parent_->top_layer_ = Layer.mostRecent();
   if (parent_->top_layer_ <= parent_->max_layers_)
-    ::LEDPaletteTheme.updateHandler(parent_->map_base_, parent_->top_layer_);
+    ::LEDPaletteThemeDefy.updateHandler(parent_->map_base_, parent_->top_layer_);
 }
 
 
 void ColormapEffectDefy::updateColorIndexAtPosition(uint8_t layer, uint16_t position, uint8_t palette_index) {
   if (layer >= max_layers_) return;
 
-  uint16_t index = Runtime.device().led_count * layer + position;
-  ::LEDPaletteTheme.updateColorIndexAtPosition(map_base_, index, palette_index);
+  uint16_t index = (Runtime.device().led_count) * layer + position;
+  ::LEDPaletteThemeDefy.updateColorIndexAtPosition(map_base_, index, palette_index);
 }
 
 void ColormapEffectDefy::TransientLEDMode::refreshAt(KeyAddr key_addr) {
   if (parent_->top_layer_ <= parent_->max_layers_)
-    ::LEDPaletteTheme.refreshAt(parent_->map_base_, parent_->top_layer_, key_addr);
+    ::LEDPaletteThemeDefy.refreshAt(parent_->map_base_, parent_->top_layer_, key_addr);
 }
 
 EventHandlerResult ColormapEffectDefy::onLayerChange() {
@@ -67,8 +68,19 @@ EventHandlerResult ColormapEffectDefy::onLayerChange() {
 }
 
 EventHandlerResult ColormapEffectDefy::onFocusEvent(const char *command) {
-  return ::LEDPaletteTheme.themeFocusEvent(command, PSTR("colormap.map"),
+  return ::LEDPaletteThemeDefy.themeFocusEvent(command, PSTR("colormap.map"),
                                            map_base_, max_layers_);
+}
+void ColormapEffectDefy::getColorPalette(uint8_t output_buf[16]) {
+	::LEDPaletteThemeDefy.getColorPalette(output_buf);
+  for (int i = 0; i < 16; ++i) {
+	Serial.printf("%i ",output_buf[i]);
+  }
+  Serial.println("");
+}
+
+void ColormapEffectDefy::getLayer(uint8_t *output_buf) {
+
 }
 
 }

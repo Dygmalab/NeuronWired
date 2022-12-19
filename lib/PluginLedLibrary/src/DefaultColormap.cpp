@@ -20,11 +20,11 @@
 
 #include <Arduino.h>                         // for F, PSTR, __FlashStringHelper
 #include "Kaleidoscope-LEDControl.h"         // for LEDControl
-#include "Kaleidoscope-LED-Palette-Theme.h"  // for LEDPaletteTheme
 #include <stdint.h>                          // for uint8_t, uint16_t
 
 #include "kaleidoscope/KeyAddr.h"  // for KeyAddr
 #include "kaleidoscope/Runtime.h"  // for Runtime, Runtime_
+#include "LED-Palette-Theme-Defy.h" // for LEDPaletteTheme
 
 namespace kaleidoscope {
 namespace plugin {
@@ -58,7 +58,7 @@ enum {
 };
 bool defaultcolormap::palette_defined = true;
 const uint8_t defaultcolormap::colormap_layers = 4;
-const uint8_t defaultcolormap::colormaps[4][kaleidoscope_internal::device.led_count+1] = {
+const uint8_t defaultcolormap::colormaps[4][kaleidoscope_internal::device.led_count] = {
 	{
 		GREEN, RED, GREEN, RED, GREEN, RED, GREEN,
 		GREEN, RED, GREEN, RED, GREEN, RED, GREEN,
@@ -89,8 +89,8 @@ const uint8_t defaultcolormap::colormaps[4][kaleidoscope_internal::device.led_co
 		GREEN, RED, GREEN, RED, GREEN, RED, GREEN, RED, GREEN, RED,
 		GREEN, RED, GREEN, RED, GREEN, RED, GREEN, RED, GREEN, RED,
 		GREEN, RED, GREEN,
-		//Neuron
-		WHITE
+		//Neuron Duplicated...
+		WHITE,RED
 	},
 	{
 		BLUE, WHITE, BLUE, WHITE, BLUE, WHITE, BLUE,
@@ -122,8 +122,8 @@ const uint8_t defaultcolormap::colormaps[4][kaleidoscope_internal::device.led_co
 		BLUE, WHITE, BLUE, WHITE, BLUE, WHITE, BLUE, WHITE, BLUE, WHITE,
 		BLUE, WHITE, BLUE, WHITE, BLUE, WHITE, BLUE, WHITE, BLUE, WHITE,
 		BLUE, WHITE, BLUE,
-		//Neuron
-		WHITE
+		//Neuron Duplicated...
+		WHITE,RED
 	},
 	{
 		YELLOW, MAGENT, YELLOW, MAGENT, YELLOW, MAGENT, YELLOW,
@@ -155,8 +155,8 @@ const uint8_t defaultcolormap::colormaps[4][kaleidoscope_internal::device.led_co
 		YELLOW, MAGENT, YELLOW, MAGENT, YELLOW, MAGENT, YELLOW, MAGENT, YELLOW, MAGENT,
 		YELLOW, MAGENT, YELLOW, MAGENT, YELLOW, MAGENT, YELLOW, MAGENT, YELLOW, MAGENT,
 		YELLOW, MAGENT, YELLOW,
-		//Neuron
-		MAGENT
+		//Neuron Duplicated...
+		WHITE,RED
 	},
 	{
 		GREEN, RED, GREEN, RED, GREEN, RED, GREEN,
@@ -188,8 +188,8 @@ const uint8_t defaultcolormap::colormaps[4][kaleidoscope_internal::device.led_co
 		GREEN, RED, GREEN, RED, GREEN, RED, GREEN, RED, GREEN, RED,
 		GREEN, RED, GREEN, RED, GREEN, RED, GREEN, RED, GREEN, RED,
 		GREEN, RED, GREEN,
-		//Neuron
-		RED
+		//Neuron Duplicated...
+		WHITE,RED
 	}
 };
 
@@ -209,14 +209,14 @@ void DefaultColormap::install() {
 	color.b = defaultcolormap::palette[i].b;
 	color.w = defaultcolormap::palette[i].w;
 
-	::LEDPaletteTheme.updatePaletteColor(i, color);
+	::LEDPaletteThemeDefy.updatePaletteColor(i, color);
   }
 
   if (defaultcolormap::colormap_layers==0)
 	return;
 
   for (uint8_t layer = 0; layer < defaultcolormap::colormap_layers; layer++) {
-	for (int16_t i = 0; i < Runtime.device().led_count+1; i++) {
+	for (int16_t i = 0; i < Runtime.device().led_count; i++) {
 	  const uint8_t idx = pgm_read_byte(&(defaultcolormap::colormaps[layer][i]));
 	  ::ColormapEffectDefy.updateColorIndexAtPosition(layer, i, idx);
 	}

@@ -35,7 +35,7 @@ class ColormapEffectDefy : public Plugin,
   EventHandlerResult onFocusEvent(const char *command);
   void updateColorIndexAtPosition(uint8_t layer, uint16_t position, uint8_t palette_index);
   LedModeSerializable_Layer &led_mode = ledModeSerializableLayer;
-
+  void getColorPalette(uint8_t output_buf[16]);
   // This class' instance has dynamic lifetime
   //
   class TransientLEDMode : public LEDMode {
@@ -62,6 +62,7 @@ class ColormapEffectDefy : public Plugin,
   static uint8_t top_layer_;
   static uint8_t max_layers_;
   static uint16_t map_base_;
+  void getLayer(uint8_t *output_buf);
 };
 }
 }
