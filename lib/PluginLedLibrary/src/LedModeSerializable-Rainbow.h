@@ -25,7 +25,7 @@ public:
       rainbowLastUpdate += base_settings.delay_ms;
     }
     cRGB rainbow = hsvToRgb(rainbowHue, rainbowSaturation, base_settings.brightness);
-
+	rainbow.w =0;
     rainbowHue += 1;
   if (rainbowHue >= 255) {
     rainbowHue -= 255;
