@@ -20,8 +20,6 @@
 
 #include "kaleidoscope/Runtime.h"
 #include <Kaleidoscope-EEPROM-Settings.h>
-#include <Kaleidoscope-LEDControl.h>
-#include <KeyboardioHID.h>
 #include <Wire.h>
 #include "pico/unique_id.h"
 
@@ -139,13 +137,11 @@ String WiredHands::getChipID() {
 }
 
 void WiredHands::initializeSide(uint8_t side) {
-
+	wired::Hand hand = side ? WiredHands::rightHand : WiredHands::leftHand;
+	hand.setLedMode(ledMode);
 }
 
 void WiredHands::initializeSides() {
-  if(Serial.available()){
-	Serial.println("Init sides");
-  }
   WiredHands::leftHand.setLedMode(ledMode);
   WiredHands::rightHand.setLedMode(ledMode);
   // key scan interval from eeprom
@@ -175,7 +171,7 @@ bool WiredLEDDriver::isLEDChangedNeuron;
 uint8_t WiredLEDDriver::isLEDChangedLeft[LED_BANKS];
 uint8_t WiredLEDDriver::isLEDChangedRight[LED_BANKS];
 cRGB WiredLEDDriver::neuronLED;
-constexpr uint8_t WiredLEDDriver::led_map[][WiredLEDDriverProps::led_count + 1];
+constexpr uint8_t WiredLEDDriver::led_map[][WiredLEDDriverProps::led_count];
 
 constexpr uint8_t WiredLEDDriverProps::key_led_map[];
 
@@ -231,7 +227,7 @@ void WiredLEDDriver::setCrgbAt(uint8_t i, cRGB crgb) {
 	return;
 
   // neuron LED
-  if (i==WiredLEDDriverProps::led_count - 1) {
+  if (i==WiredLEDDriverProps::led_count - 2) {
 	isLEDChangedNeuron |= !(neuronLED.r==crgb.r && neuronLED.g==crgb.g && neuronLED.b==crgb.b && neuronLED.w==crgb.w);
 	neuronLED = crgb;
 	return;
@@ -332,9 +328,12 @@ void WiredKeyScanner::readMatrix() {
   }
 
   // if a side has just been replugged, initialise it
-  if ((WiredHands::leftHand.online && !lastLeftOnline) ||
-	  (WiredHands::rightHand.online && !lastRightOnline))
-	WiredHands::initializeSides();
+  if (WiredHands::leftHand.online && !lastLeftOnline){
+	WiredHands::initializeSide(1);
+  }
+  if(WiredHands::rightHand.online && !lastRightOnline){
+	WiredHands::initializeSide(0);
+  }
 
   // if a side has just been unplugged, wipe its state
   if (!WiredHands::leftHand.online && lastLeftOnline)
