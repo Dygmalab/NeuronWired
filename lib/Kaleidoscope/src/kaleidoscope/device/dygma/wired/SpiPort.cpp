@@ -133,7 +133,6 @@ bool SpiPort::sendMessage(SpiPort::Message *data) {
 
 uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
   if (millis() - lasTimeCommunication > 1000){
-	//Serial.printf("Port disconnected %i\n", portUSB);
 	return 0;
   }
   if (queue_is_empty(&rxMessages)) {
@@ -167,9 +166,9 @@ void SpiPort::irq() {
 	return;
   }
   lasTimeCommunication = millis();
-  bool sideCom = spiSettings.rxMessage.context.bit_arr & 0b00000001;
+  sideCommunications = spiSettings.rxMessage.context.bit_arr & 0b00000001;
   if (spiSettings.rxMessage.context.cmd!=1) {
-	if (sideCom) {
+	if (sideCommunications) {
 	  queue_add_blocking(&portRight.rxMessages, &spiSettings.rxMessage);
 	  if (!queue_is_empty(&portRight.txMessages)) {
 		queue_remove_blocking(&portRight.txMessages, &spiSettings.txMessage);
@@ -181,7 +180,7 @@ void SpiPort::irq() {
 	  }
 	}
   }
-  if (sideCom) {
+  if (sideCommunications) {
 	if (!queue_is_empty(&portRight.txMessages)) {
 	  queue_remove_blocking(&portRight.txMessages, &spiSettings.txMessage);
 	}else{

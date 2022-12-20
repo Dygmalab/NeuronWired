@@ -20,6 +20,7 @@ public:
 	  rainbowLastUpdate += base_settings.delay_ms;
 	}
 	//Only for the neuron
+	rainbowHue = base_settings.step;
 	uint16_t led_hue = rainbowHue + 16*(kaleidoscope::Runtime.device().LEDs().all().end().offset()/4);
 	// We want led_hue to be capped at 255, but we do not want to clip it to
 	// that, because that does not result in a nice animation. Instead, when it
@@ -28,8 +29,7 @@ public:
 	while (led_hue > 255) {
 	  led_hue -= 255;
 	}
-	cRGB rainbow = hsvToRgb(led_hue, rainbowSaturation, base_settings.brightness);
-	rainbow.w =0;
+	cRGB rainbow = HSItoRGBW(led_hue, rainbowSaturation, base_settings.brightness);
 	rainbowHue += 1;
 	if (rainbowHue >= 255) {
 	  rainbowHue -= 255;
@@ -49,6 +49,7 @@ public:
       multiplier = 0;
     }
 
+	rainbowHue = base_settings.step;
     for (uint8_t i = 0; i < NUMBER_OF_LEDS; i++) {
       uint16_t led_hue = rainbowHue  + 16 * ((i + multiplier) / 4);
       // We want led_hue to be capped at 255, but we do not want to clip it to
@@ -59,7 +60,7 @@ public:
 		  led_hue -= 255;
 	  }
 
-      cRGB rainbow = hsvToRgb(led_hue, rainbowSaturation, base_settings.brightness);
+      cRGB rainbow = LedCommon::HSItoRGBW(led_hue, rainbowSaturation, base_settings.brightness);
       LEDManagement::set_led_at(rainbow, i);
     }
     rainbowHue += 1;

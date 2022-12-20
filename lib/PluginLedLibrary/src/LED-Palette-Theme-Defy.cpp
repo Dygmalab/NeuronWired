@@ -39,7 +39,7 @@ void LEDPaletteThemeDefy::updateHandler(uint16_t theme_base, uint8_t theme) {
 
   uint16_t map_base = theme_base + (theme*leds_per_layer_in_memory_);
 
-  for (uint8_t pos = 0; pos < Runtime.device().led_count; pos++) {
+  for (uint8_t pos = Runtime.device().led_count-2; pos < Runtime.device().led_count; pos++) {
 	cRGB color = lookupColorAtPosition(map_base, pos);
 	::LEDControl.setCrgbAt(pos, color);
   }
@@ -71,7 +71,6 @@ const uint8_t LEDPaletteThemeDefy::lookupColorIndexAtPosition(uint16_t map_base,
 
 const cRGB LEDPaletteThemeDefy::lookupColorAtPosition(uint16_t map_base, uint16_t position) {
   uint8_t color_index = lookupColorIndexAtPosition(map_base, position);
-  Serial.printf("Update position %i, of color %i\n",position,color_index);
   return lookupPaletteColor(color_index);
 }
 
@@ -179,6 +178,7 @@ EventHandlerResult LEDPaletteThemeDefy::themeFocusEvent(const char *command,
 	Runtime.storage().update(theme_base + pos, indexes);
 	pos++;
   }
+  Runtime.device().syncLayers();
   Runtime.storage().commit();
 
   ::LEDControl.refreshAll();
@@ -194,10 +194,6 @@ void LEDPaletteThemeDefy::updatePaletteColor(uint8_t palette_index, cRGB color) 
 
   Runtime.storage().put(palette_base_ + palette_index * sizeof(color), color);
 }
-void LEDPaletteThemeDefy::getColorPalette(uint8_t output_buf[16]) {
-  Runtime.storage().get(palette_base_, output_buf);
-}
-
 }
 }
 

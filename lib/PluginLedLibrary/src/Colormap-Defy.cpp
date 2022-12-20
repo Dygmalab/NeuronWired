@@ -40,10 +40,11 @@ void ColormapEffectDefy::max_layers(uint8_t max_) {
 void ColormapEffectDefy::TransientLEDMode::onActivate(void) {
   if (!Runtime.has_leds)
     return;
+
+  parent_->top_layer_ = Layer.mostRecent();
   parent_->led_mode.layer = parent_->top_layer_;
   Runtime.device().setLedMode(&(parent_->led_mode));
 
-  parent_->top_layer_ = Layer.mostRecent();
   if (parent_->top_layer_ <= parent_->max_layers_)
     ::LEDPaletteThemeDefy.updateHandler(parent_->map_base_, parent_->top_layer_);
 }
@@ -54,6 +55,13 @@ void ColormapEffectDefy::updateColorIndexAtPosition(uint8_t layer, uint16_t posi
 
   uint16_t index = (Runtime.device().led_count) * layer + position;
   ::LEDPaletteThemeDefy.updateColorIndexAtPosition(map_base_, index, palette_index);
+}
+
+uint8_t ColormapEffectDefy::getColorIndexAtPosition(uint8_t layer, uint16_t position) {
+  if (layer >= max_layers_) return 0;
+
+  uint16_t index = (Runtime.device().led_count) * layer + position;
+  return ::LEDPaletteThemeDefy.lookupColorIndexAtPosition(map_base_, index);
 }
 
 void ColormapEffectDefy::TransientLEDMode::refreshAt(KeyAddr key_addr) {
@@ -71,16 +79,21 @@ EventHandlerResult ColormapEffectDefy::onFocusEvent(const char *command) {
   return ::LEDPaletteThemeDefy.themeFocusEvent(command, PSTR("colormap.map"),
                                            map_base_, max_layers_);
 }
-void ColormapEffectDefy::getColorPalette(uint8_t output_buf[16]) {
-	::LEDPaletteThemeDefy.getColorPalette(output_buf);
+void ColormapEffectDefy::getColorPalette(cRGB output_palette[16]) {
   for (int i = 0; i < 16; ++i) {
-	Serial.printf("%i ",output_buf[i]);
+	const cRGB &color = ::LEDPaletteThemeDefy.lookupPaletteColor(i);
+	output_palette[i] = color;
   }
-  Serial.println("");
 }
 
-void ColormapEffectDefy::getLayer(uint8_t *output_buf) {
+void ColormapEffectDefy::getLayer(uint8_t layer,uint8_t output_buf[Runtime.device().led_count]) {
+  for (int i = 0; i < Runtime.device().led_count; ++i) {
+	output_buf[i] = getColorIndexAtPosition(layer,i);
+  }
+}
 
+uint8_t ColormapEffectDefy::getMaxLayers() {
+  return max_layers_;
 }
 
 }

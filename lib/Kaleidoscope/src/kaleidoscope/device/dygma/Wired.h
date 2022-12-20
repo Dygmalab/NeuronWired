@@ -45,6 +45,7 @@ struct WiredHands {
   static void setup();
   static void initializeSide(uint8_t side);
   static void initializeSides();
+  static void syncLayers(wired::Hand &hand);
 
   static uint8_t layout;
 
@@ -76,7 +77,9 @@ private:
 using kaleidoscope::driver::led::no_led;
 
 struct WiredLEDDriverProps : public kaleidoscope::driver::led::BaseProps {
-  static constexpr uint8_t leds_hand = 88;
+  static constexpr uint8_t underglow_leds = 53;
+  static constexpr uint8_t key_matrix_leds = 35;
+  static constexpr uint8_t leds_hand = underglow_leds+key_matrix_leds;
   static constexpr uint8_t led_count = leds_hand*2+2;//178 This has to be par number that's why the neuron takes 2
   static constexpr uint8_t key_led_map[] = {
 	  // ISO & ANSI (ANSI has no LED at 20, but this key can never be pressed so we can have just one map).
@@ -250,6 +253,8 @@ public:
   void setCrgbNeuron(cRGB crgb);
 
   void setLedMode(LedModeSerializable *serializable);
+
+  void syncLayers();
 
   struct side {
 	uint8_t getPower();

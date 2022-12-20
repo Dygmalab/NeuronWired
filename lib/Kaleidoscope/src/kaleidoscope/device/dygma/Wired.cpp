@@ -27,6 +27,7 @@
 #include "kaleidoscope/driver/color/GammaCorrection.h"
 #include "kaleidoscope/driver/keyscanner/Base_Impl.h"
 #include "Wired.h"
+#include "Colormap-Defy.h"
 
 #define I2C_SDA_PIN 26  // SWe 20220719: I2C1 data out-/in-put, MASTER role
 #define I2C_SCL_PIN 27  // SWe 20220719: I2C1 clock output, MASTER role
@@ -137,8 +138,23 @@ String WiredHands::getChipID() {
 }
 
 void WiredHands::initializeSide(uint8_t side) {
-	wired::Hand hand = side ? WiredHands::rightHand : WiredHands::leftHand;
-	hand.setLedMode(ledMode);
+  wired::Hand &hand = side ? WiredHands::rightHand : WiredHands::leftHand;
+  syncLayers(hand);
+}
+
+void WiredHands::syncLayers(wired::Hand &hand) {
+  cRGB palette[16];
+  ColormapEffectDefy.getColorPalette(palette);
+  hand.sendPaletteColors(palette);
+  uint8_t layerColors[WiredLEDDriverProps::led_count];
+  uint8_t baseKeymapIndex = hand.getActualSide() ? WiredLEDDriverProps::key_matrix_leds:0;
+  uint8_t baseUnderGlowIndex = hand.getActualSide() ? (WiredLEDDriverProps::key_matrix_leds)*2+WiredLEDDriverProps::underglow_leds: WiredLEDDriverProps::key_matrix_leds*2;
+  for (int i = 0; i < ColormapEffectDefy.getMaxLayers(); ++i) {
+	ColormapEffectDefy.getLayer(i, layerColors);
+	hand.sendLayerKeyMapColors(i, &layerColors[baseKeymapIndex]);
+	hand.sendLayerUnderGlowColors(i, &layerColors[baseUnderGlowIndex]);
+  }
+  hand.setLedMode(ledMode);
 }
 
 void WiredHands::initializeSides() {
@@ -259,7 +275,7 @@ void WiredLEDDriver::setCrgbNeuron(cRGB crgb) {
 }
 
 cRGB WiredLEDDriver::getCrgbAt(uint8_t i) {
-  if (i >= WiredLEDDriverProps::led_count )
+  if (i >= WiredLEDDriverProps::led_count)
 	return {0, 0, 0};
 
   uint8_t sled_num = led_map[WiredHands::layout][i];
@@ -328,11 +344,11 @@ void WiredKeyScanner::readMatrix() {
   }
 
   // if a side has just been replugged, initialise it
-  if (WiredHands::leftHand.online && !lastLeftOnline){
-	WiredHands::initializeSide(1);
-  }
-  if(WiredHands::rightHand.online && !lastRightOnline){
+  if (WiredHands::leftHand.online && !lastLeftOnline) {
 	WiredHands::initializeSide(0);
+  }
+  if (WiredHands::rightHand.online && !lastRightOnline) {
+	WiredHands::initializeSide(1);
   }
 
   // if a side has just been unplugged, wipe its state
@@ -499,10 +515,14 @@ void Wired::setup() {
 void Wired::setLedMode(LedModeSerializable *ledMode) {
   WiredHands::leftHand.setLedMode(ledMode);
   WiredHands::rightHand.setLedMode(ledMode);
-  WiredHands::ledMode=ledMode;
+  WiredHands::ledMode = ledMode;
 }
 void Wired::setCrgbNeuron(cRGB crgb) {
   led_driver_.setCrgbNeuron(crgb);
+}
+void Wired::syncLayers() {
+  WiredHands::syncLayers(WiredHands::rightHand);
+  WiredHands::syncLayers(WiredHands::leftHand);
 }
 
 void Wired::side::prepareForFlash() {
