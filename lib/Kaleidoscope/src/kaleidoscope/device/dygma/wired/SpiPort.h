@@ -31,7 +31,7 @@ namespace kaleidoscope::device::dygma::wired {
 #define SIDE_nRESET_2  10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
 
 #define SPI_PORT1 spi0
-#define SPI_SPEED (1000 * 1000)
+#define SPI_SPEED (4000 * 1000)
 #define SPI_MOSI1  20   //SPI-1 slave IN, we are slave Pin 20 -Mod Version is 16
 #define SPI_MISO1  23   //SPI-1 slave OUT, we are slave
 #define SPI_CLK1   18  //was 22   //SPI-1 clock IN, we are slave (must be changed in HW to 18)
@@ -42,7 +42,7 @@ namespace kaleidoscope::device::dygma::wired {
 #define SPI_MISO2  11   //SPI-2 slave OUT, we are slave
 #define SPI_CLK2   14  //was 10   //SPI-2 clock IN, we are slave  (must be changed in HW to 14)
 #define SPI_CS2     9   //SPI-2 chip select IN, we are slave1
-#define SIZE_TRANSFER    40
+#define SIZE_TRANSFER    128
 
 class SpiPort {
 public:
@@ -53,6 +53,9 @@ public:
 	SET_MODE_LED,
 	SYNC_MODE_LED,
 	UPDATE_LED_BANK,
+	SET_PALETTE_COLORS,
+	SET_LAYER_KEYMAP_COLORS,
+	SET_LAYER_UNDERGLOW_COLORS,
   };
 
   struct Context {
@@ -88,6 +91,7 @@ public:
   void irq();
   queue_t txMessages;
   queue_t rxMessages;
+  bool sideCommunications; // 1 for right 0 for left
 
 private:
   void initInterrupt();
