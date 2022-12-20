@@ -63,8 +63,8 @@ class KeyboardioI2CBootloader : kaleidoscope::util::flasher::Base<_Props> {
 
 	  DBG_PRINTF("Keyscaner version %lu\n", sealAction.version);
 	  DBG_PRINTF("Neuron Keyscnaer version %lu\n", firmware.KEY_SCANNER_VERSION);
-	  DBG_PRINTF("Neuron CRC %lu\n", crc32(firmware.data, firmware.size));
-	  DBG_PRINTF("Keyscane CRC  %lu\n", sealAction.crc);
+	  DBG_PRINTF("Neuron CRC %x\n", crc32(firmware.data, firmware.size));
+	  DBG_PRINTF("Keyscane CRC  %x\n", sealAction.crc);
 
 	  return sealAction.version == firmware.KEY_SCANNER_VERSION
 		  && crc32(firmware.data, firmware.size) == sealAction.crc;
@@ -220,7 +220,7 @@ class KeyboardioI2CBootloader : kaleidoscope::util::flasher::Base<_Props> {
 	sealAction.crc = crc32(firmware.data, firmware.size);
 	sealAction.version = firmware.KEY_SCANNER_VERSION;
 
-	DBG_PRINTF("Going to send seal vtor %lu, size %lu, crc %lu and version %lu\n",
+	DBG_PRINTF("Going to send seal vtor %lu, size %lu, crc %x and version %x\n",
 			   sealAction.vtor,
 			   sealAction.size,
 			   sealAction.crc,

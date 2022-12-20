@@ -21,6 +21,7 @@
 #include <Arduino.h>
 #include "Hand.h"
 #include "kaleidoscope/driver/color/GammaCorrection.h"
+#include "kaleidoscope/device/dygma/Wired.h"
 
 namespace kaleidoscope {
 namespace device {
@@ -253,6 +254,37 @@ void Hand::setLedMode(LedModeSerializable *ledMode) {
   message.context.cmd = SpiPort::SPI_COMMUNICATION::SET_MODE_LED;
   message.context.size = ledMode->serialize(message.data);
   spiPort->sendMessage(&message);
+}
+
+void Hand::sendPaletteColors(const cRGB palette[16]) {
+  SpiPort::Message message;
+  message.context.cmd = SpiPort::SPI_COMMUNICATION::SET_PALETTE_COLORS;
+  message.context.size = sizeof(cRGB)*16;
+  memcpy(message.data, palette, message.context.size);
+  spiPort->sendMessage(&message);
+}
+
+void Hand::sendLayerKeyMapColors(uint8_t layer, const uint8_t *keyMapColors) {
+  SpiPort::Message message;
+  message.context.cmd = SpiPort::SPI_COMMUNICATION::SET_LAYER_KEYMAP_COLORS;
+  message.context.size = WiredLEDDriverProps::key_matrix_leds + 1;
+  message.data[0] = layer;
+  memcpy(&message.data[1], keyMapColors, message.context.size-1);
+  Serial.println();
+  spiPort->sendMessage(&message);
+}
+
+void Hand::sendLayerUnderGlowColors(uint8_t layer, const uint8_t *underGlowColors) {
+  SpiPort::Message message;
+  message.context.cmd = SpiPort::SPI_COMMUNICATION::SET_LAYER_UNDERGLOW_COLORS;
+  message.context.size = WiredLEDDriverProps::underglow_leds + 1;
+  message.data[0] = layer;
+  memcpy(&message.data[1], underGlowColors, message.context.size-1);
+  spiPort->sendMessage(&message);
+}
+
+uint8_t Hand::getActualSide() {
+  return spiPort->sideCommunications;
 }
 
 }

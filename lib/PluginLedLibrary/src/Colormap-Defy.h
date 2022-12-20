@@ -34,8 +34,11 @@ class ColormapEffectDefy : public Plugin,
   EventHandlerResult onLayerChange();
   EventHandlerResult onFocusEvent(const char *command);
   void updateColorIndexAtPosition(uint8_t layer, uint16_t position, uint8_t palette_index);
+  uint8_t getColorIndexAtPosition(uint8_t layer, uint16_t position);
   LedModeSerializable_Layer &led_mode = ledModeSerializableLayer;
-  void getColorPalette(uint8_t output_buf[16]);
+  void getColorPalette(cRGB output_palette[16]);
+  void getLayer(uint8_t layer,uint8_t output_buf[Runtime.device().led_count]);
+
   // This class' instance has dynamic lifetime
   //
   class TransientLEDMode : public LEDMode {
@@ -60,9 +63,11 @@ class ColormapEffectDefy : public Plugin,
 
  private:
   static uint8_t top_layer_;
+public:
+  static uint8_t getMaxLayers();
+private:
   static uint8_t max_layers_;
   static uint16_t map_base_;
-  void getLayer(uint8_t *output_buf);
 };
 }
 }

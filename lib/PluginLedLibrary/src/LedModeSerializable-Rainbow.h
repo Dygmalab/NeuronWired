@@ -24,8 +24,8 @@ public:
     } else {
       rainbowLastUpdate += base_settings.delay_ms;
     }
-    cRGB rainbow = hsvToRgb(rainbowHue, rainbowSaturation, base_settings.brightness);
-	rainbow.w =0;
+	rainbowHue = base_settings.step;
+	cRGB rainbow = HSItoRGBW(rainbowHue, rainbowSaturation, base_settings.brightness);
     rainbowHue += 1;
   if (rainbowHue >= 255) {
     rainbowHue -= 255;
@@ -37,7 +37,8 @@ public:
 
 #ifdef KEYSCANNER
   void update() override {
-    cRGB rainbow = hsvToRgb(rainbowHue, rainbowSaturation, base_settings.brightness);
+	rainbowHue = base_settings.step;
+    cRGB rainbow = LedCommon::HSItoRGBW(rainbowHue, rainbowSaturation, base_settings.brightness);
     rainbowHue += 1;
   if (rainbowHue >= 255) {
     rainbowHue -= 255;
