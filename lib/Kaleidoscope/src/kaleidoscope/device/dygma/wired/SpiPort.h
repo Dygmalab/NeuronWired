@@ -24,9 +24,10 @@
 #include <Arduino.h>
 #include <hardware/dma.h>
 #include "hardware/spi.h"
+#include "SPICommunications.h"
 
 namespace kaleidoscope::device::dygma::wired {
-
+using namespace Communications;
 #define SIDE_nRESET_1  22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
 #define SIDE_nRESET_2  10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
 
@@ -42,37 +43,9 @@ namespace kaleidoscope::device::dygma::wired {
 #define SPI_MISO2  11   //SPI-2 slave OUT, we are slave
 #define SPI_CLK2   14  //was 10   //SPI-2 clock IN, we are slave  (must be changed in HW to 14)
 #define SPI_CS2     9   //SPI-2 chip select IN, we are slave1
-#define SIZE_TRANSFER    128
 
 class SpiPort {
 public:
-
-  enum SPI_COMMUNICATION {
-	IS_ALIVE = 1,
-	HAS_KEYS,
-	SET_MODE_LED,
-	SYNC_MODE_LED,
-	UPDATE_LED_BANK,
-	SET_PALETTE_COLORS,
-	SET_LAYER_KEYMAP_COLORS,
-	SET_LAYER_UNDERGLOW_COLORS,
-  };
-
-  struct Context {
-	uint8_t cmd;
-	uint8_t bit_arr;
-	uint8_t size;
-  };
-
-  union Message {
-	struct {
-	  Context context;
-	  uint8_t data[SIZE_TRANSFER - sizeof(context)];
-	};
-	uint8_t buf[SIZE_TRANSFER];
-  };
-
-  static_assert(sizeof(Message)==SIZE_TRANSFER);
 
   explicit SpiPort(bool side);
 
@@ -91,7 +64,7 @@ public:
   void irq();
   queue_t txMessages;
   queue_t rxMessages;
-  bool sideCommunications; // 1 for right 0 for left
+  Devices sideCommunications;
 
 private:
   void initInterrupt();

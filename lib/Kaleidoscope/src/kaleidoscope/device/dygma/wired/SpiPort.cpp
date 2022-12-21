@@ -48,12 +48,12 @@ void SpiPort::startDMA() {
   dma_channel_configure(spiSettings.dmaIndexTx, &spiSettings.channelConfigTx,
 						&spi_get_hw(spiSettings.port)->dr, // write address
 						spiSettings.txMessage.buf, // read address
-						SIZE_TRANSFER, // element count (each element is of size transfer_data_size)
+						MAX_TRANSFER_SIZE, // element count (each element is of size transfer_data_size)
 						false); // don't start yet
   dma_channel_configure(spiSettings.dmaIndexRx, &spiSettings.channelConfigRx,
 						spiSettings.rxMessage.buf, // write address
 						&spi_get_hw(spiSettings.port)->dr, // read address
-						SIZE_TRANSFER, // element count (each element is of size transfer_data_size)
+						MAX_TRANSFER_SIZE, // element count (each element is of size transfer_data_size)
 						false); // don't start yet
   dma_start_channel_mask((1u << spiSettings.dmaIndexTx) | (1u << spiSettings.dmaIndexRx));
 }
@@ -112,8 +112,8 @@ uint8_t SpiPort::writeTo(uint8_t *data, size_t length) {
 	if (queue_is_full(&txMessages)) {
 	  return 0;
 	}
-	message.context.cmd = UPDATE_LED_BANK;
-	message.context.size = length;
+	message.context.command = UPDATE_LED_BANK;
+	message.context.messageSize = length;
 	for (uint8_t i = 1; i < length; ++i) {
 	  message.data[i] = data[i];
 	}
@@ -123,7 +123,7 @@ uint8_t SpiPort::writeTo(uint8_t *data, size_t length) {
   return 0;
 }
 
-bool SpiPort::sendMessage(SpiPort::Message *data) {
+bool SpiPort::sendMessage(Message *data) {
   if (queue_is_full(&txMessages)) {
 	return false;
   }
@@ -155,7 +155,7 @@ void SpiPort::irq() {
   irq_clear(spiSettings.irq);
   portUSB ? dma_channel_acknowledge_irq1(spiSettings.dmaIndexRx)
 		  : dma_channel_acknowledge_irq0(spiSettings.dmaIndexRx);
-  if (spiSettings.rxMessage.context.cmd==0) {
+  if (spiSettings.rxMessage.context.command==0) {
 	//Something happened lest restart the communication
 	if (Serial.available())
 	  Serial.printf("Lost Connections with hand %i\n", portUSB);
@@ -166,9 +166,9 @@ void SpiPort::irq() {
 	return;
   }
   lasTimeCommunication = millis();
-  sideCommunications = spiSettings.rxMessage.context.bit_arr & 0b00000001;
-  if (spiSettings.rxMessage.context.cmd!=1) {
-	if (sideCommunications) {
+  sideCommunications = spiSettings.rxMessage.context.device;
+  if (spiSettings.rxMessage.context.command!=1) {
+	if (sideCommunications==KEYSCANNER_DEFY_RIGHT) {
 	  queue_add_blocking(&portRight.rxMessages, &spiSettings.rxMessage);
 	  if (!queue_is_empty(&portRight.txMessages)) {
 		queue_remove_blocking(&portRight.txMessages, &spiSettings.txMessage);
@@ -180,17 +180,17 @@ void SpiPort::irq() {
 	  }
 	}
   }
-  if (sideCommunications) {
+  if (sideCommunications==KEYSCANNER_DEFY_RIGHT) {
 	if (!queue_is_empty(&portRight.txMessages)) {
 	  queue_remove_blocking(&portRight.txMessages, &spiSettings.txMessage);
 	}else{
-	  spiSettings.txMessage.context.cmd=0;
+	  spiSettings.txMessage.context.command=Communications::IS_ALIVE;
 	}
   } else {
 	if (!queue_is_empty(&portLeft.txMessages)) {
 	  queue_remove_blocking(&portLeft.txMessages, &spiSettings.txMessage);
 	}else{
-	  spiSettings.txMessage.context.cmd=0;
+	  spiSettings.txMessage.context.command=Communications::IS_ALIVE;
 	}
   }
   irq_set_enabled(spiSettings.irq, true);
