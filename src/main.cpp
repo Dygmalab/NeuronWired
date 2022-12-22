@@ -216,9 +216,6 @@ void initVariant(){
 }
 
 void setup() {
-  //Wait for Devices to be ready maybe we can remove this in the final product
-  //TODO: Test it
-  sleep_ms(100);
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
   SideFlash.flashSides();
@@ -226,6 +223,7 @@ void setup() {
   EEPROMKeymap.setup(10);
   // Reserve space for the number of Colormap layers we will use
   ColormapEffectDefy.max_layers(10);
+  DefaultColormap.setup();
   StalkerEffect.variant = STALKER(BlazingTrail);
 
   DynamicSuperKeys.setup(0, 1024);
