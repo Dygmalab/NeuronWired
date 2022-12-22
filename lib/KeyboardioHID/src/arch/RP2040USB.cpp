@@ -353,7 +353,7 @@ extern "C" uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, h
 // Invoked when received SET_REPORT control request or
 // received data on OUT endpoint ( Report ID = 0, Type = 0 )
 extern "C" void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize) {
-  // TODO set LED based on CAPLOCK, NUMLOCK etc...
+  //  TODO set LED based on CAPLOCK, NUMLOCK etc...
   (void) instance;
   (void) report_id;
   (void) report_type;

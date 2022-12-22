@@ -147,8 +147,8 @@ void WiredHands::syncLayers(wired::Hand &hand) {
   ColormapEffectDefy.getColorPalette(palette);
   hand.sendPaletteColors(palette);
   uint8_t layerColors[WiredLEDDriverProps::led_count];
-  uint8_t baseKeymapIndex = hand.getActualSide() ? WiredLEDDriverProps::key_matrix_leds:0;
-  uint8_t baseUnderGlowIndex = hand.getActualSide() ? (WiredLEDDriverProps::key_matrix_leds)*2+WiredLEDDriverProps::underglow_leds: WiredLEDDriverProps::key_matrix_leds*2;
+  uint8_t baseKeymapIndex = hand.getActualSide() == Communications::Devices::KEYSCANNER_DEFY_RIGHT ? WiredLEDDriverProps::key_matrix_leds:0;
+  uint8_t baseUnderGlowIndex = hand.getActualSide() == Communications::Devices::KEYSCANNER_DEFY_RIGHT ? (WiredLEDDriverProps::key_matrix_leds)*2+WiredLEDDriverProps::underglow_leds: WiredLEDDriverProps::key_matrix_leds*2;
   for (int i = 0; i < ColormapEffectDefy.getMaxLayers(); ++i) {
 	ColormapEffectDefy.getLayer(i, layerColors);
 	hand.sendLayerKeyMapColors(i, &layerColors[baseKeymapIndex]);
@@ -158,27 +158,7 @@ void WiredHands::syncLayers(wired::Hand &hand) {
 }
 
 void WiredHands::initializeSides() {
-  WiredHands::leftHand.setLedMode(ledMode);
-  WiredHands::rightHand.setLedMode(ledMode);
-  // key scan interval from eeprom
-//  leftHand.setKeyscanInterval(keyscan_interval_);
-//  rightHand.setKeyscanInterval(keyscan_interval_);
-//
-//  // led brightness from eeprom
-//  leftHand.setBrightness(led_brightness_correction_);
-//  rightHand.setBrightness(led_brightness_correction_);
 
-  // get ANSI/ISO at every side replug
-//  uint8_t l_layout = leftHand.readLayout();
-//  uint8_t r_layout = rightHand.readLayout();
-
-  // setup layout variable, this will affect led mapping - defaults to ISO if
-  // nothing reported
-//  // FIXME
-//  if (l_layout == 1 || r_layout == 1)
-//    layout = 1;
-//  else
-//    layout = 0;
 }
 
 /********* LED Driver *********/
@@ -502,16 +482,9 @@ void Wired::setup() {
   WiredHands::setup();
   KeyScanner::setup();
   LEDDriver::setup();
-
-  // initialise Wire of scanner - have to do this here to avoid problem with
-  // static object intialisation ordering
-  WIRE_.setSDA(I2C_SDA_PIN);
-  WIRE_.setSCL(I2C_SCL_PIN);
-  WIRE_.begin();
-  WIRE_.setClock(I2C_CLOCK_KHZ*1000);
-
   WiredHands::initializeSides();
 }
+
 void Wired::setLedMode(LedModeSerializable *ledMode) {
   WiredHands::leftHand.setLedMode(ledMode);
   WiredHands::rightHand.setLedMode(ledMode);
