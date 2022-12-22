@@ -90,7 +90,7 @@ private:
 
   Spi_settings spiSettings;
   bool portUSB;
-  uint32_t lasTimeCommunication;
+  uint32_t lasTimeCommunication=2000;
 };
 
 extern SpiPort portLeft;
