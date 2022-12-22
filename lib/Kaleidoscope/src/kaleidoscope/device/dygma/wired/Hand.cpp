@@ -225,7 +225,7 @@ void Hand::sendLEDBank(uint8_t bank) {
   if (!online)
 	return;
   Message message;
-  message.context.command = UPDATE_LED_BANK;
+  message.context.command = Communications::SET_LED_BANK;
   message.context.messageSize = LED_BYTES_PER_BANK;
   message.data[0] = bank;
   for (uint8_t i = 0; i < LED_BYTES_PER_BANK; i++) {
@@ -246,7 +246,7 @@ void Hand::sendLEDBank(uint8_t bank) {
 	  message.data[i + 1] = message.data[i + 1]*red_max_fraction_/100;
 	}
   }
-  spiPort->sendMessage(&message);
+  //spiPort->sendMessage(&message);
 }
 
 void Hand::setLedMode(LedModeSerializable *ledMode) {

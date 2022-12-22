@@ -107,19 +107,6 @@ uint8_t SpiPort::crc_errors() {
   return 0;
 }
 uint8_t SpiPort::writeTo(uint8_t *data, size_t length) {
-  if (data[0] >= 0x80) {
-	Message message;
-	if (queue_is_full(&txMessages)) {
-	  return 0;
-	}
-	message.context.command = UPDATE_LED_BANK;
-	message.context.messageSize = length;
-	for (uint8_t i = 1; i < length; ++i) {
-	  message.data[i] = data[i];
-	}
-	message.data[0] = data[0] - 0x80;
-	queue_add_blocking(&txMessages, &message);
-  }
   return 0;
 }
 

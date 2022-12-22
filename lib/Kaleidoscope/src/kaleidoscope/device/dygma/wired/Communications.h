@@ -1,5 +1,5 @@
-#ifndef SPICOMMUNICATIONS_H_
-#define SPICOMMUNICATIONS_H_
+#ifndef COMMUNICATIONS_H_
+#define COMMUNICATIONS_H_
 
 namespace Communications {
 
@@ -15,10 +15,16 @@ static_assert(sizeof(Devices)==sizeof(uint8_t));
 enum Commands: uint8_t {
   IS_DEAD = 0,
   IS_ALIVE,
-  HAS_KEYS,
+  GET_VERSION,
+  SET_ALIVE_INTERVAL,
+  //Keys
+  HAS_KEYS = 10,
+  SET_KEYSCAN_INTERVAL,
+  //LEDS
+  SET_BRIGHTNESS=20,
   SET_MODE_LED,
-  SYNC_MODE_LED,
-  UPDATE_LED_BANK,
+  SET_LED,
+  SET_LED_BANK,
   SET_PALETTE_COLORS,
   SET_LAYER_KEYMAP_COLORS,
   SET_LAYER_UNDERGLOW_COLORS,
@@ -42,15 +48,15 @@ union Message{
 };
 static_assert(sizeof(Message)==MAX_TRANSFER_SIZE);
 
-class DefaultMessage{
+class Default{
 public:
-  DefaultMessage() {
+  Default() {
 	message.context.device = UNKNOWN;
 	message.context.command = IS_DEAD;
 	message.context.messageSize = 0;
   };
 
-  explicit DefaultMessage(Devices device, Commands cmd = IS_ALIVE) {
+  explicit Default(Devices device, Commands cmd = IS_ALIVE) {
 	message.context.device = device;
 	message.context.command = cmd;
 	message.context.messageSize = 0;
@@ -67,36 +73,36 @@ public:
   Message message;
 };
 
-class MessageKeyStrokes : public DefaultMessage {
+class KeyStrokes : public Default {
 public:
-  MessageKeyStrokes(Devices device, Commands cmd = HAS_KEYS) : DefaultMessage(device, cmd) {
+  KeyStrokes(Devices device) : Default(device, HAS_KEYS) {
 	message.context.messageSize = sizeof(keys);
   }
   uint8_t serialize() override {
-	uint8_t lastIndex = DefaultMessage::serialize();
+	uint8_t lastIndex = Default::serialize();
 	memcpy(&message.buf[lastIndex], keys, sizeof(keys));
 	return sizeof(keys) + lastIndex;
   }
   uint8_t deSerialize() override {
-	uint8_t lastIndex = DefaultMessage::deSerialize();
+	uint8_t lastIndex = Default::deSerialize();
 	memcpy(keys, &message.buf[lastIndex], sizeof(keys));
 	return sizeof(keys) + lastIndex;
   }
   uint8_t keys[5];
 };
 
-class MessageCrc : public DefaultMessage {
+class Crc : public Default {
 public:
-  MessageCrc(Devices device, Commands cmd = HAS_KEYS) : DefaultMessage(device, cmd) {
+  Crc(Devices device, Commands cmd = HAS_KEYS) : Default(device, cmd) {
 	message.context.messageSize = sizeof(crc);
   }
   uint8_t serialize() override {
-	uint8_t lastIndex = DefaultMessage::serialize();
+	uint8_t lastIndex = Default::serialize();
 	memcpy(&message.buf[lastIndex], &crc, sizeof(crc));
 	return sizeof(crc) + lastIndex;
   }
   uint8_t deSerialize() override {
-	uint8_t lastIndex = DefaultMessage::deSerialize();
+	uint8_t lastIndex = Default::deSerialize();
 	memcpy(&crc, &message.buf[lastIndex], sizeof(crc));
 	return sizeof(crc) + lastIndex;
   }
