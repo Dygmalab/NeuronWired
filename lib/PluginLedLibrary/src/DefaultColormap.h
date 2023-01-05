@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <Arduino.h>  // for PROGMEM
 #include <stdint.h>   // for uint8_t
 
 #include "kaleidoscope_internal/device.h"       // for device
