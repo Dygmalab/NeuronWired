@@ -1,7 +1,7 @@
-#ifndef COMMUNICATIONS_H_
-#define COMMUNICATIONS_H_
+#ifndef SIDE_COMMUNICATIONS_H_
+#define SIDE_COMMUNICATIONS_H_
 
-namespace Communications {
+namespace Side_communications_protocol {
 
 enum Devices: uint8_t {
   UNKNOWN = 0,
@@ -10,6 +10,7 @@ enum Devices: uint8_t {
   NEURON_DEFY_WIRED,
   NEURON_DEFY_WIRELESS,
 };
+
 static_assert(sizeof(Devices)==sizeof(uint8_t));
 
 enum Commands: uint8_t {
@@ -39,14 +40,14 @@ struct Context {
 static_assert(sizeof(Context)==(sizeof(uint8_t)*3));
 
 static const constexpr uint8_t MAX_TRANSFER_SIZE = 128;
-union Message{
+union Packet{
   struct{
 	Context context;
 	uint8_t data[MAX_TRANSFER_SIZE-sizeof(Context)];
   };
   uint8_t buf[MAX_TRANSFER_SIZE];
 };
-static_assert(sizeof(Message)==MAX_TRANSFER_SIZE);
+static_assert(sizeof(Packet)==MAX_TRANSFER_SIZE);
 
 class Default{
 public:
@@ -70,7 +71,7 @@ public:
 	memcpy(message.buf, &message.context, sizeof(Context));
 	return sizeof(Context);
   };
-  Message message;
+  Packet message;
 };
 
 class KeyStrokes : public Default {

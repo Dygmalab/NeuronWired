@@ -91,8 +91,8 @@ SpiPort::SpiPort(bool side) : portUSB(side) {
   gpio_put(spiSettings.reset, false);
   sleep_us(1);
   gpio_put(spiSettings.reset, true);
-  queue_init(&txMessages, sizeof(Message), 40);
-  queue_init(&rxMessages, sizeof(Message), 40);
+  queue_init(&txMessages, sizeof(Packet), 40);
+  queue_init(&rxMessages, sizeof(Packet), 40);
 }
 
 void SpiPort::initCommunications() {
@@ -110,7 +110,7 @@ uint8_t SpiPort::writeTo(uint8_t *data, size_t length) {
   return 0;
 }
 
-bool SpiPort::sendMessage(Message *data) {
+bool SpiPort::sendPacket(Packet *data) {
   if (queue_is_full(&txMessages)) {
 	return false;
   }
@@ -126,7 +126,7 @@ uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
 	data[0] = 0;
 	return 6;
   }
-  Message message;
+  Packet message;
   queue_remove_blocking(&rxMessages, &message);
   data[0] = 1;
   data[1] = message.data[0];
@@ -171,13 +171,13 @@ void SpiPort::irq() {
 	if (!queue_is_empty(&portRight.txMessages)) {
 	  queue_remove_blocking(&portRight.txMessages, &spiSettings.txMessage);
 	}else{
-	  spiSettings.txMessage.context.command=Communications::IS_ALIVE;
+	  spiSettings.txMessage.context.command=Side_communications_protocol::IS_ALIVE;
 	}
   } else {
 	if (!queue_is_empty(&portLeft.txMessages)) {
 	  queue_remove_blocking(&portLeft.txMessages, &spiSettings.txMessage);
 	}else{
-	  spiSettings.txMessage.context.command=Communications::IS_ALIVE;
+	  spiSettings.txMessage.context.command=Side_communications_protocol::IS_ALIVE;
 	}
   }
   irq_set_enabled(spiSettings.irq, true);
