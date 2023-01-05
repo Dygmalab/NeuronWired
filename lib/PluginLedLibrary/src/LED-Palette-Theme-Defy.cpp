@@ -117,7 +117,7 @@ EventHandlerResult LEDPaletteThemeDefy::onFocusEvent(const char *command) {
 	  cRGB color;
 
 	  color = lookupPaletteColor(i);
-	  ::Focus.send(color);
+	  ::Focus.send(color.r, color.g, color.b,color.w);
 	}
 	return EventHandlerResult::EVENT_CONSUMED;
   }
