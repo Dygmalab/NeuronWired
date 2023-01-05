@@ -226,7 +226,7 @@ void Hand::sendLEDBank(uint8_t bank) {
 	return;
   Packet message;
   message.context.command = Side_communications_protocol::SET_LED_BANK;
-  message.context.messageSize = LED_BYTES_PER_BANK;
+  message.context.size = LED_BYTES_PER_BANK;
   message.data[0] = bank;
   for (uint8_t i = 0; i < LED_BYTES_PER_BANK; i++) {
 	uint8_t c = led_data.bytes[bank][i];
@@ -252,24 +252,24 @@ void Hand::sendLEDBank(uint8_t bank) {
 void Hand::setLedMode(LedModeSerializable *ledMode) {
   Packet message;
   message.context.command = SET_MODE_LED;
-  message.context.messageSize = ledMode->serialize(message.data);
+  message.context.size = ledMode->serialize(message.data);
   spiPort->sendPacket(&message);
 }
 
 void Hand::sendPaletteColors(const cRGB palette[16]) {
   Packet message;
   message.context.command = SET_PALETTE_COLORS;
-  message.context.messageSize = sizeof(cRGB)*16;
-  memcpy(message.data, palette, message.context.messageSize);
+  message.context.size = sizeof(cRGB)*16;
+  memcpy(message.data, palette, message.context.size);
   spiPort->sendPacket(&message);
 }
 
 void Hand::sendLayerKeyMapColors(uint8_t layer, const uint8_t *keyMapColors) {
   Packet message;
   message.context.command = SET_LAYER_KEYMAP_COLORS;
-  message.context.messageSize = WiredLEDDriverProps::key_matrix_leds + 1;
+  message.context.size = WiredLEDDriverProps::key_matrix_leds + 1;
   message.data[0] = layer;
-  memcpy(&message.data[1], keyMapColors, message.context.messageSize-1);
+  memcpy(&message.data[1], keyMapColors, message.context.size-1);
   Serial.println();
   spiPort->sendPacket(&message);
 }
@@ -277,9 +277,9 @@ void Hand::sendLayerKeyMapColors(uint8_t layer, const uint8_t *keyMapColors) {
 void Hand::sendLayerUnderGlowColors(uint8_t layer, const uint8_t *underGlowColors) {
   Packet message;
   message.context.command = SET_LAYER_UNDERGLOW_COLORS;
-  message.context.messageSize = WiredLEDDriverProps::underglow_leds + 1;
+  message.context.size = WiredLEDDriverProps::underglow_leds + 1;
   message.data[0] = layer;
-  memcpy(&message.data[1], underGlowColors, message.context.messageSize-1);
+  memcpy(&message.data[1], underGlowColors, message.context.size-1);
   spiPort->sendPacket(&message);
 }
 
