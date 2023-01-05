@@ -35,7 +35,7 @@ static_assert(sizeof(Commands)==sizeof(uint8_t));
 struct Context {
   Commands command;
   Devices device;
-  uint8_t messageSize;
+  uint8_t size;
 };
 static_assert(sizeof(Context)==(sizeof(uint8_t)*3));
 
@@ -54,13 +54,13 @@ public:
   Default() {
 	message.context.device = UNKNOWN;
 	message.context.command = IS_DEAD;
-	message.context.messageSize = 0;
+	message.context.size = 0;
   };
 
   explicit Default(Devices device, Commands cmd = IS_ALIVE) {
 	message.context.device = device;
 	message.context.command = cmd;
-	message.context.messageSize = 0;
+	message.context.size = 0;
   };
 
   virtual uint8_t serialize() {
@@ -77,7 +77,7 @@ public:
 class KeyStrokes : public Default {
 public:
   KeyStrokes(Devices device) : Default(device, HAS_KEYS) {
-	message.context.messageSize = sizeof(keys);
+	message.context.size = sizeof(keys);
   }
   uint8_t serialize() override {
 	uint8_t lastIndex = Default::serialize();
@@ -95,7 +95,7 @@ public:
 class Crc : public Default {
 public:
   Crc(Devices device, Commands cmd = HAS_KEYS) : Default(device, cmd) {
-	message.context.messageSize = sizeof(crc);
+	message.context.size = sizeof(crc);
   }
   uint8_t serialize() override {
 	uint8_t lastIndex = Default::serialize();
