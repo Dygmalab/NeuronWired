@@ -18,7 +18,6 @@
 #include "Colormap-Defy.h"  // for Colormap
 #include "DefaultColormap.h"
 
-#include <Arduino.h>                         // for F, PSTR, __FlashStringHelper
 #include "Kaleidoscope-LEDControl.h"         // for LEDControl
 #include <stdint.h>                          // for uint8_t, uint16_t
 
