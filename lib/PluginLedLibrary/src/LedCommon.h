@@ -1,9 +1,11 @@
 #pragma once
 #include <cmath>
-#ifdef KEYSCANNER
+
+#ifndef ARDUINO
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 #define PI          3.1415926535897932384626433832795
 #endif
+
 static cRGB HSItoRGBW(float hue, float saturation, float intensity) {
   cRGB result = {0,0,0,0};        // the RGBW result you'll return
   hue = constrain(hue, 0, 360);              // constrain hue to 0-360
