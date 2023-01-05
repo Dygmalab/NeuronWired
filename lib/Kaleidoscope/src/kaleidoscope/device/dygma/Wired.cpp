@@ -147,8 +147,8 @@ void WiredHands::syncLayers(wired::Hand &hand) {
   ColormapEffectDefy.getColorPalette(palette);
   hand.sendPaletteColors(palette);
   uint8_t layerColors[WiredLEDDriverProps::led_count];
-  uint8_t baseKeymapIndex = hand.getActualSide() == Communications::Devices::KEYSCANNER_DEFY_RIGHT ? WiredLEDDriverProps::key_matrix_leds:0;
-  uint8_t baseUnderGlowIndex = hand.getActualSide() == Communications::Devices::KEYSCANNER_DEFY_RIGHT ? (WiredLEDDriverProps::key_matrix_leds)*2+WiredLEDDriverProps::underglow_leds: WiredLEDDriverProps::key_matrix_leds*2;
+  uint8_t baseKeymapIndex = hand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? WiredLEDDriverProps::key_matrix_leds : 0;
+  uint8_t baseUnderGlowIndex = hand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? (WiredLEDDriverProps::key_matrix_leds)*2+WiredLEDDriverProps::underglow_leds : WiredLEDDriverProps::key_matrix_leds*2;
   for (int i = 0; i < ColormapEffectDefy.getMaxLayers(); ++i) {
 	ColormapEffectDefy.getLayer(i, layerColors);
 	hand.sendLayerKeyMapColors(i, &layerColors[baseKeymapIndex]);

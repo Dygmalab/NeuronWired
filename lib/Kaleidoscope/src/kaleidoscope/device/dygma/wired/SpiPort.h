@@ -24,10 +24,10 @@
 #include <Arduino.h>
 #include <hardware/dma.h>
 #include "hardware/spi.h"
-#include "Communications.h"
+#include "Side_communications_protocol.h"
 
 namespace kaleidoscope::device::dygma::wired {
-using namespace Communications;
+using namespace Side_communications_protocol;
 #define SIDE_nRESET_1  22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
 #define SIDE_nRESET_2  10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
 
@@ -53,7 +53,7 @@ public:
 
   uint8_t writeTo(uint8_t *data, size_t length);
 
-  bool sendMessage(Message *data);
+  bool sendPacket(Side_communications_protocol::Packet *data);
 
   uint8_t readFrom(uint8_t *data, size_t length);
 
@@ -84,8 +84,8 @@ private:
 	uint8_t dmaIndexRx;
 	dma_channel_config channelConfigTx;
 	dma_channel_config channelConfigRx;
-	Message txMessage;
-	Message rxMessage;
+	Packet txMessage;
+	Packet rxMessage;
   };
 
   Spi_settings spiSettings;
