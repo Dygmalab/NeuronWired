@@ -142,7 +142,7 @@ void SpiPort::irq() {
   irq_clear(spiSettings.irq);
   portUSB ? dma_channel_acknowledge_irq1(spiSettings.dmaIndexRx)
 		  : dma_channel_acknowledge_irq0(spiSettings.dmaIndexRx);
-  if (spiSettings.rxMessage.context.command==0) {
+  if (spiSettings.rxMessage.context.command==IS_DEAD) {
 	//Something happened lest restart the communication
 	if (Serial.available())
 	  Serial.printf("Lost Connections with hand %i\n", portUSB);
@@ -154,7 +154,7 @@ void SpiPort::irq() {
   }
   lasTimeCommunication = millis();
   sideCommunications = spiSettings.rxMessage.context.device;
-  if (spiSettings.rxMessage.context.command!=1) {
+  if (spiSettings.rxMessage.context.command!=IS_ALIVE) {
 	if (sideCommunications==KEYSCANNER_DEFY_RIGHT) {
 	  queue_add_blocking(&portRight.rxMessages, &spiSettings.rxMessage);
 	  if (!queue_is_empty(&portRight.txMessages)) {
