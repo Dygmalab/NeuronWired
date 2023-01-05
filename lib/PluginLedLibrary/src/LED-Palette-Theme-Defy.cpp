@@ -104,12 +104,12 @@ EventHandlerResult LEDPaletteThemeDefy::onFocusEvent(const char *command) {
   if (!Runtime.has_leds)
 	return EventHandlerResult::OK;
 
-  const char *cmd = PSTR("palette");
+  const char *cmd = "palette";
 
   if (::Focus.handleHelp(command, cmd))
 	return EventHandlerResult::OK;
 
-  if (strcmp_P(command, cmd)!=0)
+  if (strcmp(command, cmd)!=0)
 	return EventHandlerResult::OK;
 
   if (::Focus.isEOL()) {

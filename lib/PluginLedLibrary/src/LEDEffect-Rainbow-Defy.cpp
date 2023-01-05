@@ -27,11 +27,11 @@ void LEDRainbowEffectDefy::TransientLEDMode::onActivate() {
   Runtime.device().setLedMode(&(parent_->led_mode));
 }
 
-void LEDRainbowEffectDefy::brightness(byte brightness) {
+void LEDRainbowEffectDefy::brightness(uint8_t brightness) {
   led_mode.base_settings.brightness = brightness;
 }
 
-void LEDRainbowEffectDefy::update_delay(byte delay) {
+void LEDRainbowEffectDefy::update_delay(uint8_t delay) {
   led_mode.base_settings.delay_ms = delay;
 }
 
@@ -45,11 +45,11 @@ void LEDRainbowWaveEffectDefy::TransientLEDMode::onActivate() {
   Runtime.device().setLedMode(&(parent_->led_mode));
 }
 
-void LEDRainbowWaveEffectDefy::brightness(byte brightness) {
+void LEDRainbowWaveEffectDefy::brightness(uint8_t brightness) {
   led_mode.base_settings.brightness = brightness;
 }
 
-void LEDRainbowWaveEffectDefy::update_delay(byte delay) {
+void LEDRainbowWaveEffectDefy::update_delay(uint8_t delay) {
   led_mode.base_settings.delay_ms = delay;
 }
 
