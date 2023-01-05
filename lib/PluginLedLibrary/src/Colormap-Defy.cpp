@@ -76,7 +76,7 @@ EventHandlerResult ColormapEffectDefy::onLayerChange() {
 }
 
 EventHandlerResult ColormapEffectDefy::onFocusEvent(const char *command) {
-  return ::LEDPaletteThemeDefy.themeFocusEvent(command, PSTR("colormap.map"),
+  return ::LEDPaletteThemeDefy.themeFocusEvent(command, "colormap.map",
                                            map_base_, max_layers_);
 }
 void ColormapEffectDefy::getColorPalette(cRGB output_palette[16]) {
