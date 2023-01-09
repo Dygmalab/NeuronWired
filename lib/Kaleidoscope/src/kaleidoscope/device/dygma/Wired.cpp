@@ -98,11 +98,12 @@ void WiredHands::setup() {
 
   // If keyscan is max, assume that EEPROM is uninitialized, and store the
   // defaults.
+  //TODO: Fix commits of default settings
   uint16_t interval;
   Runtime.storage().get(settings_base_, interval);
   if (interval==0xffff) {
 	Runtime.storage().put(settings_base_, keyscan_interval_);
-	Runtime.storage().commit();
+//	Runtime.storage().commit();
   }
   Runtime.storage().get(settings_base_, keyscan_interval_);
 
@@ -110,7 +111,7 @@ void WiredHands::setup() {
   Runtime.storage().get(settings_brightness_, brightness);
   if (brightness==0xff) {
 	Runtime.storage().put(settings_brightness_, led_brightness_correction_);
-	Runtime.storage().commit();
+//	Runtime.storage().commit();
   }
   Runtime.storage().get(settings_brightness_, led_brightness_correction_);
 }
@@ -120,7 +121,7 @@ void WiredHands::keyscanInterval(uint16_t interval) {
   rightHand.setKeyscanInterval(interval);
   keyscan_interval_ = interval;
   Runtime.storage().put(settings_base_, keyscan_interval_);
-  Runtime.storage().commit();
+//  Runtime.storage().commit();
 }
 
 void WiredHands::ledBrightnessCorrection(uint8_t brightness) {
@@ -128,7 +129,7 @@ void WiredHands::ledBrightnessCorrection(uint8_t brightness) {
   rightHand.setBrightness(brightness);
   led_brightness_correction_ = brightness;
   Runtime.storage().put(settings_brightness_, led_brightness_correction_);
-  Runtime.storage().commit();
+//  Runtime.storage().commit();
 }
 
 String WiredHands::getChipID() {

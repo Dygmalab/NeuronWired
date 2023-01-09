@@ -223,7 +223,6 @@ void setup() {
   EEPROMKeymap.setup(10);
   // Reserve space for the number of Colormap layers we will use
   ColormapEffectDefy.max_layers(10);
-  DefaultColormap.setup();
   StalkerEffect.variant = STALKER(BlazingTrail);
 
   DynamicSuperKeys.setup(0, 1024);
