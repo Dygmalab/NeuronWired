@@ -39,11 +39,11 @@ void LEDPaletteThemeDefy::updateHandler(uint16_t theme_base, uint8_t theme) {
 
   uint16_t map_base = theme_base + (theme*leds_per_layer_in_memory_);
 
-  for (uint8_t pos = Runtime.device().led_count-2; pos < Runtime.device().led_count; pos++) {
+  for (uint8_t pos = Runtime.device().led_count - 2; pos < Runtime.device().led_count; pos++) {
 	cRGB color = lookupColorAtPosition(map_base, pos);
 	::LEDControl.setCrgbAt(pos, color);
   }
-  
+
 }
 
 void LEDPaletteThemeDefy::refreshAt(uint16_t theme_base, uint8_t theme, KeyAddr key_addr) {
@@ -117,7 +117,7 @@ EventHandlerResult LEDPaletteThemeDefy::onFocusEvent(const char *command) {
 	  cRGB color;
 
 	  color = lookupPaletteColor(i);
-	  ::Focus.send(color.r, color.g, color.b,color.w);
+	  ::Focus.send(color.r, color.g, color.b, color.w);
 	}
 	return EventHandlerResult::EVENT_CONSUMED;
   }
@@ -126,13 +126,11 @@ EventHandlerResult LEDPaletteThemeDefy::onFocusEvent(const char *command) {
   while (i < 16 && !::Focus.isEOL()) {
 	cRGB color;
 
-	::Focus.read(color);
-	color.r ^= 0xff;
-	color.g ^= 0xff;
-	color.b ^= 0xff;
-	color.w ^= 0xff;
-
-	Runtime.storage().put(palette_base_ + i*sizeof(color), color);
+	::Focus.read(color.r);
+	::Focus.read(color.g);
+	::Focus.read(color.b);
+	::Focus.read(color.w);
+	::LEDPaletteThemeDefy.updatePaletteColor(i, color);
 	i++;
   }
   Runtime.storage().commit();
@@ -143,9 +141,9 @@ EventHandlerResult LEDPaletteThemeDefy::onFocusEvent(const char *command) {
 }
 
 EventHandlerResult LEDPaletteThemeDefy::themeFocusEvent(const char *command,
-													const char *expected_command,
-													uint16_t theme_base,
-													uint8_t max_themes) {
+														const char *expected_command,
+														uint16_t theme_base,
+														uint8_t max_themes) {
   if (!Runtime.has_leds)
 	return EventHandlerResult::OK;
 
@@ -192,7 +190,7 @@ void LEDPaletteThemeDefy::updatePaletteColor(uint8_t palette_index, cRGB color) 
   color.b ^= 0xff;
   color.w ^= 0xff;
 
-  Runtime.storage().put(palette_base_ + palette_index * sizeof(color), color);
+  Runtime.storage().put(palette_base_ + palette_index*sizeof(color), color);
 }
 }
 }
