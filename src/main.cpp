@@ -52,6 +52,7 @@
 #include "EEPROMPadding.h"
 
 #include "EEPROMUpgrade.h"
+#include "FLASH_Upgrade.h"
 
 #include "RP2040_firmware.h"
 #include "arch/RP2040USB.h"
@@ -181,6 +182,7 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0,255);
 
  KALEIDOSCOPE_INIT_PLUGINS(
     FirmwareVersion,
+	FlashUpgrade,
     USBQuirks,
     MagicCombo,
     RaiseIdleLEDs,

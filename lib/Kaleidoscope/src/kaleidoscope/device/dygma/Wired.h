@@ -32,6 +32,7 @@
 #include "kaleidoscope/device/Base.h"
 #include "kaleidoscope/util/flasher/KeyboardioI2CBootloader.h"
 #include "LedModeSerializable.h"
+#include "kaleidoscope/driver/bootloader/rp2040/UF2.h"
 
 namespace kaleidoscope {
 namespace device {
@@ -228,6 +229,7 @@ struct WiredProps : kaleidoscope::device::BaseProps {
   typedef WiredKeyScanner KeyScanner;
   typedef WiredStorageProps StorageProps;
   typedef kaleidoscope::driver::storage::Flash<StorageProps> Storage;
+  typedef kaleidoscope::driver::bootloader::rp2040::UF2 Bootloader;
 
   typedef WiredSideFlasherProps SideFlasherProps;
   typedef kaleidoscope::util::flasher::KeyboardioI2CBootloader<SideFlasherProps> SideFlasher;
