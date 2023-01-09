@@ -23,7 +23,6 @@
 #include <Arduino.h>
 #include "EEPROM.h"
 #include <hardware/flash.h>
-#include <hardware/sync.h>
 
 #ifdef USE_TINYUSB
 // For Serial when selecting TinyUSB.  Can't include in the core because Arduino IDE
@@ -37,22 +36,22 @@
 extern "C" uint8_t _EEPROM_start;
 
 EEPROMClass::EEPROMClass(void)
-    : _sector(&_EEPROM_start) {
+	: _sector(&_EEPROM_start) {
 }
 
 void EEPROMClass::begin(size_t size) {
   if ((size <= 0) || (size > 8192)) {
-    size = 8192;
+	size = 8192;
   }
 
   _size = (size + 255) & (~255);  // Flash writes limited to 256 byte boundaries
 
   // In case begin() is called a 2nd+ time, don't reallocate if size is the same
-  if (_data && size != _size) {
-    delete[] _data;
-    _data = new uint8_t[size];
+  if (_data && size!=_size) {
+	delete[] _data;
+	_data = new uint8_t[size];
   } else if (!_data) {
-    _data = new uint8_t[size];
+	_data = new uint8_t[size];
   }
 
   memcpy(_data, _sector, _size);
@@ -64,12 +63,12 @@ bool EEPROMClass::end() {
   bool retval;
 
   if (!_size) {
-    return false;
+	return false;
   }
 
   retval = commit();
   if (_data) {
-    delete[] _data;
+	delete[] _data;
   }
   _data = 0;
   _size = 0;
@@ -79,51 +78,60 @@ bool EEPROMClass::end() {
 }
 
 uint8_t EEPROMClass::read(int const address) {
-  if (address < 0 || (size_t) address >= _size) {
-    return 0;
+  if (address < 0 || (size_t)address >= _size) {
+	return 0;
   }
   if (!_data) {
-    return 0;
+	return 0;
   }
 
   return _data[address];
 }
 
 void EEPROMClass::write(int const address, uint8_t const value) {
-  if (address < 0 || (size_t) address >= _size) {
-    return;
+  if (address < 0 || (size_t)address >= _size) {
+	return;
   }
   if (!_data) {
-    return;
+	return;
   }
 
   // Optimise _dirty. Only flagged if data written is different.
   uint8_t *pData = &_data[address];
-  if (*pData != value) {
-    *pData = value;
-    _dirty = true;
+  if (*pData!=value) {
+	*pData = value;
+	_dirty = true;
   }
 }
 
 bool EEPROMClass::commit() {
   if (!_size) {
-    return false;
+	return false;
   }
   if (!_dirty) {
-    return true;
+	return true;
   }
   if (!_data) {
-    return false;
+	return false;
   }
-//  unsigned long i = millis();
-//  noInterrupts();
-//  rp2040.idleOtherCore();
-//  flash_range_erase((intptr_t) _sector - (intptr_t) XIP_BASE, 8192);
-//  flash_range_program((intptr_t) _sector - (intptr_t) XIP_BASE, _data, _size);
-//  rp2040.resumeOtherCore();
-//  interrupts();
-//  unsigned long j = millis();
-//  Serial.printf("It took %llu", j - i);
+
+  noInterrupts();
+  rp2040.idleOtherCore();
+  flash_range_erase((intptr_t)_sector - (intptr_t)XIP_BASE, 8192/2);
+  rp2040.resumeOtherCore();
+  interrupts();
+  noInterrupts();
+  rp2040.idleOtherCore();
+  flash_range_erase((intptr_t)_sector - (intptr_t)XIP_BASE + (8192/2), 8192/2);
+  rp2040.resumeOtherCore();
+  interrupts();
+  for (int i = 0; i < 8192/256; ++i) {
+	noInterrupts();
+	rp2040.idleOtherCore();
+	flash_range_program((intptr_t)_sector - (intptr_t)XIP_BASE + i*256, &_data[i*256], 256);
+	rp2040.resumeOtherCore();
+	interrupts();
+  }
   return true;
 }
 

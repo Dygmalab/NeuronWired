@@ -24,13 +24,14 @@
 namespace kaleidoscope {
 namespace plugin {
 
-uint16_t PersistentLEDMode::settings_base_;
-uint8_t PersistentLEDMode::cached_mode_index_;
+//TODO: There is no need to do a persistent led mode :)
+//uint16_t PersistentLEDMode::settings_base_;
+uint8_t PersistentLEDMode::cached_mode_index_=0xff;
 
 EventHandlerResult PersistentLEDMode::onSetup() {
-  settings_base_ = ::EEPROMSettings.requestSlice(sizeof(cached_mode_index_));
+//  settings_base_ = ::EEPROMSettings.requestSlice(sizeof(cached_mode_index_));
 
-  Runtime.storage().get(settings_base_, cached_mode_index_);
+//  Runtime.storage().get(settings_base_, cached_mode_index_);
 
   // If the index is max, assume an uninitialized EEPROM, and don't set the LED
   // mode. We don't change the cached index here, `onLEDModeChange()` will do
@@ -48,7 +49,7 @@ EventHandlerResult PersistentLEDMode::onLEDModeChange() {
     return EventHandlerResult::OK;
 
   cached_mode_index_ = ::LEDControl.get_mode_index();
-  Runtime.storage().put(settings_base_, cached_mode_index_);
+  //Runtime.storage().put(settings_base_, cached_mode_index_);
   //Runtime.storage().commit();
   return EventHandlerResult::OK;
 }
