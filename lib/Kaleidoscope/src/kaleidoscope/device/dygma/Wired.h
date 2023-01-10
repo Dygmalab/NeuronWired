@@ -32,6 +32,7 @@
 #include "kaleidoscope/device/Base.h"
 #include "kaleidoscope/util/flasher/KeyboardioI2CBootloader.h"
 #include "LedModeSerializable.h"
+
 #include "kaleidoscope/driver/bootloader/rp2040/UF2.h"
 
 namespace kaleidoscope {
