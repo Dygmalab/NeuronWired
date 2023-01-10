@@ -21,12 +21,14 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <Arduino.h>
-#include "SPII.h"
+#include "SpiPort.h"
+#include "LedModeSerializable.h"
 
 struct cRGB {
   uint8_t r;
   uint8_t g;
   uint8_t b;
+  uint8_t w;
 };
 
 namespace kaleidoscope {
@@ -58,7 +60,16 @@ typedef union {
 
 class Hand {
  public:
-  explicit Hand(byte ad01) : ad01_(ad01), spi_(ad01) {}
+  explicit Hand(byte ad01) : ad01_(ad01) {
+	spiPort = ad01 ? &portRight : &portLeft;
+  }
+
+  void setLedMode(LedModeSerializable *pSerializable);
+  void sendPaletteColors(const cRGB palette[16]);
+  void sendLayerKeyMapColors(uint8_t layer, const uint8_t *keyMapColors);
+  void sendLayerUnderGlowColors(uint8_t layer, const uint8_t *underGlowColors);
+
+  uint8_t getActualSide();
 
   int readVersion();
   int readSLEDVersion();
@@ -80,7 +91,7 @@ class Hand {
   bool readKeys();
   uint8_t controllerAddress();
   uint8_t crc_errors() {
-    return spi_.crc_errors();
+    return spiPort->crc_errors();
   }
 
   void setBrightness(uint8_t brightness) {
@@ -93,13 +104,11 @@ class Hand {
   LEDData_t led_data;
   bool online = false;
   keydata_t key_data_;
-  bool new_key;
-  bool new_leds;
 
- private:
+private:
   uint8_t brightness_adjustment_ = 0;
   int ad01_;
-  SPII spi_;
+  SpiPort *spiPort;
   uint8_t next_led_bank_ = 0;
   uint8_t red_max_fraction_ = (LED_RED_CHANNEL_MAX * 100) / 255;
 

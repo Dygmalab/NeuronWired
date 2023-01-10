@@ -24,11 +24,11 @@
 #include <Wire.h>
 #include "hardware/dma.h"
 #include "kaleidoscope/util/flasher/Base.h"
-#include "kaleidoscope/util/crc16.h"
 #include "hardware/watchdog.h"
 
 #define WIRE_ Wire1
 
+#define DEBUG_BOOTLOADER
 #ifdef DEBUG_BOOTLOADER
 #define DBG_PRINTF(...) Serial.printf(__VA_ARGS__)
 #else
@@ -63,8 +63,8 @@ class KeyboardioI2CBootloader : kaleidoscope::util::flasher::Base<_Props> {
 
 	  DBG_PRINTF("Keyscaner version %lu\n", sealAction.version);
 	  DBG_PRINTF("Neuron Keyscnaer version %lu\n", firmware.KEY_SCANNER_VERSION);
-	  DBG_PRINTF("Neuron CRC %lu\n", crc32(firmware.data, firmware.size));
-	  DBG_PRINTF("Keyscane CRC  %lu\n", sealAction.crc);
+	  DBG_PRINTF("Neuron CRC %x\n", crc32(firmware.data, firmware.size));
+	  DBG_PRINTF("Keyscane CRC  %x\n", sealAction.crc);
 
 	  return sealAction.version == firmware.KEY_SCANNER_VERSION
 		  && crc32(firmware.data, firmware.size) == sealAction.crc;
@@ -75,7 +75,7 @@ class KeyboardioI2CBootloader : kaleidoscope::util::flasher::Base<_Props> {
   template<typename T>
   static bool flash(uint8_t address, T &firmware) {
 	if (verify(address, firmware)) {
-	  return true;
+     return true;
 	}
 
 	if (!erase_program(address, firmware)) {
@@ -220,7 +220,7 @@ class KeyboardioI2CBootloader : kaleidoscope::util::flasher::Base<_Props> {
 	sealAction.crc = crc32(firmware.data, firmware.size);
 	sealAction.version = firmware.KEY_SCANNER_VERSION;
 
-	DBG_PRINTF("Going to send seal vtor %lu, size %lu, crc %lu and version %lu\n",
+	DBG_PRINTF("Going to send seal vtor %lu, size %lu, crc %x and version %x\n",
 			   sealAction.vtor,
 			   sealAction.size,
 			   sealAction.crc,
@@ -278,40 +278,34 @@ class KeyboardioI2CBootloader : kaleidoscope::util::flasher::Base<_Props> {
 	return r ? val + (to - r) : val;
   }
 
-  //TODO: Change CRC32 Implementation for DMA
-  static uint32_t crc32(const uint8_t *buf, size_t len) {
-	uint32_t crc;
-	static uint32_t table[256];
-	static int have_table = 0;
-	uint32_t rem;
-	uint8_t octet;
-	int i, j;
-	const uint8_t *p, *q;
+  static uint32_t crc32(const void *ptr, uint32_t len) {
+	uint32_t dummy_dest, crc;
 
-	/* This check is not thread safe; there is no mutex. */
-	if (have_table == 0) {
-	  /* Calculate CRC table. */
-	  for (i = 0; i < 256; i++) {
-		rem = i;  /* remainder from polynomial division */
-		for (j = 0; j < 8; j++) {
-		  if (rem & 1) {
-			rem >>= 1;
-			rem ^= 0xedb88320;
-		  } else
-			rem >>= 1;
-		}
-		table[i] = rem;
-	  }
-	  have_table = 1;
-	}
+	int channel = dma_claim_unused_channel(true);
+	dma_channel_config c = dma_channel_get_default_config(channel);
+	channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
+	channel_config_set_read_increment(&c, true);
+	channel_config_set_write_increment(&c, false);
+	channel_config_set_sniff_enable(&c, true);
 
-	crc = ~crc;
-	q = buf + len;
-	for (p = buf; p < q; p++) {
-	  octet = *p;  /* Cast to unsigned octet. */
-	  crc = (crc >> 8) ^ table[(crc & 0xff) ^ octet];
-	}
-	return ~crc;
+	// Seed the CRC calculation
+	dma_hw->sniff_data = 0xffffffff;
+
+	// Mode 1, then bit-reverse the result gives the same result as
+	dma_sniffer_enable(channel, 0x1, true);
+	dma_hw->sniff_ctrl |= DMA_SNIFF_CTRL_OUT_REV_BITS;
+
+	dma_channel_configure(channel, &c, &dummy_dest, ptr, len / 4, true);
+
+	dma_channel_wait_for_finish_blocking(channel);
+
+	// Read the result before resetting
+	crc = dma_hw->sniff_data ^ 0xffffffff;
+
+	dma_sniffer_disable();
+	dma_channel_unclaim(channel);
+
+	return crc;
   }
 
 };

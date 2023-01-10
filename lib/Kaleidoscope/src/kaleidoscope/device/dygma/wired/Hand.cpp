@@ -20,8 +20,8 @@
 
 #include <Arduino.h>
 #include "Hand.h"
-
 #include "kaleidoscope/driver/color/GammaCorrection.h"
+#include "kaleidoscope/device/dygma/Wired.h"
 
 namespace kaleidoscope {
 namespace device {
@@ -91,7 +91,7 @@ uint8_t Hand::controllerAddress() {
 // https://www.arduino.cc/en/Reference/WireEndTransmission
 byte Hand::setKeyscanInterval(byte delay) {
   uint8_t data[] = {spi_CMD_KEYSCAN_INTERVAL, delay};
-  return spi_.writeTo(data, ELEMENTS(data));
+  return spiPort->writeTo(data, ELEMENTS(data));
 }
 
 // returns -1 on error, otherwise returns the scanner version integer
@@ -110,7 +110,7 @@ int Hand::readSLEDCurrent() {
 
 byte Hand::setSLEDCurrent(byte current) {
   uint8_t data[] = {spi_CMD_SLED_CURRENT, current};
-  return spi_.writeTo(data, ELEMENTS(data));
+  return spiPort->writeTo(data, ELEMENTS(data));
 }
 
 // returns -1 on error, otherwise returns the scanner keyscan interval
@@ -135,7 +135,7 @@ int Hand::readLEDSPIFrequency() {
 // https://www.arduino.cc/en/Reference/WireEndTransmission
 byte Hand::setLEDSPIFrequency(byte frequency) {
   uint8_t data[] = {spi_CMD_LED_SPI_FREQUENCY, frequency};
-  return spi_.writeTo(data, ELEMENTS(data));
+  return spiPort->writeTo(data, ELEMENTS(data));
 }
 
 // returns -1 on error, otherwise returns the value of the hall sensor integer
@@ -143,9 +143,9 @@ int Hand::readJoint() {
   byte return_value = 0;
 
   uint8_t data[] = {spi_CMD_JOINED};
-  uint8_t result = spi_.writeTo(data, ELEMENTS(data));
-  if (result != 0)
-    return -1;
+  uint8_t result = spiPort->writeTo(data, ELEMENTS(data));
+  if (result!=0)
+	return -1;
 
   // needs to be long enough for the slave to respond
   delayMicroseconds(40);
@@ -153,11 +153,11 @@ int Hand::readJoint() {
   uint8_t rxBuffer[2];
 
   // perform blocking read into buffer
-  uint8_t read = spi_.readFrom(rxBuffer, ELEMENTS(rxBuffer));
-  if (read == 2) {
-    return rxBuffer[0] + (rxBuffer[1] << 8);
+  uint8_t read = spiPort->readFrom(rxBuffer, ELEMENTS(rxBuffer));
+  if (read==2) {
+	return rxBuffer[0] + (rxBuffer[1] << 8);
   } else {
-    return -1;
+	return -1;
   }
 }
 
@@ -165,9 +165,9 @@ int Hand::readRegister(uint8_t cmd) {
   byte return_value = 0;
 
   uint8_t data[] = {cmd};
-  uint8_t result = spi_.writeTo(data, ELEMENTS(data));
-  if (result != 0)
-    return -1;
+  uint8_t result = spiPort->writeTo(data, ELEMENTS(data));
+  if (result!=0)
+	return -1;
 
   // needs to be long enough for the slave to respond
   delayMicroseconds(40);
@@ -175,20 +175,37 @@ int Hand::readRegister(uint8_t cmd) {
   uint8_t rxBuffer[1];
 
   // perform blocking read into buffer
-  uint8_t read = spi_.readFrom(rxBuffer, ELEMENTS(rxBuffer));
+  uint8_t read = spiPort->readFrom(rxBuffer, ELEMENTS(rxBuffer));
   if (read > 0) {
-    return rxBuffer[0];
+	return rxBuffer[0];
   } else {
-    return -1;
+	return -1;
   }
 }
 
 // gives information on the key that was just pressed or released.
 bool Hand::readKeys() {
+  uint8_t rxBuffer[6] = {0, 0, 0, 0, 0, 0};
+
+  // perform blocking read into buffer
+  uint8_t result = spiPort->readFrom(rxBuffer, ELEMENTS(rxBuffer));
   // if result isn't 6? this can happens if slave nacks while trying to read
-  //TODO: Make this online variable
-  Hand::online = 1;
-  return new_key;
+  Hand::online = (result==6);
+
+  if (result!=6)
+	// could also try reset pressed keys here
+	return false;
+
+  if (rxBuffer[0]==spi_REPLY_KEYDATA) {
+	key_data_.rows[0] = rxBuffer[1];
+	key_data_.rows[1] = rxBuffer[2];
+	key_data_.rows[2] = rxBuffer[3];
+	key_data_.rows[3] = rxBuffer[4];
+	key_data_.rows[4] = rxBuffer[5];
+	return true;
+  } else {
+	return false;
+  }
 }
 
 keydata_t Hand::getKeyData() {
@@ -197,35 +214,77 @@ keydata_t Hand::getKeyData() {
 
 void Hand::sendLEDData() {
   sendLEDBank(next_led_bank_++);
-  if (next_led_bank_ == LED_BANKS) {
-    next_led_bank_ = 0;
+  if (next_led_bank_==LED_BANKS) {
+	next_led_bank_ = 0;
   }
 }
 
 auto constexpr gamma8 = kaleidoscope::driver::color::gamma_correction;
 
 void Hand::sendLEDBank(uint8_t bank) {
-  uint8_t data[LED_BYTES_PER_BANK + 1]; // + 1 for the update LED command itself
-  data[0]  = spi_CMD_LED_BASE + bank;
-  for (uint8_t i = 0 ; i < LED_BYTES_PER_BANK; i++) {
-    uint8_t c = led_data.bytes[bank][i];
-    if (c > brightness_adjustment_)
-      c -= brightness_adjustment_;
-    else
-      c = 0;
+  if (!online)
+	return;
+  Packet message;
+  message.context.command = Side_communications_protocol::SET_LED_BANK;
+  message.context.size = LED_BYTES_PER_BANK;
+  message.data[0] = bank;
+  for (uint8_t i = 0; i < LED_BYTES_PER_BANK; i++) {
+	uint8_t c = led_data.bytes[bank][i];
+	if (c > brightness_adjustment_)
+	  c -= brightness_adjustment_;
+	else
+	  c = 0;
 
-    data[i + 1] = pgm_read_byte(&gamma8[c]);
+	message.data[i + 1] = pgm_read_byte(&gamma8[c]);
 
-    // The Red component on the Wired hardware appears to get more voltage than
-    // the others, resulting in colors slightly off. Adjust for that here by
-    // reducing the red component a little.
-    //
-    // FIXME(@anyone): This should eventually be configurable someway.
-    if ((i + 1) % 3 == 1) {
-      data[i + 1] = data[i + 1] * red_max_fraction_ / 100;
-    }
+	// The Red component on the Wired hardware appears to get more voltage than
+	// the others, resulting in colors slightly off. Adjust for that here by
+	// reducing the red component a little.
+	//
+	// FIXME(@anyone): This should eventually be configurable someway.
+	if ((i + 1)%3==1) {
+	  message.data[i + 1] = message.data[i + 1]*red_max_fraction_/100;
+	}
   }
-  uint8_t result = spi_.writeTo(data, ELEMENTS(data));
+  //spiPort->sendMessage(&message);
+}
+
+void Hand::setLedMode(LedModeSerializable *ledMode) {
+  Packet message;
+  message.context.command = SET_MODE_LED;
+  message.context.size = ledMode->serialize(message.data);
+  spiPort->sendPacket(&message);
+}
+
+void Hand::sendPaletteColors(const cRGB palette[16]) {
+  Packet message;
+  message.context.command = SET_PALETTE_COLORS;
+  message.context.size = sizeof(cRGB)*16;
+  memcpy(message.data, palette, message.context.size);
+  spiPort->sendPacket(&message);
+}
+
+void Hand::sendLayerKeyMapColors(uint8_t layer, const uint8_t *keyMapColors) {
+  Packet message;
+  message.context.command = SET_LAYER_KEYMAP_COLORS;
+  message.context.size = WiredLEDDriverProps::key_matrix_leds + 1;
+  message.data[0] = layer;
+  memcpy(&message.data[1], keyMapColors, message.context.size-1);
+  Serial.println();
+  spiPort->sendPacket(&message);
+}
+
+void Hand::sendLayerUnderGlowColors(uint8_t layer, const uint8_t *underGlowColors) {
+  Packet message;
+  message.context.command = SET_LAYER_UNDERGLOW_COLORS;
+  message.context.size = WiredLEDDriverProps::underglow_leds + 1;
+  message.data[0] = layer;
+  memcpy(&message.data[1], underGlowColors, message.context.size-1);
+  spiPort->sendPacket(&message);
+}
+
+uint8_t Hand::getActualSide() {
+  return spiPort->sideCommunications;
 }
 
 }

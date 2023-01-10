@@ -1,7 +1,5 @@
-/* -*- mode: c++ -*-
- * kaleidoscope::device::dygma::Wired -- Kaleidoscope device plugin for Dygma Wired
- * Copyright (C) 2017-2019  Keyboard.io, Inc
- * Copyright (C) 2017-2019  Dygma Lab S.L.
+/* Kaleidoscope-LEDEffect-SolidColor - Solid color LED effects for Kaleidoscope.
+ * Copyright (C) 2017  Keyboard.io, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -16,30 +14,21 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef ARDUINO_RASPBERRY_PI_PICO
+#include "LEDEffect-SolidColor-Defy.h"
 
-#include "SPII.h"
-#include "hardware/spi.h"
-#include "hardware/dma.h"
+namespace kaleidoscope {
+namespace plugin {
 
-namespace kaleidoscope::device::dygma::wired {
-
-SPII::SPII(bool side) {
+void LEDSolidColorDefy::TransientLEDMode::onActivate(void) {
+  parent_->led_mode.r_ = parent_->r_;
+  parent_->led_mode.g_ = parent_->g_;
+  parent_->led_mode.b_ = parent_->b_;
+  parent_->led_mode.w_ = parent_->w_;
+  Runtime.device().setLedMode(&(parent_->led_mode));
 }
 
-SPII::~SPII() {
-}
-
-void SPII::initSide() {
-}
-
-uint8_t SPII::crc_errors() {
-  return 0;
-}
-uint8_t SPII::writeTo(uint8_t *data, size_t length) { return 0; }
-uint8_t SPII::readFrom(uint8_t *data, size_t length) {
-  return 0;
+void LEDSolidColorDefy::TransientLEDMode::update(void) {
+  parent_->led_mode.update();
 }
 }
-
-#endif
+}

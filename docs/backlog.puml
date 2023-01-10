@@ -1,0 +1,33 @@
+@startmindmap
+'https://plantuml.com/mindmap-diagram
+
+title Backlog WiredNeuron
+
+* <&flag>WiredNeuron
+** Persistence of data
+*** Think about how to improve saves
+**** Check how hard it will be to add a fileSystem
+*** Reconnection of communication via SPI?
+*** Maybe a reconnection is needed and no fileSystem
+** Bootloader
+*** Send command of start of bootloader
+*** And communicate that the user actually wants to update neuron.
+** Kaleidoscope Integration
+*** Add actualization of keyscanner and RF or attachment (Trackball)
+*** Mouse integration
+*** Macros integration
+*** SuperKeys Integration
+** LEDS
+*** Led Effect Stalker
+*** Mayus indicator ( Version 2.0)
+
+* KeyScannerTester
+** SPI Communications
+** I2C Communications
+** USB Communications
+** Reset
+
+
+center footer Dygma
+
+@endmindmap

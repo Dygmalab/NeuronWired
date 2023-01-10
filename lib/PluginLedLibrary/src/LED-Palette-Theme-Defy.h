@@ -23,9 +23,9 @@
 namespace kaleidoscope {
 namespace plugin {
 
-class LEDPaletteTheme : public kaleidoscope::Plugin {
+class LEDPaletteThemeDefy : public kaleidoscope::Plugin {
  public:
-  LEDPaletteTheme(void) {}
+  LEDPaletteThemeDefy(void) {}
 
   static uint16_t reserveThemes(uint8_t max_themes);
   static void updateHandler(uint16_t theme_base, uint8_t theme);
@@ -45,9 +45,10 @@ class LEDPaletteTheme : public kaleidoscope::Plugin {
   void updatePaletteColor(uint8_t i, cRGB rgb);
 private:
   static uint16_t palette_base_;
+  static uint16_t leds_per_layer_in_memory_;
 };
 
 }
 }
 
-extern kaleidoscope::plugin::LEDPaletteTheme LEDPaletteTheme;
+extern kaleidoscope::plugin::LEDPaletteThemeDefy LEDPaletteThemeDefy;

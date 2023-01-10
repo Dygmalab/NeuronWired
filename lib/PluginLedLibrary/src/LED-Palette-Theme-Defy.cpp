@@ -15,46 +15,49 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Kaleidoscope-LED-Palette-Theme.h>
+#include <LED-Palette-Theme-Defy.h>
 #include <Kaleidoscope-EEPROM-Settings.h>
 #include <Kaleidoscope-FocusSerial.h>
 
 namespace kaleidoscope {
 namespace plugin {
 
-uint16_t LEDPaletteTheme::palette_base_;
+uint16_t LEDPaletteThemeDefy::palette_base_;
+uint16_t LEDPaletteThemeDefy::leds_per_layer_in_memory_;
 
-uint16_t LEDPaletteTheme::reserveThemes(uint8_t max_themes) {
+uint16_t LEDPaletteThemeDefy::reserveThemes(uint8_t max_themes) {
   if (!palette_base_)
 	palette_base_ = ::EEPROMSettings.requestSlice(16*sizeof(cRGB));
-
-  return ::EEPROMSettings.requestSlice(max_themes*Runtime.device().led_count/2);
+  //plus 2 so that we can have the neuron in a full position
+  leds_per_layer_in_memory_ = (Runtime.device().led_count)/2;
+  return ::EEPROMSettings.requestSlice(max_themes*leds_per_layer_in_memory_);
 }
 
-void LEDPaletteTheme::updateHandler(uint16_t theme_base, uint8_t theme) {
+void LEDPaletteThemeDefy::updateHandler(uint16_t theme_base, uint8_t theme) {
   if (!Runtime.has_leds)
 	return;
 
-  uint16_t map_base = theme_base + (theme*Runtime.device().led_count/2);
+  uint16_t map_base = theme_base + (theme*leds_per_layer_in_memory_);
 
-  for (uint8_t pos = 0; pos < Runtime.device().led_count; pos++) {
+  for (uint8_t pos = Runtime.device().led_count - 2; pos < Runtime.device().led_count; pos++) {
 	cRGB color = lookupColorAtPosition(map_base, pos);
 	::LEDControl.setCrgbAt(pos, color);
   }
+
 }
 
-void LEDPaletteTheme::refreshAt(uint16_t theme_base, uint8_t theme, KeyAddr key_addr) {
+void LEDPaletteThemeDefy::refreshAt(uint16_t theme_base, uint8_t theme, KeyAddr key_addr) {
   if (!Runtime.has_leds)
 	return;
 
-  uint16_t map_base = theme_base + (theme*Runtime.device().led_count/2);
+  uint16_t map_base = theme_base + (theme*leds_per_layer_in_memory_);
   uint8_t pos = Runtime.device().getLedIndex(key_addr);
 
   cRGB color = lookupColorAtPosition(map_base, pos);
   ::LEDControl.setCrgbAt(key_addr, color);
 }
 
-const uint8_t LEDPaletteTheme::lookupColorIndexAtPosition(uint16_t map_base, uint16_t position) {
+const uint8_t LEDPaletteThemeDefy::lookupColorIndexAtPosition(uint16_t map_base, uint16_t position) {
   uint8_t color_index;
 
   color_index = Runtime.storage().read(map_base + position/2);
@@ -66,13 +69,12 @@ const uint8_t LEDPaletteTheme::lookupColorIndexAtPosition(uint16_t map_base, uin
   return color_index;
 }
 
-const cRGB LEDPaletteTheme::lookupColorAtPosition(uint16_t map_base, uint16_t position) {
+const cRGB LEDPaletteThemeDefy::lookupColorAtPosition(uint16_t map_base, uint16_t position) {
   uint8_t color_index = lookupColorIndexAtPosition(map_base, position);
-
   return lookupPaletteColor(color_index);
 }
 
-const cRGB LEDPaletteTheme::lookupPaletteColor(uint8_t color_index) {
+const cRGB LEDPaletteThemeDefy::lookupPaletteColor(uint8_t color_index) {
   cRGB color;
 
   Runtime.storage().get(palette_base_ + color_index*sizeof(cRGB), color);
@@ -83,7 +85,7 @@ const cRGB LEDPaletteTheme::lookupPaletteColor(uint8_t color_index) {
   return color;
 }
 
-void LEDPaletteTheme::updateColorIndexAtPosition(uint16_t map_base, uint16_t position, uint8_t color_index) {
+void LEDPaletteThemeDefy::updateColorIndexAtPosition(uint16_t map_base, uint16_t position, uint8_t color_index) {
   uint8_t indexes;
 
   indexes = Runtime.storage().read(map_base + position/2);
@@ -98,16 +100,16 @@ void LEDPaletteTheme::updateColorIndexAtPosition(uint16_t map_base, uint16_t pos
   Runtime.storage().commit();
 }
 
-EventHandlerResult LEDPaletteTheme::onFocusEvent(const char *command) {
+EventHandlerResult LEDPaletteThemeDefy::onFocusEvent(const char *command) {
   if (!Runtime.has_leds)
 	return EventHandlerResult::OK;
 
-  const char *cmd = PSTR("palette");
+  const char *cmd = "palette";
 
   if (::Focus.handleHelp(command, cmd))
 	return EventHandlerResult::OK;
 
-  if (strcmp_P(command, cmd)!=0)
+  if (strcmp(command, cmd)!=0)
 	return EventHandlerResult::OK;
 
   if (::Focus.isEOL()) {
@@ -115,7 +117,7 @@ EventHandlerResult LEDPaletteTheme::onFocusEvent(const char *command) {
 	  cRGB color;
 
 	  color = lookupPaletteColor(i);
-	  ::Focus.send(color.r, color.g, color.b,color.w);
+	  ::Focus.send(color.r, color.g, color.b, color.w);
 	}
 	return EventHandlerResult::EVENT_CONSUMED;
   }
@@ -124,13 +126,11 @@ EventHandlerResult LEDPaletteTheme::onFocusEvent(const char *command) {
   while (i < 16 && !::Focus.isEOL()) {
 	cRGB color;
 
-	::Focus.read(color);
-	color.r ^= 0xff;
-	color.g ^= 0xff;
-	color.b ^= 0xff;
-	color.w ^= 0xff;
-
-	Runtime.storage().put(palette_base_ + i*sizeof(color), color);
+	::Focus.read(color.r);
+	::Focus.read(color.g);
+	::Focus.read(color.b);
+	::Focus.read(color.w);
+	::LEDPaletteThemeDefy.updatePaletteColor(i, color);
 	i++;
   }
   Runtime.storage().commit();
@@ -140,10 +140,10 @@ EventHandlerResult LEDPaletteTheme::onFocusEvent(const char *command) {
   return EventHandlerResult::EVENT_CONSUMED;
 }
 
-EventHandlerResult LEDPaletteTheme::themeFocusEvent(const char *command,
-													const char *expected_command,
-													uint16_t theme_base,
-													uint8_t max_themes) {
+EventHandlerResult LEDPaletteThemeDefy::themeFocusEvent(const char *command,
+														const char *expected_command,
+														uint16_t theme_base,
+														uint8_t max_themes) {
   if (!Runtime.has_leds)
 	return EventHandlerResult::OK;
 
@@ -153,7 +153,7 @@ EventHandlerResult LEDPaletteTheme::themeFocusEvent(const char *command,
   if (strcmp_P(command, expected_command)!=0)
 	return EventHandlerResult::OK;
 
-  uint16_t max_index = (max_themes*Runtime.device().led_count)/2;
+  uint16_t max_index = (max_themes*leds_per_layer_in_memory_);
 
   if (::Focus.isEOL()) {
 	for (uint16_t pos = 0; pos < max_index; pos++) {
@@ -176,6 +176,7 @@ EventHandlerResult LEDPaletteTheme::themeFocusEvent(const char *command,
 	Runtime.storage().update(theme_base + pos, indexes);
 	pos++;
   }
+  Runtime.device().syncLayers();
   Runtime.storage().commit();
 
   ::LEDControl.refreshAll();
@@ -183,16 +184,15 @@ EventHandlerResult LEDPaletteTheme::themeFocusEvent(const char *command,
   return EventHandlerResult::EVENT_CONSUMED;
 }
 
-void LEDPaletteTheme::updatePaletteColor(uint8_t palette_index, cRGB color) {
+void LEDPaletteThemeDefy::updatePaletteColor(uint8_t palette_index, cRGB color) {
   color.r ^= 0xff;
   color.g ^= 0xff;
   color.b ^= 0xff;
   color.w ^= 0xff;
 
-  Runtime.storage().put(palette_base_ + palette_index * sizeof(color), color);
+  Runtime.storage().put(palette_base_ + palette_index*sizeof(color), color);
+}
+}
 }
 
-}
-}
-
-kaleidoscope::plugin::LEDPaletteTheme LEDPaletteTheme;
+kaleidoscope::plugin::LEDPaletteThemeDefy LEDPaletteThemeDefy;
