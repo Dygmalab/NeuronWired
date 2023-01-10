@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.0.0...pre_release_1.1.0) (2023-01-10)
+
+
+### Features
+
+* added bootloader plugin holding esc ([60b9f5e](https://github.com/Dygmalab/NeuronWired/commit/60b9f5e3fa3b31bd2dd8df08855540d01feb2273))
+
 # 1.0.0 (2023-01-10)
 
 
