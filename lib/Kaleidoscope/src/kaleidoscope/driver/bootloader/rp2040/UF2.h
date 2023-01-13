@@ -20,7 +20,6 @@
 
 #ifdef ARDUINO_ARCH_RP2040
 
-#include <SerialUSB.h>
 #include "kaleidoscope/driver/bootloader/Base.h"
 #include "pico/bootrom.h"
 
