@@ -48,7 +48,7 @@ class AbsoluteMouseWrapper {
     SingleAbsoluteMouse.move(x, y, wheel);
   }
   void moveTo(uint16_t x, uint16_t y, uint8_t wheel) {
-    SingleAbsoluteMouse.moveTo(x, y, wheel);
+	SingleAbsoluteMouse.moveTo(x, y, wheel);
   }
 
   void click(uint8_t buttons) {
@@ -63,7 +63,7 @@ class AbsoluteMouseWrapper {
 };
 
 struct AbsoluteMouseProps: public base::AbsoluteMouseProps {
-  typedef AbsoluteMouseWrapper AbsoluteMouse;
+//  typedef AbsoluteMouseWrapper AbsoluteMouse;
 };
 
 template <typename _Props>

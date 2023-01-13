@@ -56,7 +56,6 @@
 
 
 #include "RP2040_firmware.h"
-#include "arch/RP2040USB.h"
 #include "LEDEffect-Rainbow-Defy.h"
 #include "LEDEffect-SolidColor-Defy.h"
 #include "Colormap-Defy.h"
@@ -133,7 +132,7 @@ void toggleLedsOnSuspendResume(kaleidoscope::plugin::HostPowerManagement::Event 
  */
 void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::Event event) {
   //TODO: Check of to manage this.
-  //toggleLedsOnSuspendResume(event);
+  toggleLedsOnSuspendResume(event);
 }
 
 enum {
@@ -213,12 +212,14 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0,255);
     EEPROMUpgrade,
     HostPowerManagement);
 
-void initVariant(){
-  __USBStart();
-  Serial.begin(115200);
-}
 
 void setup() {
+  TinyUSBDevice.setID(BOARD_VENDORID,BOARD_PRODUCTID);
+  TinyUSBDevice.setManufacturerDescriptor(BOARD_MANUFACTURER);
+  TinyUSBDevice.setProductDescriptor(BOARD_PRODUCT);
+
+  Serial.begin(115200);
+  HID().begin();
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
   SideFlash.flashSides();

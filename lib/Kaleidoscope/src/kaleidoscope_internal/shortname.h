@@ -26,32 +26,7 @@
  * this workaround.
  */
 
-#ifndef DYGMA_USE_TINYUSB
-
 #define _INIT_HID_GETSHORTNAME                        __NL__ \
   uint8_t HID_::getShortName(char *name) {            __NL__ \
     return Kaleidoscope.device().getShortName(name);  __NL__ \
   }
-
-#else  // DYGMA_USE_TINYUSB
-
-class HID_
-{
-  public:
-    uint8_t getShortName(char *name);
-
-  private:
-    char keyboarName[20] = "Defy RP2040";
-};
-
-#define _INIT_HID_GETSHORTNAME              __NL__ \
-  uint8_t HID_::getShortName(char *name) {  __NL__ \
-    {                                       __NL__ \
-      uint8_t n = strlen(keyboarName);      __NL__ \
-      memcpy(name, keyboarName, n);         __NL__ \
-                                            __NL__ \
-      return n;                             __NL__ \
-    };                                      __NL__ \
-  }
-
-#endif  // DYGMA_USE_TINYUSB
