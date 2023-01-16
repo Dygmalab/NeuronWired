@@ -71,90 +71,44 @@ enum {
 /* This comment temporarily turns off astyle's indent enforcement so we can make
  * the keymaps actually resemble the physical key layout better
  */
-// *INDENT-OFF*
-
+// clang-format off
 KEYMAPS(
-  [QWERTY] = KEYMAP_STACKED(
-    Key_Escape, Key_1, Key_2, Key_3, Key_4, Key_5, Key_6, Key_Tab, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_VolumeUp, Key_CapsLock, Key_A, Key_S, Key_D, Key_F, Key_G, Key_VolumeDown, Key_Backslash, Key_Z, Key_X, Key_C, Key_V, Key_B, Key_LeftControl, Key_LeftGui, Key_Backspace, Key_Delete, Key_LeftShift, Key_LeftAlt, Key_Enter, Key_Space
+[QWERTY] = KEYMAP_STACKED
+(
+    Key_Escape, Key_1, Key_2, Key_3, Key_4, Key_5, Key_6
+    , Key_Tab, Key_Q, Key_W, Key_E, Key_R, Key_T, Key_VolumeUp
+    , Key_CapsLock, Key_A, Key_S, Key_D, Key_F, Key_G, Key_VolumeDown
+    , Key_Backslash, Key_Z, Key_X, Key_C, Key_V, Key_B
+    , Key_LeftControl, Key_LeftGui, Key_Backspace, Key_Delete
+    , Key_LeftShift, Key_LeftAlt, Key_Enter, Key_Space
 
-    ,
-    LT(1, Space),
-    LT(2, Space),
-    LT(3, Space),
-    LT(4, Space),
-    Key_Minus,
-    Key_Equals,
-    Key_Backspace,
-    Key_Y,
-    Key_U,
-    Key_I,
-    Key_O,
-    Key_P,
-    Key_LeftBracket,
-    Key_RightBracket,
-    Key_H,
-    Key_J,
-    Key_K,
-    Key_L,
-    Key_Semicolon,
-    Key_Quote,
-    Key_RightShift,
-    Key_N,
-    Key_M,
-    Key_Comma,
-    Key_Period,
-    Key_Slash,
-    Key_RightShift,
-    Key_LEDEffectNext,
-    Key_Home,
-    Key_UpArrow,
-    Key_End,
-    Key_RightArrow,
-    Key_DownArrow,
-    Key_LeftArrow,
-    Key_Enter),
+    , LT(1,Space), LT(2,Space), LT(3,Space), LT(4,Space), Key_Minus, Key_Equals, Key_Backspace
+    , Key_Y, Key_U, Key_I, Key_O, Key_P, Key_LeftBracket, Key_RightBracket
+    , Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Quote, Key_RightShift
+    , Key_N, Key_M, Key_Comma, Key_Period, Key_Slash, Key_RightShift
+    , Key_LEDEffectNext, Key_Home, Key_UpArrow, Key_End
+    , Key_RightArrow, Key_DownArrow, Key_LeftArrow, Key_Enter
+),
 
-  [NUMPAD] = KEYMAP_STACKED(
-    Key_Escape, Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_F6, Key_Tab, Key_NoKey, Key_UpArrow, Key_NoKey, Key_NoKey, Key_NoKey, Key_NoKey, Key_CapsLock, Key_LeftArrow, Key_DownArrow, Key_RightArrow, Key_NoKey, Key_NoKey, Key_NoKey, Key_LeftShift, Key_Backslash, Key_NoKey, Key_NoKey, Key_NoKey, Key_NoKey, Key_LeftControl, Key_LeftGui, Key_LeftAlt, Key_Space, Key_Space, Key_Backspace, Key_Enter, Key_Delete
+[NUMPAD] = KEYMAP_STACKED
+(
+    Key_Escape, Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_F6
+    , Key_Tab, Key_NoKey, Key_UpArrow, Key_NoKey, Key_NoKey, Key_NoKey, Key_NoKey
+    , Key_CapsLock, Key_LeftArrow, Key_DownArrow, Key_RightArrow, Key_NoKey, Key_NoKey, Key_NoKey
+    , Key_LeftShift, Key_Backslash, Key_NoKey, Key_NoKey, Key_NoKey, Key_NoKey
+    , Key_LeftControl, Key_LeftGui, Key_LeftAlt, Key_Space
+    , Key_Space, Key_Backspace, Key_Enter, Key_Delete
 
-    ,
-    Key_F7,
-    Key_F8,
-    Key_F9,
-    Key_F10,
-    Key_F11,
-    Key_F12,
-    Key_Backspace,
-    Key_KeypadSubtract,
-    Key_7,
-    Key_8,
-    Key_9,
-    Key_KeypadDivide,
-    Key_NoKey,
-    Key_Enter,
-    Key_KeypadAdd,
-    Key_4,
-    Key_5,
-    Key_6,
-    Key_KeypadMultiply,
-    Key_NoKey,
-    Key_Backslash,
-    Key_KeypadDot,
-    Key_1,
-    Key_2,
-    Key_3,
-    Key_UpArrow,
-    Key_RightShift,
-    Key_0,
-    Key_Space,
-    Key_LeftArrow,
-    Key_DownArrow,
-    Key_RightArrow,
-    Key_RightControl,
-    Key_Delete,
-    MoveToLayer(QWERTY)));
-/* Re-enable astyle's indent enforcement */
-// *INDENT-ON*
+    , Key_F7, Key_F8, Key_F9, Key_F10, Key_F11, Key_F12, Key_Backspace
+    , Key_KeypadSubtract, Key_7, Key_8, Key_9, Key_KeypadDivide, Key_NoKey, Key_Enter
+    , Key_KeypadAdd, Key_4, Key_5, Key_6, Key_KeypadMultiply, Key_NoKey, Key_Backslash
+    , Key_KeypadDot, Key_1, Key_2, Key_3, Key_UpArrow, Key_RightShift
+    , Key_0, Key_Space, Key_LeftArrow, Key_DownArrow
+    , Key_RightArrow, Key_RightControl, Key_Delete, MoveToLayer(QWERTY)
+)
+);
+// clang-format on
+
 
 kaleidoscope::device::dygma::wired::SideFlash<RP2040Firmware> SideFlash;
 
@@ -225,7 +179,7 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidGreenDefy(0, 255, 0, 0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidBlueDefy(0, 0, 255, 0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0, 255);
 
-
+// clang-format off
 KALEIDOSCOPE_INIT_PLUGINS(
   FirmwareVersion,
   FlashUpgrade,
@@ -243,12 +197,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   LEDPaletteThemeDefy,
   JointPadding,
   ColormapEffectDefy,
-  LEDRainbowWaveEffectDefy,
-  LEDRainbowEffectDefy,
-  solidRedDefy,
-  solidGreenDefy,
-  solidBlueDefy,
-  solidWhiteDefy,
+  LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
   PersistentIdleLEDs,
   WiredFocus,
   Qukeys,
@@ -262,6 +211,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   LayerFocus,
   EEPROMUpgrade,
   HostPowerManagement);
+// clang-format on
 
 
 void setup() {
