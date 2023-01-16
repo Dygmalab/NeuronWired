@@ -89,7 +89,7 @@ class HID_ {
   Adafruit_USBD_HID usb_hid;
 private:
   char keyboarName[20] = "Defy RP2040";
-  std::vector<uint8_t> descriptor;
+//  std::vector<uint8_t> descriptor;
 
   uint8_t protocol;
   uint8_t idle;
