@@ -34,14 +34,14 @@ void ColormapEffectDefy::max_layers(uint8_t max_) {
     return;
 
   max_layers_ = max_;
-  map_base_ = ::LEDPaletteThemeDefy.reserveThemes(max_layers_);
+  map_base_   = ::LEDPaletteThemeDefy.reserveThemes(max_layers_);
 }
 
 void ColormapEffectDefy::TransientLEDMode::onActivate(void) {
   if (!Runtime.has_leds)
     return;
 
-  parent_->top_layer_ = Layer.mostRecent();
+  parent_->top_layer_     = Layer.mostRecent();
   parent_->led_mode.layer = parent_->top_layer_;
   Runtime.device().setLedMode(&(parent_->led_mode));
 
@@ -76,19 +76,18 @@ EventHandlerResult ColormapEffectDefy::onLayerChange() {
 }
 
 EventHandlerResult ColormapEffectDefy::onFocusEvent(const char *command) {
-  return ::LEDPaletteThemeDefy.themeFocusEvent(command, "colormap.map",
-                                           map_base_, max_layers_);
+  return ::LEDPaletteThemeDefy.themeFocusEvent(command, "colormap.map", map_base_, max_layers_);
 }
 void ColormapEffectDefy::getColorPalette(cRGB output_palette[16]) {
   for (int i = 0; i < 16; ++i) {
-	const cRGB &color = ::LEDPaletteThemeDefy.lookupPaletteColor(i);
-	output_palette[i] = color;
+    const cRGB &color = ::LEDPaletteThemeDefy.lookupPaletteColor(i);
+    output_palette[i] = color;
   }
 }
 
-void ColormapEffectDefy::getLayer(uint8_t layer,uint8_t output_buf[Runtime.device().led_count]) {
+void ColormapEffectDefy::getLayer(uint8_t layer, uint8_t output_buf[Runtime.device().led_count]) {
   for (int i = 0; i < Runtime.device().led_count; ++i) {
-	output_buf[i] = getColorIndexAtPosition(layer,i);
+    output_buf[i] = getColorIndexAtPosition(layer, i);
   }
 }
 
@@ -96,7 +95,7 @@ uint8_t ColormapEffectDefy::getMaxLayers() {
   return max_layers_;
 }
 
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
 
 kaleidoscope::plugin::ColormapEffectDefy ColormapEffectDefy;

@@ -142,6 +142,7 @@ void SpiPort::irq() {
   irq_clear(spiSettings.irq);
   portUSB ? dma_channel_acknowledge_irq1(spiSettings.dmaIndexRx)
 		  : dma_channel_acknowledge_irq0(spiSettings.dmaIndexRx);
+
   if (spiSettings.rxMessage.context.command==IS_DEAD) {
 	//Something happened lest restart the communication
 	if (Serial.available())
@@ -152,17 +153,20 @@ void SpiPort::irq() {
 	gpio_put(spiSettings.reset, true);
 	return;
   }
+
   lasTimeCommunication = millis();
   sideCommunications = spiSettings.rxMessage.context.device;
   SpiPort &port = sideCommunications==KEYSCANNER_DEFY_RIGHT?portRight:portLeft;
   if (spiSettings.rxMessage.context.command!=IS_ALIVE) {
 	queue_add_blocking(&port.rxMessages, &spiSettings.rxMessage);
   }
+
   if (!queue_is_empty(&port.txMessages)) {
 	queue_remove_blocking(&port.txMessages, &spiSettings.txMessage);
   }else{
 	spiSettings.txMessage.context.command=Side_communications_protocol::IS_ALIVE;
   }
+  spiSettings.txMessage.context.has_more_packets = !queue_is_empty(&port.txMessages);
   irq_set_enabled(spiSettings.irq, true);
   startDMA();
 }

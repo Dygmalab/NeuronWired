@@ -30,5 +30,5 @@ void LEDSolidColorDefy::TransientLEDMode::onActivate(void) {
 void LEDSolidColorDefy::TransientLEDMode::update(void) {
   parent_->led_mode.update();
 }
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
