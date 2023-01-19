@@ -26,7 +26,6 @@ namespace driver {
 namespace hid {
 namespace keyboardio {
 
-#ifndef ARDUINO_RASPBERRY_PI_PICO
 
 /*
  * We are wrapping a few keyboard-related objects here, instead of directly
@@ -166,7 +165,7 @@ class SystemControlWrapper {
 };
 
 struct KeyboardProps: public base::KeyboardProps {
-  typedef BootKeyboardWrapper BootKeyboard;
+//  typedef BootKeyboardWrapper BootKeyboard;
   typedef NKROKeyboardWrapper NKROKeyboard;
   typedef ConsumerControlWrapper ConsumerControl;
   typedef SystemControlWrapper SystemControl;
@@ -175,66 +174,6 @@ struct KeyboardProps: public base::KeyboardProps {
 template <typename _Props>
 class Keyboard: public base::Keyboard<_Props> {};
 
-#else // ARDUINO_RASPBERRY_PI_PICO
-
-/*
- * We are wrapping a few keyboard-related objects here, instead of directly
- * using the classes in `KeyboardProps` below. We do this, because this lets the
- * linker optimize this whole thing out if it is unused. It can do that because
- * instantiating `Keyboard_` & co is in a separate compilation unit.
- *
- * While it would have been cleaner and shorter to instantiate them here, and
- * drop the global objects, that prevents optimizing them out, and that's a cost
- * we do not want to pay.
- */
-
-class NKROKeyboardWrapper {
- public:
-  NKROKeyboardWrapper() {}
-  void begin() {
-    Keyboard.begin();
-  }
-
-  void sendReport() {
-    Keyboard.sendReport();
-  }
-
-  void press(uint8_t code) {
-    Keyboard.press(code);
-  }
-  void release(uint8_t code) {
-    Keyboard.release(code);
-  }
-  void releaseAll() {
-    Keyboard.releaseAll();
-  }
-
-  bool isModifierActive(uint8_t code) {
-    return Keyboard.isModifierActive(code);
-  }
-  bool wasModifierActive(uint8_t code) {
-    return Keyboard.wasModifierActive(code);
-  }
-  bool isAnyModifierActive() {
-    return Keyboard.isAnyModifierActive();
-  }
-  bool wasAnyModifierActive() {
-    return Keyboard.wasAnyModifierActive();
-  }
-
-  uint8_t getLeds() {
-    return Keyboard.getLEDs();
-  }
-};
-
-struct KeyboardProps: public base::KeyboardProps {
-  typedef NKROKeyboardWrapper NKROKeyboard;
-};
-
-template <typename _Props>
-class Keyboard: public base::Keyboard<_Props> {};
-
-#endif  // ARDUINO_RASPBERRY_PI_PICO
 
 }
 }

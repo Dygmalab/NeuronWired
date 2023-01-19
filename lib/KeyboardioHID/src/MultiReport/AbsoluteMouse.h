@@ -26,28 +26,18 @@ THE SOFTWARE.
 // Include guard
 #pragma once
 
-#ifndef __ABSOLUTE_MOUSE_H__
-#define __ABSOLUTE_MOUSE_H__
-
 #include <Arduino.h>
 #include "HID.h"
 #include "HID-Settings.h"
 #include "../DeviceAPIs/AbsoluteMouseAPI.h"
 
-
-#ifndef DYGMA_USE_TINYUSB
-
 class AbsoluteMouse_ : public AbsoluteMouseAPI {
-  public:
-    AbsoluteMouse_(void);
+ public:
+  AbsoluteMouse_();
 
-  protected:
-    // Sending is public in the base class for advanced users.
-    virtual void sendReport(void* data, int length);
+ protected:
+  // Sending is public in the base class for advanced users.
+  virtual void sendReport(void* data, int length);
 };
 
 extern AbsoluteMouse_ AbsoluteMouse;
-
-#endif  // DYGMA_USE_TINYUSB
-
-#endif  // __ABSOLUTE_MOUSE_H__

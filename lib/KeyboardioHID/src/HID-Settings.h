@@ -26,6 +26,7 @@ THE SOFTWARE.
 // Include guard
 #pragma once
 
+
 #define HID_REPORTID_NONE 0
 
 #ifndef HID_REPORTID_MOUSE
@@ -63,11 +64,6 @@ THE SOFTWARE.
 #endif
 
 
-// Nico has submitted these definitions upstream, but they're not merged yet
-// HID Request Type HID1.11 Page 51 7.2.1 Get_Report Request
-#define KALEID_HID_REPORT_TYPE_INPUT   1
-#define KALEID_HID_REPORT_TYPE_OUTPUT  2
-#define KALEID_HID_REPORT_TYPE_FEATURE 3
 
 // Controls whether to pack messages or not. When set, any sends will be delayed
 // until packing is toggled off, and sent then. This is a no-op on AVR, but is
@@ -77,13 +73,14 @@ void USB_PackMessages(bool pack);
 
 #if defined(ARDUINO_ARCH_AVR)
 
-#include "PluggableUSB.h"
+#include <PluggableUSB.h>
 
 #define EPTYPE_DESCRIPTOR_SIZE      uint8_t
+#define USB_Configured              USBDevice.configured
 
 #elif defined(ARDUINO_ARCH_SAM)
 
-#include "USB/PluggableUSB.h"
+#include <PluggableUSB.h>
 
 #define EPTYPE_DESCRIPTOR_SIZE      uint32_t
 #define EP_TYPE_INTERRUPT_IN        (UOTGHS_DEVEPTCFG_EPSIZE_512_BYTE | \
@@ -103,10 +100,11 @@ void USB_PackMessages(bool pack);
 #define USB_Recv                    USBD_Recv
 #define USB_Send                    USBD_Send
 #define USB_Flush                   USBD_Flush
+#define USB_Configured              USBDevice.configured
 
 #elif defined(ARDUINO_ARCH_SAMD)
 
-#include "USB/PluggableUSB.h"
+#include <PluggableUSB.h>
 
 #define EPTYPE_DESCRIPTOR_SIZE      uint32_t
 #define EP_TYPE_INTERRUPT_IN        USB_ENDPOINT_TYPE_INTERRUPT | USB_ENDPOINT_IN(0);
@@ -118,6 +116,7 @@ void USB_PackMessages(bool pack);
 #define USB_RecvControl             USBDevice.recvControl
 #define USB_Send                    USBDevice.send
 #define USB_Flush                   USBDevice.flush
+#define USB_Configured              USBDevice.configured
 
 int USB_SendControl(void* y, uint8_t z);
 int USB_SendControl(uint8_t x, const void* y, uint8_t z);
@@ -125,22 +124,28 @@ int USB_SendControl(uint8_t x, const void* y, uint8_t z);
 #define TRANSFER_PGM                0
 #define TRANSFER_RELEASE            0
 
-#define HID_REPORT_TYPE_INPUT       1
-#define HID_REPORT_TYPE_OUTPUT      2
-#define HID_REPORT_TYPE_FEATURE     3
+#elif defined(ARDUINO_ARCH_GD32)
 
-#elif defined(ARDUINO_ARCH_NRF52)
+#include "USBCore.h"
 
-#include "api/USBAPI.h"
+#define EPTYPE_DESCRIPTOR_SIZE      unsigned int
 
-#define EPTYPE_DESCRIPTOR_SIZE      uint32_t
 
-#elif defined(ARDUINO_ARCH_RP2040)
+// Should eventually get defined upstream
+#ifndef USB_DEVICE_CLASS_HUMAN_INTERFACE
+#define USB_DEVICE_CLASS_HUMAN_INTERFACE       0x03
+#endif
 
-// Normal or bios protocol (Keyboard/Mouse) HID1.11 Page 54 7.2.5 Get_Protocol Request
-// "protocol" variable is used for this purpose.
-#define HID_BOOT_PROTOCOL	0
-#define HID_REPORT_PROTOCOL	1
+#define ARCH_HAS_CONFIGURABLE_EP_SIZES
+
+constexpr uint16_t EP_TYPE_INTERRUPT_IN(uint8_t buffer_size) { return EPDesc(USB_TRX_IN, USB_EP_ATTR_INT, buffer_size).val; }
+constexpr uint16_t EP_TYPE_INTERRUPT_OUT(uint8_t buffer_size) { return EPDesc(USB_TRX_OUT, USB_EP_ATTR_INT, buffer_size).val; }
+
+#define USB_Configured USBCore().configured
+
+
+#elif defined(ARDUINO_RASPBERRY_PI_PICO)
+
 
 #else
 

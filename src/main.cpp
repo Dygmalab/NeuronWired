@@ -56,7 +56,6 @@
 
 
 #include "RP2040_firmware.h"
-#include "arch/RP2040USB.h"
 #include "LEDEffect-Rainbow-Defy.h"
 #include "LEDEffect-SolidColor-Defy.h"
 #include "Colormap-Defy.h"
@@ -67,13 +66,12 @@ enum {
   QWERTY,
   NUMPAD,
   _LAYER_MAX
-}; // layers
+};  // layers
 
 /* This comment temporarily turns off astyle's indent enforcement so we can make
  * the keymaps actually resemble the physical key layout better
  */
-// *INDENT-OFF*
-
+// clang-format off
 KEYMAPS(
 [QWERTY] = KEYMAP_STACKED
 (
@@ -109,8 +107,8 @@ KEYMAPS(
     , Key_RightArrow, Key_RightControl, Key_Delete, MoveToLayer(QWERTY)
 )
 );
-/* Re-enable astyle's indent enforcement */
-// *INDENT-ON*
+// clang-format on
+
 
 kaleidoscope::device::dygma::wired::SideFlash<RP2040Firmware> SideFlash;
 
@@ -119,11 +117,14 @@ kaleidoscope::device::dygma::wired::SideFlash<RP2040Firmware> SideFlash;
  */
 void toggleLedsOnSuspendResume(kaleidoscope::plugin::HostPowerManagement::Event event) {
   switch (event) {
-    case kaleidoscope::plugin::HostPowerManagement::Suspend:LEDControl.disable();
-      break;
-    case kaleidoscope::plugin::HostPowerManagement::Resume:LEDControl.enable();
-      break;
-    case kaleidoscope::plugin::HostPowerManagement::Sleep:break;
+  case kaleidoscope::plugin::HostPowerManagement::Suspend:
+    LEDControl.disable();
+    break;
+  case kaleidoscope::plugin::HostPowerManagement::Resume:
+    LEDControl.enable();
+    break;
+  case kaleidoscope::plugin::HostPowerManagement::Sleep:
+    break;
   }
 }
 
@@ -133,7 +134,7 @@ void toggleLedsOnSuspendResume(kaleidoscope::plugin::HostPowerManagement::Event 
  */
 void hostPowerManagementEventHandler(kaleidoscope::plugin::HostPowerManagement::Event event) {
   //TODO: Check of to manage this.
-  //toggleLedsOnSuspendResume(event);
+  toggleLedsOnSuspendResume(event);
 }
 
 enum {
@@ -168,57 +169,58 @@ static void protocolBreathe() {
 }
 
 USE_MAGIC_COMBOS(
-    {
-      .action = toggleKeyboardProtocol,
-// Left Ctrl + Left Shift + Left Alt + 6
-      .keys = {R4C0, R3C0, R4C2, R0C6}
-    });
+  {.action = toggleKeyboardProtocol,
+   // Left Ctrl + Left Shift + Left Alt + 6
+   .keys = {R4C0, R3C0, R4C2, R0C6}});
 
 kaleidoscope::plugin::EEPROMPadding JointPadding(8);
-static kaleidoscope::plugin::LEDSolidColorDefy solidRedDefy(255, 0, 0,0);
-static kaleidoscope::plugin::LEDSolidColorDefy solidGreenDefy(0, 255, 0,0);
-static kaleidoscope::plugin::LEDSolidColorDefy solidBlueDefy(0, 0, 255,0);
-static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0,255);
+static kaleidoscope::plugin::LEDSolidColorDefy solidRedDefy(255, 0, 0, 0);
+static kaleidoscope::plugin::LEDSolidColorDefy solidGreenDefy(0, 255, 0, 0);
+static kaleidoscope::plugin::LEDSolidColorDefy solidBlueDefy(0, 0, 255, 0);
+static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0, 255);
 
+// clang-format off
+KALEIDOSCOPE_INIT_PLUGINS(
+  FirmwareVersion,
+  FlashUpgrade,
+  USBQuirks,
+  MagicCombo,
+  RaiseIdleLEDs,
+  EEPROMSettings,
+  EEPROMKeymap,
+  FocusSettingsCommand,
+  FocusEEPROMCommand,
+  LEDCapsLockLight,
+  LEDControl,
+  PersistentLEDMode,
+  FocusLEDCommand,
+  LEDPaletteThemeDefy,
+  JointPadding,
+  ColormapEffectDefy,
+  LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
+  PersistentIdleLEDs,
+  WiredFocus,
+  Qukeys,
+  DynamicSuperKeys,
+  DynamicMacros,
+  SideFlash,
+  Focus,
+  MouseKeys,
+  OneShot,
+  EscapeOneShot,
+  LayerFocus,
+  EEPROMUpgrade,
+  HostPowerManagement);
+// clang-format on
 
- KALEIDOSCOPE_INIT_PLUGINS(
-    FirmwareVersion,
-	FlashUpgrade,
-    USBQuirks,
-    MagicCombo,
-    RaiseIdleLEDs,
-    EEPROMSettings,
-    EEPROMKeymap,
-    FocusSettingsCommand,
-    FocusEEPROMCommand,
-    LEDCapsLockLight,
-    LEDControl,
-    PersistentLEDMode,
-    FocusLEDCommand,
-    LEDPaletteThemeDefy,
-    JointPadding,
-    ColormapEffectDefy,
-    LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
-    PersistentIdleLEDs,
-    WiredFocus,
-    Qukeys,
-    DynamicSuperKeys,
-    DynamicMacros,
-    SideFlash,
-    Focus,
-    MouseKeys,
-    OneShot,
-    EscapeOneShot,
-    LayerFocus,
-    EEPROMUpgrade,
-    HostPowerManagement);
-
-void initVariant(){
-  __USBStart();
-  Serial.begin(115200);
-}
 
 void setup() {
+  TinyUSBDevice.setID(BOARD_VENDORID, BOARD_PRODUCTID);
+  TinyUSBDevice.setManufacturerDescriptor(BOARD_MANUFACTURER);
+  TinyUSBDevice.setProductDescriptor(BOARD_PRODUCT);
+
+  Serial.begin(115200);
+  HID().begin();
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
   SideFlash.flashSides();
@@ -242,7 +244,7 @@ void loop() {
   watchdog_update();
 }
 
-void setup1(){
+void setup1() {
   kaleidoscope::device::dygma::wired::portRight.initCommunications();
   kaleidoscope::device::dygma::wired::portLeft.initCommunications();
 }

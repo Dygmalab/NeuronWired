@@ -270,7 +270,6 @@ void Hand::sendLayerKeyMapColors(uint8_t layer, const uint8_t *keyMapColors) {
   message.context.size = WiredLEDDriverProps::key_matrix_leds + 1;
   message.data[0] = layer;
   memcpy(&message.data[1], keyMapColors, message.context.size-1);
-  Serial.println();
   spiPort->sendPacket(&message);
 }
 

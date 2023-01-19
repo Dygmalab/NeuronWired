@@ -3,17 +3,16 @@
 
 namespace Side_communications_protocol {
 
-enum Devices: uint8_t {
+enum Devices : uint8_t {
   UNKNOWN = 0,
   KEYSCANNER_DEFY_LEFT,
   KEYSCANNER_DEFY_RIGHT,
   NEURON_DEFY_WIRED,
   NEURON_DEFY_WIRELESS,
 };
+static_assert(sizeof(Devices) == sizeof(uint8_t));
 
-static_assert(sizeof(Devices)==sizeof(uint8_t));
-
-enum Commands: uint8_t {
+enum Commands : uint8_t {
   IS_DEAD = 0,
   IS_ALIVE,
   GET_VERSION,
@@ -22,7 +21,7 @@ enum Commands: uint8_t {
   HAS_KEYS = 10,
   SET_KEYSCAN_INTERVAL,
   //LEDS
-  SET_BRIGHTNESS=20,
+  SET_BRIGHTNESS = 20,
   SET_MODE_LED,
   SET_LED,
   SET_LED_BANK,
@@ -30,37 +29,40 @@ enum Commands: uint8_t {
   SET_LAYER_KEYMAP_COLORS,
   SET_LAYER_UNDERGLOW_COLORS,
 };
-static_assert(sizeof(Commands)==sizeof(uint8_t));
+static_assert(sizeof(Commands) == sizeof(uint8_t));
 
 struct Context {
   Commands command;
   Devices device;
-  uint8_t size;
+  struct {
+	uint8_t size : 7;
+	bool has_more_packets : 1;
+  };
 };
-static_assert(sizeof(Context)==(sizeof(uint8_t)*3));
+static_assert(sizeof(Context) == (sizeof(uint8_t) * 3));
 
 static const constexpr uint8_t MAX_TRANSFER_SIZE = 128;
-union Packet{
-  struct{
+union Packet {
+  struct {
 	Context context;
-	uint8_t data[MAX_TRANSFER_SIZE-sizeof(Context)];
+	uint8_t data[MAX_TRANSFER_SIZE - sizeof(Context)];
   };
   uint8_t buf[MAX_TRANSFER_SIZE];
 };
-static_assert(sizeof(Packet)==MAX_TRANSFER_SIZE);
+static_assert(sizeof(Packet) == MAX_TRANSFER_SIZE);
 
-class Default{
+class Default {
 public:
   Default() {
-	message.context.device = UNKNOWN;
+	message.context.device  = UNKNOWN;
 	message.context.command = IS_DEAD;
-	message.context.size = 0;
+	message.context.size    = 0;
   };
 
   explicit Default(Devices device, Commands cmd = IS_ALIVE) {
-	message.context.device = device;
+	message.context.device  = device;
 	message.context.command = cmd;
-	message.context.size = 0;
+	message.context.size    = 0;
   };
 
   virtual uint8_t serialize() {
@@ -76,7 +78,8 @@ public:
 
 class KeyStrokes : public Default {
 public:
-  KeyStrokes(Devices device) : Default(device, HAS_KEYS) {
+  KeyStrokes(Devices device)
+	  : Default(device, HAS_KEYS) {
 	message.context.size = sizeof(keys);
   }
   uint8_t serialize() override {
@@ -94,7 +97,8 @@ public:
 
 class Crc : public Default {
 public:
-  Crc(Devices device, Commands cmd = HAS_KEYS) : Default(device, cmd) {
+  Crc(Devices device, Commands cmd = HAS_KEYS)
+	  : Default(device, cmd) {
 	message.context.size = sizeof(crc);
   }
   uint8_t serialize() override {
@@ -109,5 +113,5 @@ public:
   }
   uint32_t crc;
 };
-}
+}  // namespace Side_communications_protocol
 #endif

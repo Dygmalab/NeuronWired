@@ -25,78 +25,73 @@ THE SOFTWARE.
 
 #include "SystemControl.h"
 #include "DescriptorPrimitives.h"
+#include "Adafruit_TinyUSB.h"
 
-static const uint8_t _hidMultiReportDescriptorSystem[] PROGMEM = {
-    //TODO limit to system keys only?
-    /*  System Control (Power Down, Sleep, Wakeup, ...) */
-    D_USAGE_PAGE, D_PAGE_GENERIC_DESKTOP,								/* USAGE_PAGE (Generic Desktop) */
-    D_USAGE, 0x80,								/* USAGE (System Control) */
-    D_COLLECTION, D_APPLICATION, 							/* COLLECTION (Application) */
-    D_REPORT_ID, HID_REPORTID_SYSTEMCONTROL,		/* REPORT_ID */
-    /* 1 system key */
-    D_LOGICAL_MINIMUM, 0x00, 							/* LOGICAL_MINIMUM (0) */
-    D_MULTIBYTE(D_LOGICAL_MAXIMUM), 0xff, 0x00, 						/* LOGICAL_MAXIMUM (255) */
-    D_USAGE_MINIMUM, 0x00, 							/* USAGE_MINIMUM (Undefined) */
-    D_USAGE_MAXIMUM, 0xff, 							/* USAGE_MAXIMUM (System Menu Down) */
-    D_REPORT_COUNT, 0x01, 							/* REPORT_COUNT (1) */
-    D_REPORT_SIZE, 0x08, 							/* REPORT_SIZE (8) */
-    D_INPUT, (D_DATA|D_ARRAY|D_ABSOLUTE), 							/* INPUT (Data,Ary,Abs) */
-    D_END_COLLECTION 									/* END_COLLECTION */
+static const uint8_t system_control_hid_descriptor_[] PROGMEM = {
+  //TODO limit to system keys only?
+  /*  System Control (Power Down, Sleep, Wakeup, ...) */
+  D_USAGE_PAGE, D_PAGE_GENERIC_DESKTOP,         /* USAGE_PAGE (Generic Desktop) */
+  D_USAGE, 0x80,                                /* USAGE (System Control) */
+  D_COLLECTION, D_APPLICATION,                  /* COLLECTION (Application) */
+  D_REPORT_ID, HID_REPORTID_SYSTEMCONTROL,      /* REPORT_ID */
+  /* 1 system key */
+  D_LOGICAL_MINIMUM, 0x00,                      /* LOGICAL_MINIMUM (0) */
+  D_MULTIBYTE(D_LOGICAL_MAXIMUM), 0xff, 0x00,   /* LOGICAL_MAXIMUM (255) */
+  D_USAGE_MINIMUM, 0x00,                        /* USAGE_MINIMUM (Undefined) */
+  D_USAGE_MAXIMUM, 0xff,                        /* USAGE_MAXIMUM (System Menu Down) */
+  D_REPORT_COUNT, 0x01,                         /* REPORT_COUNT (1) */
+  D_REPORT_SIZE, 0x08,                          /* REPORT_SIZE (8) */
+  D_INPUT, (D_DATA | D_ARRAY | D_ABSOLUTE),     /* INPUT (Data,Ary,Abs) */
+  D_END_COLLECTION                              /* END_COLLECTION */
 };
 
-#ifndef DYGMA_USE_TINYUSB
-
-SystemControl_::SystemControl_(void) {
-    static HIDSubDescriptor node(_hidMultiReportDescriptorSystem, sizeof(_hidMultiReportDescriptorSystem));
-    HID().AppendDescriptor(&node);
+SystemControl_::SystemControl_() {
+  static HIDSubDescriptor node(system_control_hid_descriptor_,
+                               sizeof(system_control_hid_descriptor_));
+  HID().AppendDescriptor(&node);
 }
 
-void SystemControl_::begin(void) {
-    // release all buttons
-    end();
+void SystemControl_::begin() {
 }
 
-void SystemControl_::end(void) {
-    uint8_t _report = 0x00;
-    sendReport(&_report, sizeof(_report));
+void SystemControl_::end() {
+  releaseAll();
 }
 
 void SystemControl_::write(uint8_t s) {
-    press(s);
-    release();
+  press(s);
+  release();
 }
 
-void SystemControl_::release(void) {
-    begin();
+void SystemControl_::release() {
+  releaseAll();
 }
 
-void SystemControl_::releaseAll(void) {
-    begin();
+void SystemControl_::releaseAll() {
+  uint8_t report = 0x00;
+  sendReport(&report, sizeof(report));
 }
 
 void SystemControl_::press(uint8_t s) {
-    if (s == HID_SYSTEM_WAKE_UP) {
+  if (s == HID_SYSTEM_WAKE_UP) {
 #ifdef __AVR__
-        USBDevice.wakeupHost();
+    USBDevice.wakeupHost();
 #endif
 #ifdef ARDUINO_ARCH_SAMD
-        // This is USBDevice_SAMD21G18x.wakeupHost(). But we can't include that
-        // header, because it redefines a few symbols, and causes linking
-        // errors. So we simply reimplement the same thing here.
-        USB->DEVICE.CTRLB.bit.UPRSM = 1;
+    // This is USBDevice_SAMD21G18x.wakeupHost(). But we can't include that
+    // header, because it redefines a few symbols, and causes linking
+    // errors. So we simply reimplement the same thing here.
+    USB->DEVICE.CTRLB.bit.UPRSM = 1;
 #endif
-    } else {
-        sendReport(&s, sizeof(s));
-    }
+	TinyUSBDevice.remoteWakeup();
+  } else {
+    sendReport(&s, sizeof(s));
+  }
 }
 
 
 void SystemControl_::sendReport(void* data, int length) {
-    HID().SendReport(HID_REPORTID_SYSTEMCONTROL, data, length);
+  HID().SendReport(HID_REPORTID_SYSTEMCONTROL, data, length);
 }
 
 SystemControl_ SystemControl;
-
-#else
-
-#endif  // DYGMA_USE_TINYUSB

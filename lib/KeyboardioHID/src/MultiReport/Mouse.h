@@ -26,93 +26,55 @@ THE SOFTWARE.
 // Include guard
 #pragma once
 
-#ifndef __MOUSE_H__
-#define __MOUSE_H__
-
 #include <Arduino.h>
 #include "HID.h"
 #include "HID-Settings.h"
 #include "../MouseButtons.h"
 
 typedef union {
-    // Mouse report: 8 buttons, position, wheel
-    struct {
-        uint8_t buttons;
-        int8_t xAxis;
-        int8_t yAxis;
-        int8_t vWheel;
-        int8_t hWheel;
-    };
+  // Mouse report: 8 buttons, position, wheel
+  struct {
+    uint8_t buttons;
+    int8_t xAxis;
+    int8_t yAxis;
+    int8_t vWheel;
+    int8_t hWheel;
+  };
 } HID_MouseReport_Data_t;
 
-#ifndef DYGMA_USE_TINYUSB
 
 class Mouse_ {
-  public:
-    Mouse_(void);
-    void begin(void);
-    void end(void);
-    void click(uint8_t b = MOUSE_LEFT);
-    void move(signed char x, signed char y, signed char vWheel = 0, signed char hWheel = 0);
-    void press(uint8_t b = MOUSE_LEFT);   // press LEFT by default
-    void release(uint8_t b = MOUSE_LEFT); // release LEFT by default
-    bool isPressed(uint8_t b = MOUSE_LEFT); // check LEFT by default
-
-    /** getReport returns the current report.
-     *
-     * The current report is the one to be send next time sendReport() is called.
-     *
-     * @returns A copy of the report.
-     */
-    const HID_MouseReport_Data_t getReport() {
-        return report;
-    }
-    void sendReport(void);
-
-    void releaseAll(void);
-
-  protected:
-    HID_MouseReport_Data_t report;
-    HID_MouseReport_Data_t lastReport;
-
-  private:
-    void sendReportUnchecked(void);
-};
-extern Mouse_ Mouse;
-
-#else // DYGMA_USE_TINYUSB
-
-// TinyUSB
-#include "tusb.h"
-
-class Mouse_ 
-{
-  public:
+ public:
   Mouse_();
-
-  void begin(void);
-  void end(void);
-
-  void move(int8_t x, int8_t y, int8_t vWheel = 0, int8_t hWheel = 0) ;
-
-  void press(uint8_t b = MOUSE_LEFT);     // press LEFT by default
+  void begin();
+  void end();
+  // Note: the following `click()` method is unlike the `move()`, `press()`, and
+  // `release()` methods, in that it doesn't merely modify the pending report,
+  // but also calls `sendReport()` at least twice.
   void click(uint8_t b = MOUSE_LEFT);
-  void release(uint8_t b = MOUSE_LEFT);   // release LEFT by default
-  void releaseAll(void);
-
+  void move(int8_t x, int8_t y, int8_t v_wheel = 0, int8_t h_wheel = 0);
+  void press(uint8_t b = MOUSE_LEFT);   // press LEFT by default
+  void release(uint8_t b = MOUSE_LEFT); // release LEFT by default
   bool isPressed(uint8_t b = MOUSE_LEFT); // check LEFT by default
 
-  void sendReport(void);
+  /** getReport returns the current report.
+   *
+   * The current report is the one to be send next time sendReport() is called.
+   *
+   * @returns A copy of the report.
+   */
+  const HID_MouseReport_Data_t getReport() {
+    return report_;
+  }
+  void sendReport();
 
-  const HID_MouseReport_Data_t getReport(void);
+  void releaseAll();
 
-  private:
-    HID_MouseReport_Data_t report;
-    HID_MouseReport_Data_t lastReport;
+ protected:
+  HID_MouseReport_Data_t report_;
+  uint8_t prev_report_buttons_ = 0;
+
+ private:
+  void sendReportUnchecked();
 };
-
 extern Mouse_ Mouse;
-
-#endif  // DYGMA_USE_TINYUSB
-
-#endif  // __MOUSE_H__

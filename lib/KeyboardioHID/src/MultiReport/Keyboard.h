@@ -26,9 +26,6 @@ THE SOFTWARE.
 // Include guard
 #pragma once
 
-#ifndef __KEYBOARD_H__
-#define __KEYBOARD_H__
-
 #include <Arduino.h>
 #include "HID.h"
 #include "HID-Settings.h"
@@ -36,92 +33,45 @@ THE SOFTWARE.
 #include "HIDTables.h"
 #include "HIDAliases.h"
 
-#ifndef DYGMA_USE_TINYUSB
-
-#define KEY_BYTES 28
+#define KEY_BITS (4 + HID_LAST_KEY - HID_KEYBOARD_A_AND_A + 1)
+#define KEY_BYTES ((KEY_BITS + 7) / 8)
 
 typedef union {
-    // Modifiers + keymap
-    struct {
-        uint8_t modifiers;
-        uint8_t keys[KEY_BYTES];
-    };
-    uint8_t allkeys[1 + KEY_BYTES];
+  // Modifiers + keymap
+  struct {
+    uint8_t modifiers;
+    uint8_t keys[KEY_BYTES ];
+  };
+  uint8_t allkeys[1 + KEY_BYTES];
 } HID_KeyboardReport_Data_t;
 
+
 class Keyboard_ {
-  public:
-    Keyboard_(void);
-    void begin(void);
-    void end(void);
+ public:
+  Keyboard_();
+  void begin();
+  void end();
 
-    size_t press(uint8_t k);
-    size_t release(uint8_t k);
-    void  releaseAll(void);
-    int sendReport(void);
+  size_t press(uint8_t k);
+  size_t release(uint8_t k);
+  void  releaseAll();
+  int sendReport();
 
-    boolean isKeyPressed(uint8_t k);
-    boolean wasKeyPressed(uint8_t k);
-    boolean isModifierActive(uint8_t k);
-    boolean wasModifierActive(uint8_t k);
-    boolean isAnyModifierActive();
-    boolean wasAnyModifierActive();
+  bool isKeyPressed(uint8_t k);
+  bool wasKeyPressed(uint8_t k);
+  bool isModifierActive(uint8_t k);
+  bool wasModifierActive(uint8_t k);
+  bool isAnyModifierActive();
+  bool wasAnyModifierActive();
 
-    uint8_t getLEDs() {
-        return HID().getLEDs();
-        return 0;
-    };
+  uint8_t getLEDs() {
+    return HID().getLEDs();
+  };
 
-    HID_KeyboardReport_Data_t keyReport;
-    HID_KeyboardReport_Data_t lastKeyReport;
-  private:
-    int sendReportUnchecked(void);
+ private:
+  HID_KeyboardReport_Data_t report_;
+  HID_KeyboardReport_Data_t last_report_;
+
+  int sendReportUnchecked();
 };
 extern Keyboard_ Keyboard;
-
-//#endif  // DYGMA_USE_TINYUSB
-#else // DYGMA_USE_TINYUSB
-
-// TinyUSB
-#include "tusb.h"
-
-#define KEY_BYTES 6 // TinyUSB uses 6 key as maximum and kaleidoscope 28
-
-class Keyboard_
-{
-  public:
-    Keyboard_();
-
-    uint8_t leds;
-
-    void begin(void);
-    void end(void);
-
-    size_t press(uint8_t k);
-    size_t release(uint8_t k);
-    
-    void  releaseAll(void);
-    int sendReport(void);
-
-    boolean isKeyPressed(uint8_t k);
-    boolean wasKeyPressed(uint8_t k);
-    boolean isModifierActive(uint8_t k);
-    boolean wasModifierActive(uint8_t k);
-    boolean isAnyModifierActive(void);
-    boolean wasAnyModifierActive(void);
-
-    uint8_t getLEDs(void);
-
-  private:
-    hid_keyboard_report_t report;
-    hid_keyboard_report_t lastReport;
-
-    boolean isPrintableKey(uint8_t k);
-    boolean isModifierKey(uint8_t k);
-};
-
-extern Keyboard_ Keyboard;
-
-#endif  // DYGMA_USE_TINYUSB
-
-#endif  // __KEYBOARD_H__

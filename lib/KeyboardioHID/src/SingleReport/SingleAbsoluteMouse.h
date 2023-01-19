@@ -26,68 +26,53 @@ THE SOFTWARE.
 // Include guard
 #pragma once
 
-#ifndef __SINGLE_ABSOLUT_MOUSE_H__
-#define __SINGLE_ABSOLUT_MOUSE_H__
-
 #include <Arduino.h>
 #include "HID.h"
 #include "HID-Settings.h"
 #include "../DeviceAPIs/AbsoluteMouseAPI.h"
 
 
-#ifndef DYGMA_USE_TINYUSB
+/*class SingleAbsoluteMouse_ : public PluggableUSBModule, public AbsoluteMouseAPI {
+ public:
+  SingleAbsoluteMouse_();
+  uint8_t getLeds();
+  uint8_t getProtocol();
 
-class SingleAbsoluteMouse_ : public PluggableUSBModule, public AbsoluteMouseAPI {
-  public:
-    SingleAbsoluteMouse_(void);
-    uint8_t getLeds(void);
-    uint8_t getProtocol(void);
+ protected:
+  // Implementation of the PUSBListNode
+  int getInterface(uint8_t* interfaceCount);
+  int getDescriptor(USBSetup& setup);
+  bool setup(USBSetup& setup);
 
-  protected:
-    // Implementation of the PUSBListNode
-    int getInterface(uint8_t* interfaceCount);
-    int getDescriptor(USBSetup& setup);
-    bool setup(USBSetup& setup);
+  EPTYPE_DESCRIPTOR_SIZE epType[1];
+  uint8_t protocol;
+  uint8_t idle;
 
-    EPTYPE_DESCRIPTOR_SIZE epType[1];
-    uint8_t protocol;
-    uint8_t idle;
-
-    virtual inline void sendReport(void* data, int length) override;
+  virtual inline void sendReport(void* data, int length) override;
 };
-extern SingleAbsoluteMouse_ SingleAbsoluteMouse;
+extern SingleAbsoluteMouse_ SingleAbsoluteMouse;*/
 
-#else  // DYGMA_USE_TINYUSB
+//TODO: Support AbsoluteMouse
+class SingleAbsoluteMouse_ {
+public:
+  SingleAbsoluteMouse_(void){};
 
-class SingleAbsoluteMouse_
-{
-  public:
-    SingleAbsoluteMouse_(void);
+  uint8_t getLeds(void){return 0;};
+  uint8_t getProtocol(void){return 0;};
 
-    uint8_t getLeds(void);
-    uint8_t getProtocol(void);
+  void begin(void) {};  // nop
+  void move(int8_t x, int8_t y, int8_t wheel) {};  // nop
+  void moveTo(uint16_t x, uint16_t y, uint8_t wheel) {};  // nop
+  void click(uint8_t buttons) {};  // nop
+  void press(uint8_t buttons) {};  // nop
+  void release(uint8_t buttons) {};  // nop
 
-    void begin(void) {};  // nop
-    void move(int8_t x, int8_t y, int8_t wheel) {};  // nop
-    void moveTo(uint16_t x, uint16_t y, uint8_t wheel) {};  // nop
-    void click(uint8_t buttons) {};  // nop
-    void press(uint8_t buttons) {};  // nop
-    void release(uint8_t buttons) {};  // nop
+protected:
 
-  protected:
-    // Implementation of the PUSBListNode
-    int getInterface(uint8_t* interfaceCount);
-    int getDescriptor(USBSetup& setup);
-    bool setup(USBSetup& setup);
+  uint8_t protocol;
+  uint8_t idle;
 
-    uint8_t protocol;
-    uint8_t idle;
-
-    void sendReport(void* data, int length);
+  void sendReport(void *data, int length){};
 };
 
 extern SingleAbsoluteMouse_ SingleAbsoluteMouse;
-
-#endif  // DYGMA_USE_TINYUSB
-
-#endif  // __SINGLE_ABSOLUT_MOUSE_H__

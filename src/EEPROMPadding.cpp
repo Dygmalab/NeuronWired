@@ -27,5 +27,5 @@ EventHandlerResult EEPROMPadding::onSetup() {
   return EventHandlerResult::OK;
 }
 
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope

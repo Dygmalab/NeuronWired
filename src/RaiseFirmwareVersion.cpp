@@ -51,7 +51,7 @@ EventHandlerResult FirmwareVersion::onFocusEvent(const char *command) {
 }
 
 
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
 
 kaleidoscope::plugin::FirmwareVersion FirmwareVersion;

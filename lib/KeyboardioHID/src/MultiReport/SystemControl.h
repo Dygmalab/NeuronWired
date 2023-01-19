@@ -23,9 +23,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef __SYSTEM_CONTROL_H__
-#define __SYSTEM_CONTROL_H__
-
 // Include guard
 #pragma once
 
@@ -35,48 +32,26 @@ THE SOFTWARE.
 #include "HIDTables.h"
 
 typedef union {
-    // Every usable system control key possible
-    uint8_t key;
+  // Every usable system control key possible
+  uint8_t key;
 } HID_SystemControlReport_Data_t;
 
-#ifndef DYGMA_USE_TINYUSB
 
 class SystemControl_ {
-  public:
-    void begin(void);
-    void end(void);
-    void write(uint8_t s);
-    void press(uint8_t s);
-    void release(void);
-    void releaseAll(void);
-    void sendReport(void* data, int length);
+ public:
+  void begin();
+  void end();
+  void write(uint8_t s);
+  void press(uint8_t s);
+  void release();
+  void releaseAll();
+  void sendReport(void* data, int length);
 
-    SystemControl_(void);
+  SystemControl_();
 
-  protected:
+ protected:
 };
 
-extern SystemControl_ SystemControl;
 
-#else
-
-class SystemControl_ {
-  public:
-    void begin(void);
-    void end(void);
-    void write(uint8_t s);
-    void press(uint8_t s);
-    void release(void);
-    void releaseAll(void);
-    void sendReport(void* data, int length);
-
-    SystemControl_(void);
-
-  protected:
-};
 
 extern SystemControl_ SystemControl;
-
-#endif  // DYGMA_USE_TINYUSB
-
-#endif  // __SYSTEM_CONTROL_H__

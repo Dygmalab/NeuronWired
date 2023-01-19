@@ -39,23 +39,23 @@ void EEPROMUpgrade::reserveStorage() {
 
 void EEPROMUpgrade::upgrade() {
   switch (version_) {
-    case 0:
-      /*
+  case 0:
+    /*
        * For some odd reason, the IdleLEDs timeout setting gets misread, even
        * when the EEPROM is correct. We always read 10176 in this case, so set
        * it back to the default 600 then.
        */
-      if (::PersistentIdleLEDs.idleTimeoutSeconds() == 10176) {
-        ::PersistentIdleLEDs.setIdleTimeoutSeconds(600);
-      }
+    if (::PersistentIdleLEDs.idleTimeoutSeconds() == 10176) {
+      ::PersistentIdleLEDs.setIdleTimeoutSeconds(600);
+    }
 
-      /*
+    /*
        * With the 0->1 upgrade, we removed a number of LED effects. For simplicity's sake, set the mode to Colormap.
        */
-      ::LEDControl.set_mode(0);
+    ::LEDControl.set_mode(0);
 
-      version_++;
-      break;
+    version_++;
+    break;
   }
   Runtime.storage().put(settings_base_, version_);
 }
@@ -78,7 +78,7 @@ EventHandlerResult EEPROMUpgrade::onFocusEvent(const char *command) {
   return EventHandlerResult::EVENT_CONSUMED;
 }
 
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
 
 kaleidoscope::plugin::EEPROMUpgrade EEPROMUpgrade;

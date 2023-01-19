@@ -53,8 +53,8 @@ void LEDRainbowWaveEffectDefy::update_delay(uint8_t delay) {
   led_mode.base_settings.delay_ms = delay;
 }
 
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
 
 kaleidoscope::plugin::LEDRainbowEffectDefy LEDRainbowEffectDefy;
 kaleidoscope::plugin::LEDRainbowWaveEffectDefy LEDRainbowWaveEffectDefy;

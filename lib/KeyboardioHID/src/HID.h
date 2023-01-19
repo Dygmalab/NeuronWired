@@ -16,15 +16,14 @@
   SOFTWARE.
  */
 
-#ifndef __HID_h__
-#define __HID_h__
+#ifndef HID_h
+#define HID_h
 
 #include <stdint.h>
 #include <Arduino.h>
 #include "HID-Settings.h"
+#include <Adafruit_TinyUSB.h>
 
-
-#ifndef DYGMA_USE_TINYUSB
 
 #define _USING_HID
 
@@ -60,88 +59,44 @@
 #define HID_REPORT_TYPE_OUTPUT  2
 #define HID_REPORT_TYPE_FEATURE 3
 
-typedef struct {
-    uint8_t len;      // 9
-    uint8_t dtype;    // 0x21
-    uint8_t addr;
-    uint8_t versionL; // 0x101
-    uint8_t versionH; // 0x101
-    uint8_t country;
-    uint8_t desctype; // 0x22 report
-    uint8_t descLenL;
-    uint8_t descLenH;
-} HIDDescDescriptor;
-
-typedef struct
-{
-	uint8_t len;		// 9
-	uint8_t dtype;		// 4
-	uint8_t number;
-	uint8_t alternate;
-	uint8_t numEndpoints;
-	uint8_t interfaceClass;
-	uint8_t interfaceSubClass;
-	uint8_t protocol;
-	uint8_t iInterface;
-} InterfaceDescriptor;
-
-//	Endpoint
-typedef struct
-{
-	uint8_t len;		// 7
-	uint8_t dtype;		// 5
-	uint8_t addr;
-	uint8_t attr;
-	uint16_t packetSize;
-	uint8_t interval;
-} EndpointDescriptor;
-
-typedef struct {
-    InterfaceDescriptor hid;
-    HIDDescDescriptor   desc;
-    EndpointDescriptor  in;
-} HIDDescriptor;
-
 class HIDSubDescriptor {
-  public:
-    HIDSubDescriptor *next = NULL;
-    HIDSubDescriptor(const void *d, const uint16_t l) : data(d), length(l) { }
-
-    const void* data;
-    const uint16_t length;
+ public:
+  HIDSubDescriptor(const uint8_t *d, const uint16_t l) : data(d), length(l) { }
+  const uint8_t * data;
+  const uint16_t length;
 };
 
-class HID_ : public PluggableUSBModule {
-  public:
+enum {
+  RID_KEYBOARD = 1,
+  RID_MOUSE,
+  RID_CONSUMER_CONTROL, // Media, volume etc ..
+};
 
-    HID_(void);
-    int begin(void);
-    int SendReport(uint8_t id, const void* data, int len);
-    void AppendDescriptor(HIDSubDescriptor* node);
-    uint8_t getLEDs(void) {
-        return setReportData.leds;
-    };
+class HID_ {
+ public:
 
-  protected:
-    // Implementation of the PluggableUSBModule
-    int getInterface(uint8_t* interfaceCount);
-    int getDescriptor(USBSetup& setup);
-    bool setup(USBSetup& setup);
-    uint8_t getShortName(char* name);
+  HID_();
+  int begin();
+  int SendReport(uint8_t id, const void* data, int len);
+  void AppendDescriptor(HIDSubDescriptor* node);
 
-    int SendReport_(uint8_t id, const void* data, int len);
-  private:
-    EPTYPE_DESCRIPTOR_SIZE epType[1];
+  uint8_t getLEDs() {
+    return setReportData.leds;
+  };
 
-    HIDSubDescriptor* rootNode;
-    uint16_t descriptorSize;
+  uint8_t getShortName(char *name);
+  int SendReport_(uint8_t id, const void* data, int len);
+  Adafruit_USBD_HID usb_hid;
+private:
+  char keyboarName[20] = "Defy RP2040";
+//  std::vector<uint8_t> descriptor;
 
-    uint8_t protocol;
-    uint8_t idle;
-    struct {
-        uint8_t reportId;
-        uint8_t leds;
-    } setReportData;
+  uint8_t protocol;
+  uint8_t idle;
+  struct {
+    uint8_t reportId;
+    uint8_t leds;
+  } setReportData;
 };
 
 // Replacement for global singleton.
@@ -151,6 +106,4 @@ HID_& HID();
 
 #define D_HIDREPORT(length) { 9, 0x21, 0x01, 0x01, 0, 1, 0x22, lowByte(length), highByte(length) }
 
-#endif // DYGMA_USE_TINYUSB
-
-#endif // __HID_h__
+#endif // HID_h

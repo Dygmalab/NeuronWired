@@ -20,7 +20,7 @@
 namespace kaleidoscope {
 namespace plugin {
 
-KeyAddr LEDCapsLockLight::caps_address_ = UnknownKeyswitchLocation;
+KeyAddr LEDCapsLockLight::caps_address_  = UnknownKeyswitchLocation;
 uint8_t LEDCapsLockLight::highlight_hue_ = 0;
 bool LEDCapsLockLight::caps_was_on_;
 
@@ -52,7 +52,7 @@ EventHandlerResult LEDCapsLockLight::beforeReportingState() {
 EventHandlerResult LEDCapsLockLight::findCapsLock() {
   caps_address_ = UnknownKeyswitchLocation;
 
-  for (auto key_addr: KeyAddr::all()) {
+  for (auto key_addr : KeyAddr::all()) {
     Key k = Layer.lookup(key_addr);
     if (k == Key_CapsLock) {
       caps_address_ = key_addr;
@@ -63,7 +63,7 @@ EventHandlerResult LEDCapsLockLight::findCapsLock() {
   return EventHandlerResult::OK;
 }
 
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
 
 kaleidoscope::plugin::LEDCapsLockLight LEDCapsLockLight;
