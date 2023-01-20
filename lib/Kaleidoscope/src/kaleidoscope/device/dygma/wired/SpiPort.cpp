@@ -25,15 +25,15 @@
 
 namespace kaleidoscope::device::dygma::wired {
 
-SpiPort portLeft(0);
-SpiPort portRight(1);
+SpiPort spi_0(0);
+SpiPort spi_1(1);
 
 void __no_inline_not_in_flash_func(dma_irq_1_handler)() {
-  portRight.irq();
+  spi_1.irq();
 }
 
 void __no_inline_not_in_flash_func(dma_irq_0_handler)() {
-  portLeft.irq();
+  spi_0.irq();
 }
 
 void SpiPort::startDMA() {
@@ -46,15 +46,15 @@ void SpiPort::startDMA() {
   channel_config_set_write_increment(&spiSettings.channelConfigRx, true);
 
   dma_channel_configure(spiSettings.dmaIndexTx, &spiSettings.channelConfigTx,
-						&spi_get_hw(spiSettings.port)->dr, // write address
-						spiSettings.txMessage.buf, // read address
-						MAX_TRANSFER_SIZE, // element count (each element is of size transfer_data_size)
-						false); // don't start yet
+                        &spi_get_hw(spiSettings.port)->dr,  // write address
+                        spiSettings.txMessage.buf,          // read address
+                        MAX_TRANSFER_SIZE,                  // element count (each element is of size transfer_data_size)
+                        false);                             // don't start yet
   dma_channel_configure(spiSettings.dmaIndexRx, &spiSettings.channelConfigRx,
-						spiSettings.rxMessage.buf, // write address
-						&spi_get_hw(spiSettings.port)->dr, // read address
-						MAX_TRANSFER_SIZE, // element count (each element is of size transfer_data_size)
-						false); // don't start yet
+                        spiSettings.rxMessage.buf,          // write address
+                        &spi_get_hw(spiSettings.port)->dr,  // read address
+                        MAX_TRANSFER_SIZE,                  // element count (each element is of size transfer_data_size)
+                        false);                             // don't start yet
   dma_start_channel_mask((1u << spiSettings.dmaIndexTx) | (1u << spiSettings.dmaIndexRx));
 }
 
@@ -68,23 +68,22 @@ void SpiPort::initInterrupt() {
   gpio_set_function(spiSettings.clock, GPIO_FUNC_SPI);
   gpio_set_function(spiSettings.cs, GPIO_FUNC_SPI);
 
-  spiSettings.dmaIndexTx = dma_claim_unused_channel(true);
-  spiSettings.dmaIndexRx = dma_claim_unused_channel(true);
+  spiSettings.dmaIndexTx      = dma_claim_unused_channel(true);
+  spiSettings.dmaIndexRx      = dma_claim_unused_channel(true);
   spiSettings.channelConfigTx = dma_channel_get_default_config(spiSettings.dmaIndexTx);
   spiSettings.channelConfigRx = dma_channel_get_default_config(spiSettings.dmaIndexRx);
   irq_set_exclusive_handler(spiSettings.irq, portUSB ? dma_irq_1_handler : dma_irq_0_handler);
   irq_set_enabled(spiSettings.irq, true);
-  portUSB ? dma_channel_set_irq1_enabled(spiSettings.dmaIndexRx, true) : dma_channel_set_irq0_enabled(spiSettings
-																										  .dmaIndexRx,
-																									  true);
+  portUSB ? dma_channel_set_irq1_enabled(spiSettings.dmaIndexRx, true) : dma_channel_set_irq0_enabled(spiSettings.dmaIndexRx, true);
   startDMA();
 }
 
-SpiPort::SpiPort(bool side) : portUSB(side) {
+SpiPort::SpiPort(bool side)
+  : portUSB(side) {
   if (side) {
-	spiSettings = {SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, SPI_SPEED, SIDE_nRESET_1, DMA_IRQ_1};
+    spiSettings = {SPI_PORT_0, SPI_MOSI_0, SPI_MISO_0, SPI_CLK_0, SPI_CS_0, SPI_SPEED, SIDE_nRESET_1, DMA_IRQ_1};
   } else {
-	spiSettings = {SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, SPI_SPEED, SIDE_nRESET_2, DMA_IRQ_0};
+    spiSettings = {SPI_PORT_1, SPI_MOSI_1, SPI_MISO_1, SPI_CLK_1, SPI_CS_1, SPI_SPEED, SIDE_nRESET_2, DMA_IRQ_0};
   }
   gpio_init(spiSettings.reset);
   gpio_set_dir(spiSettings.reset, GPIO_OUT);
@@ -112,19 +111,19 @@ uint8_t SpiPort::writeTo(uint8_t *data, size_t length) {
 
 bool SpiPort::sendPacket(Packet *data) {
   if (queue_is_full(&txMessages)) {
-	return false;
+    return false;
   }
   queue_add_blocking(&txMessages, data);
   return true;
 }
 
 uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
-  if (millis() - lasTimeCommunication > 1000){
-	return 0;
+  if (millis() - lasTimeCommunication > 1000) {
+    return 0;
   }
   if (queue_is_empty(&rxMessages)) {
-	data[0] = 0;
-	return 6;
+    data[0] = 0;
+    return 6;
   }
   Packet message;
   queue_remove_blocking(&rxMessages, &message);
@@ -141,32 +140,32 @@ void SpiPort::irq() {
   irq_set_enabled(spiSettings.irq, false);
   irq_clear(spiSettings.irq);
   portUSB ? dma_channel_acknowledge_irq1(spiSettings.dmaIndexRx)
-		  : dma_channel_acknowledge_irq0(spiSettings.dmaIndexRx);
+          : dma_channel_acknowledge_irq0(spiSettings.dmaIndexRx);
 
-  if (spiSettings.rxMessage.context.command==IS_DEAD) {
-	//Something happened lest restart the communication
-	if (Serial.available())
-	  Serial.printf("Lost Connections with hand %i\n", portUSB);
-	disableSide();
-	gpio_put(spiSettings.reset, false);
-	initInterrupt();
-	gpio_put(spiSettings.reset, true);
-	return;
+  if (spiSettings.rxMessage.context.command == IS_DEAD) {
+    //Something happened lest restart the communication
+    if (Serial.available())
+      Serial.printf("Lost Connections with hand %i\n", portUSB);
+    disableSide();
+    gpio_put(spiSettings.reset, false);
+    initInterrupt();
+    gpio_put(spiSettings.reset, true);
+    return;
   }
 
-  lasTimeCommunication = millis();
-  sideCommunications = spiSettings.rxMessage.context.device;
-  SpiPort &port = sideCommunications==KEYSCANNER_DEFY_RIGHT?portRight:portLeft;
-  if (spiSettings.rxMessage.context.command!=IS_ALIVE) {
-	queue_add_blocking(&port.rxMessages, &spiSettings.rxMessage);
+  sideCommunications   = spiSettings.rxMessage.context.device;
+  SpiPort &spi = sideCommunications == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
+  spi.lasTimeCommunication = millis();
+  if (spiSettings.rxMessage.context.command != IS_ALIVE) {
+    queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
   }
 
-  if (!queue_is_empty(&port.txMessages)) {
-	queue_remove_blocking(&port.txMessages, &spiSettings.txMessage);
-  }else{
-	spiSettings.txMessage.context.command=Side_communications_protocol::IS_ALIVE;
+  if (!queue_is_empty(&spi.txMessages)) {
+    queue_remove_blocking(&spi.txMessages, &spiSettings.txMessage);
+  } else {
+    spiSettings.txMessage.context.command = Side_communications_protocol::IS_ALIVE;
   }
-  spiSettings.txMessage.context.has_more_packets = !queue_is_empty(&port.txMessages);
+  spiSettings.txMessage.context.has_more_packets = !queue_is_empty(&spi.txMessages);
   irq_set_enabled(spiSettings.irq, true);
   startDMA();
 }
@@ -177,6 +176,6 @@ void SpiPort::disableSide() {
   dma_channel_unclaim(spiSettings.dmaIndexRx);
 }
 
-}
+}  // namespace kaleidoscope::device::dygma::wired
 
 #endif
