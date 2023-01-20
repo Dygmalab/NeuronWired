@@ -28,77 +28,79 @@ namespace device {
 namespace dygma {
 namespace wired {
 
-template<typename _Firmware>
+template<typename Firmware>
 class SideFlash : public kaleidoscope::Plugin {
  private:
-  _Firmware firmware;
+  Firmware firmware;
+
  public:
-  void flashSides(){
-	uint8_t left_boot_address = Runtime.device().side.left_boot_address;
-	uint8_t right_boot_address = Runtime.device().side.right_boot_address;
-	flashSide(left_boot_address);
-	flashSide(right_boot_address);
+  void flashSides() {
+    uint8_t left_boot_address  = Runtime.device().side.left_boot_address;
+    uint8_t right_boot_address = Runtime.device().side.right_boot_address;
+    flashSide(left_boot_address);
+    flashSide(right_boot_address);
   }
-  void flashSide(uint8_t address){
-	auto sideFlasher = Runtime.device().sideFlasher();
-	Runtime.device().side.prepareForFlash();
-	sideFlasher.get_info_program(address);
-	sideFlasher.flash(address, firmware);
-	sideFlasher.start_main_program(address);
+  void flashSide(uint8_t address) {
+    auto sideFlasher = Runtime.device().sideFlasher();
+    Runtime.device().side.prepareForFlash();
+    sideFlasher.get_info_program(address);
+    sideFlasher.flash(address, firmware);
+    sideFlasher.start_main_program(address);
   }
+
   EventHandlerResult onFocusEvent(const char *command) {
-	if (::Focus.handleHelp(command,
-						   PSTR(
-							   "hardware.flash_left_side\nhardware.flash_right_side\nhardware.verify_left_side\nhardware.verify_right_side")))
-	  return EventHandlerResult::OK;
+    if (::Focus.handleHelp(command,
+                           PSTR(
+                             "hardware.flash_left_side\nhardware.flash_right_side\nhardware.verify_left_side\nhardware.verify_right_side")))
+      return EventHandlerResult::OK;
 
-	if (strncmp_P(command, PSTR("hardware."), 9) != 0)
-	  return EventHandlerResult::OK;
+    if (strncmp_P(command, PSTR("hardware."), 9) != 0)
+      return EventHandlerResult::OK;
 
-	auto sideFlasher = Runtime.device().sideFlasher();
-	uint8_t left_boot_address = Runtime.device().side.left_boot_address;
-	uint8_t right_boot_address = Runtime.device().side.right_boot_address;
-	enum {
-	  FLASH,
-	  VERIFY
-	} sub_command;
-	uint8_t address = 0;
+    auto sideFlasher           = Runtime.device().sideFlasher();
+    uint8_t left_boot_address  = Runtime.device().side.left_boot_address;
+    uint8_t right_boot_address = Runtime.device().side.right_boot_address;
+    enum {
+      FLASH,
+      VERIFY
+    } sub_command;
+    uint8_t address = 0;
 
-	if (strcmp_P(command + 9, PSTR("flash_left_side")) == 0) {
-	  sub_command = FLASH;
-	  address = left_boot_address;
-	} else if (strcmp_P(command + 9, PSTR("flash_right_side")) == 0) {
-	  sub_command = FLASH;
-	  address = right_boot_address;
-	} else if (strcmp_P(command + 9, PSTR("verify_left_side")) == 0) {
-	  sub_command = VERIFY;
-	  address = left_boot_address;
-	} else if (strcmp_P(command + 9, PSTR("verify_right_side")) == 0) {
-	  sub_command = VERIFY;
-	  address = right_boot_address;
-	} else {
-	  return EventHandlerResult::OK;
-	}
+    if (strcmp_P(command + 9, PSTR("flash_left_side")) == 0) {
+      sub_command = FLASH;
+      address     = left_boot_address;
+    } else if (strcmp_P(command + 9, PSTR("flash_right_side")) == 0) {
+      sub_command = FLASH;
+      address     = right_boot_address;
+    } else if (strcmp_P(command + 9, PSTR("verify_left_side")) == 0) {
+      sub_command = VERIFY;
+      address     = left_boot_address;
+    } else if (strcmp_P(command + 9, PSTR("verify_right_side")) == 0) {
+      sub_command = VERIFY;
+      address     = right_boot_address;
+    } else {
+      return EventHandlerResult::OK;
+    }
 
-	bool result;
-	Runtime.device().side.prepareForFlash();
-	if (sideFlasher.get_info_program(address)) {
-	  if (sub_command == FLASH)
-		result = sideFlasher.flash(address, firmware);
-	  else
-		result = sideFlasher.verify(address,firmware);
-	  if (result) result = sideFlasher.start_main_program(address);
-	}
+    bool result;
+    Runtime.device().side.prepareForFlash();
+    if (sideFlasher.get_info_program(address)) {
+      if (sub_command == FLASH)
+        result = sideFlasher.flash(address, firmware);
+      else
+        result = sideFlasher.verify(address, firmware);
+      if (result) result = sideFlasher.start_main_program(address);
+    }
 
-	::Focus.send(result);
+    ::Focus.send(result);
 
-	return EventHandlerResult::EVENT_CONSUMED;
+    return EventHandlerResult::EVENT_CONSUMED;
   }
 };
 
-}
-}
-}
-}
+}  // namespace wired
+}  // namespace dygma
+}  // namespace device
+}  // namespace kaleidoscope
 
 #endif
