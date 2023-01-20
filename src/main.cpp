@@ -245,6 +245,6 @@ void loop() {
 }
 
 void setup1() {
-  kaleidoscope::device::dygma::wired::portRight.initCommunications();
-  kaleidoscope::device::dygma::wired::portLeft.initCommunications();
+  kaleidoscope::device::dygma::wired::spi_1.initCommunications();
+  kaleidoscope::device::dygma::wired::spi_0.initCommunications();
 }
