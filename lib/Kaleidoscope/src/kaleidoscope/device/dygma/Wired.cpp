@@ -279,7 +279,6 @@ void WiredLEDDriver::setup() {
   // so change to 16 bit resolution to avoid the mapping and do the mapping
   // ourselves in updateHubleLED() to ensure LEDs can be set fully off
   analogWriteResolution(16);
-  updateNeuronLED();
 
 //  WiredHands::setSidePower(true);
 }
