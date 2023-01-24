@@ -52,7 +52,7 @@
 #include "EEPROMPadding.h"
 
 #include "EEPROMUpgrade.h"
-#include "FLASH_Upgrade.h"
+#include "Upgrade.h"
 
 
 #include "RP2040_firmware.h"
@@ -182,7 +182,7 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0, 255);
 // clang-format off
 KALEIDOSCOPE_INIT_PLUGINS(
   FirmwareVersion,
-  FlashUpgrade,
+  Upgrade,
   USBQuirks,
   MagicCombo,
   RaiseIdleLEDs,
@@ -223,7 +223,7 @@ void setup() {
   HID().begin();
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
-  SideFlash.flashSides();
+//  SideFlash.flashSides();
   // Reserve space in the keyboard's EEPROM for the keymaps
   EEPROMKeymap.setup(10);
   // Reserve space for the number of Colormap layers we will use
