@@ -25,12 +25,12 @@ namespace plugin {
 class KeyScannerFlasher {
  public:
   enum Action {
-    INFO          = 'I',
-    WRITE         = 'W',
-    READ          = 'R',
-    ERASE         = 'E',
-    VALIDATE_SEAL = 'V',
-    GO            = 'G',
+    INFO             = 'I',
+    WRITE            = 'W',
+    READ             = 'R',
+    ERASE            = 'E',
+    VALIDATE_PROGRAM = 'V',
+    GO               = 'G',
   };
 
   struct WriteAction {
@@ -64,35 +64,48 @@ class KeyScannerFlasher {
     uint32_t programVersion;
   };
 
-  struct ValidateSealAction {
-    uint32_t addr;
-    uint32_t size;
-  };
-
   struct InfoAction {
     uint32_t hardwareVersion;
     uint32_t flashStart;
     uint32_t validationSpaceStart;
-    uint32_t validationSpaceSize;
-    uint32_t flashSize;
+    uint32_t programSpaceStart;
+    uint32_t flashAvailable;
     uint32_t eraseAlignment;
     uint32_t writeAlignment;
-    uint32_t maxDataLength;
+    uint32_t maxTransmissionLength;
+  };
+
+  enum Side : uint8_t {
+    RIGHT,
+    LEFT,
   };
 
   bool getInfoFlasherKS(InfoAction &info_action);
-  bool sendWriteAction(WriteAction write_action);
+  uint32_t sendWriteAction(WriteAction write_action, uint8_t *data);
   bool sendEraseAction(EraseAction erase_action);
   bool sendReadAction(ReadAction read_action);
-  bool sendValidateSealAction(ValidateSealAction validate_seal_action);
+  bool sendValidateProgram();
   bool sendGo(uint32_t address_to_jump);
-  bool sendMessage(uint8_t *data,size_t size);
-  uint16_t readData(uint8_t *data,size_t size);
-  void setSide(bool side);
+  uint16_t readData(uint8_t *data, size_t size);
+  void setSide(Side side);
+
+  void setSideInfo(InfoAction info_action) {
+    InfoAction &info = side_ ? infoLeft : infoRight;
+    info=info_action;
+  };
+
+  InfoAction getInfoAction() {
+    InfoAction &info = side_ ? infoLeft : infoRight;
+    return info;
+  }
+
+  uint32_t crc32(const void *ptr, uint32_t len);
 
  private:
   uint8_t address;
-  uint32_t crc32(const void *ptr, uint32_t len);
+  InfoAction infoLeft{};
+  InfoAction infoRight{};
+  Side side_{0};
   uint32_t align(uint32_t val, uint32_t to);
   uint8_t readData(uint8_t address, uint8_t *message, uint32_t lenMessage, bool stopBit = false);
   uint8_t sendMessage(uint8_t address, uint8_t *message, uint32_t lenMessage, bool stopBit = false);
@@ -112,7 +125,7 @@ class Upgrade : public Plugin {
  private:
   KeyScannerFlasher key_scanner_flasher_{};
   bool activated = false;
-  bool flashing = false;
+  bool flashing  = true;
   uint16_t press_time{1500};
   uint16_t pressed_time{0};
   bool serial_pre_activation = false;

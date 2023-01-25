@@ -37,18 +37,21 @@ namespace plugin {
 //  3 : NACK on transmit of data
 //  4 : Other error
 uint8_t KeyScannerFlasher::sendCommand(uint8_t address, uint8_t command, bool stopBit) {
+  watchdog_update();
   WIRE_.beginTransmission(address);
   WIRE_.write(command);
   return WIRE_.endTransmission(stopBit);
 }
 
 uint8_t KeyScannerFlasher::sendMessage(uint8_t address, uint8_t *message, uint32_t lenMessage, bool stopBit) {
+  watchdog_update();
   WIRE_.beginTransmission(address);
   WIRE_.write(message, lenMessage);
   return WIRE_.endTransmission(stopBit);
 }
 
 uint8_t KeyScannerFlasher::readData(uint8_t address, uint8_t *message, uint32_t lenMessage, bool stopBit) {
+  watchdog_update();
   WIRE_.requestFrom(address, lenMessage, false);
   return WIRE_.readBytes(message, lenMessage);
 }
@@ -87,7 +90,9 @@ uint32_t KeyScannerFlasher::crc32(const void *ptr, uint32_t len) {
 
   return crc;
 }
-void KeyScannerFlasher::setSide(bool side) {
+
+void KeyScannerFlasher::setSide(Side side) {
+  side_                      = side;
   uint8_t left_boot_address  = Runtime.device().side.left_boot_address;
   uint8_t right_boot_address = Runtime.device().side.right_boot_address;
   address                    = side ? left_boot_address : right_boot_address;
@@ -107,10 +112,22 @@ bool KeyScannerFlasher::sendEraseAction(KeyScannerFlasher::EraseAction erase_act
   return done;
 }
 
-bool KeyScannerFlasher::sendWriteAction(KeyScannerFlasher::WriteAction write_action) {
-  if (sendCommand(address, Action::WRITE)) return false;
-  if (sendMessage(address, (uint8_t *)&write_action, sizeof(write_action))) return false;
-  return true;
+uint32_t KeyScannerFlasher::sendWriteAction(KeyScannerFlasher::WriteAction write_action, uint8_t *data) {
+  if (sendCommand(address, Action::WRITE)) {
+    return 0;
+  }
+  if (sendMessage(address, (uint8_t *)&write_action, sizeof(write_action))) {
+    return 0;
+  }
+
+  sleep_us(500);
+  if (sendMessage(address,data, write_action.size)) {
+    return 0;
+  }
+
+  uint32_t crc32 = 0;
+  readData(address, (uint8_t *)&crc32, sizeof(crc32));
+  return crc32;
 }
 
 bool KeyScannerFlasher::sendReadAction(KeyScannerFlasher::ReadAction read_action) {
@@ -118,10 +135,7 @@ bool KeyScannerFlasher::sendReadAction(KeyScannerFlasher::ReadAction read_action
   if (sendMessage(address, (uint8_t *)&read_action, sizeof(read_action))) return false;
   return true;
 }
-bool KeyScannerFlasher::sendMessage(uint8_t *data, size_t size) {
-  if (sendMessage(address, data, size)) return false;
-  return true;
-}
+
 uint16_t KeyScannerFlasher::readData(uint8_t *data, size_t size) {
   return readData(address, data, size);
 }
@@ -130,9 +144,9 @@ bool KeyScannerFlasher::sendGo(uint32_t address_to_jump) {
   if (sendMessage(address, (uint8_t *)&address_to_jump, sizeof(address_to_jump))) return false;
   return true;
 }
-bool KeyScannerFlasher::sendValidateSealAction(KeyScannerFlasher::ValidateSealAction validate_seal_action) {
-  if (sendCommand(address, Action::VALIDATE_SEAL)) return false;
-  if (sendMessage(address, (uint8_t *)&validate_seal_action, sizeof(validate_seal_action))) return false;
+
+bool KeyScannerFlasher::sendValidateProgram() {
+  if (sendCommand(address, Action::VALIDATE_PROGRAM)) return false;
   uint8_t done = false;
   readData(address, (uint8_t *)&done, sizeof(done));
   return done;
@@ -142,16 +156,14 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
   if (::Focus.handleHelp(command,
                          PSTR(
                            "upgrade.start\n"
-                           "upgrade.isReady\n"
                            "upgrade.neuron\n"
                            "upgrade.end\n"
-                           "upgrade.keyscanner.side\n"
-                           "upgrade.keyscanner.getInfo\n"
-                           "upgrade.keyscanner.sendErase\n"
-                           "upgrade.keyscanner.read\n"
-                           "upgrade.keyscanner.sendWrite\n"
-                           "upgrade.keyscanner.sendValidateSeal\n"
-                           "upgrade.keyscanner.sendGo")))
+                           "upgrade.keyscanner.sideRight\n"   //Choose the side Right
+                           "upgrade.keyscanner.sideLeft\n"    //Choose the side Left
+                           "upgrade.keyscanner.getInfo\n"     //Version, and CRC, and is connected and start address, program is OK
+                           "upgrade.keyscanner.sendWrite\n"   //Write //{Address size DATA crc} Check if we are going to support --? true false
+                           "upgrade.keyscanner.sendStart")))  //Start main application and check validy //true false
+
     return EventHandlerResult::OK;
   //TODO set numbers ot PSTR
 
@@ -181,89 +193,109 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
   if (strncmp_P(command + 8, PSTR("keyscanner."), 11) != 0)
     return EventHandlerResult::OK;
 
-  if (strcmp_P(command + 8 + 11, PSTR("side")) == 0) {
+  if (strcmp_P(command + 8 + 11, PSTR("sideRight")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
-    uint8_t side;
-    ::Focus.read(side);
-    key_scanner_flasher_.setSide(side);
+    key_scanner_flasher_.setSide(KeyScannerFlasher::RIGHT);
+  }
+
+  if (strcmp_P(command + 8 + 11, PSTR("sideLeft")) == 0) {
+    if (!flashing) return EventHandlerResult::ERROR;
+    key_scanner_flasher_.setSide(KeyScannerFlasher::LEFT);
   }
 
   if (strcmp_P(command + 8 + 11, PSTR("getInfo")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
-
-    KeyScannerFlasher::InfoAction info{};
-    //Get Info
     Runtime.device().side.prepareForFlash();
+    KeyScannerFlasher::InfoAction info{};
     if (!key_scanner_flasher_.getInfoFlasherKS(info)) {
+      Focus.send(false);
+      return EventHandlerResult::ERROR;
+    }
+    key_scanner_flasher_.setSideInfo(info);
+
+    KeyScannerFlasher::ReadAction read{info.validationSpaceStart, sizeof(KeyScannerFlasher::Seal)};
+    KeyScannerFlasher::Seal seal{};
+    key_scanner_flasher_.sendReadAction(read);
+    if (key_scanner_flasher_.readData((uint8_t *)&seal, sizeof(KeyScannerFlasher::Seal)) != sizeof(KeyScannerFlasher::Seal)) {
+      Focus.send(false);
       return EventHandlerResult::ERROR;
     }
     Focus.send(info.hardwareVersion);
     Focus.send(info.flashStart);
-    Focus.send(info.validationSpaceStart);
-    Focus.send(info.validationSpaceSize);
-    Focus.send(info.flashSize);
-    Focus.send(info.eraseAlignment);
-    Focus.send(info.writeAlignment);
-    Focus.send(info.maxDataLength);
+    Focus.send(seal.programVersion);
+    Focus.send(seal.programCrc);
+    Focus.send(true);
   }
 
-  if (strcmp_P(command + 8 + 11, PSTR("sendErase")) == 0) {
+  if (strcmp_P(command + 8 + 11, PSTR("sendRead")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
+    Runtime.device().side.prepareForFlash();
+    KeyScannerFlasher::InfoAction info{};
+    if (!key_scanner_flasher_.getInfoFlasherKS(info)) {
+      Focus.send(false);
+      return EventHandlerResult::ERROR;
+    }
+    key_scanner_flasher_.setSideInfo(info);
 
-    KeyScannerFlasher::EraseAction erase{};
-    readStruct(erase);
-    if (!key_scanner_flasher_.sendEraseAction(erase)) {
+    KeyScannerFlasher::ReadAction read{info.validationSpaceStart, sizeof(KeyScannerFlasher::Seal)};
+    KeyScannerFlasher::Seal seal{};
+    key_scanner_flasher_.sendReadAction(read);
+    if (key_scanner_flasher_.readData((uint8_t *)&seal, sizeof(KeyScannerFlasher::Seal)) != sizeof(KeyScannerFlasher::Seal)) {
+      Focus.send(false);
       return EventHandlerResult::ERROR;
     }
-  }
-
-  if (strcmp_P(command + 8 + 11, PSTR("read")) == 0) {
-    if (!flashing) return EventHandlerResult::ERROR;
-    KeyScannerFlasher::ReadAction read_action{static_cast<uint32_t>(Runtime.serialPort().parseInt()), static_cast<uint32_t>(Runtime.serialPort().parseInt())};
-    if (!key_scanner_flasher_.sendReadAction(read_action)) {
-      return EventHandlerResult::ERROR;
-    }
-    //If for NRF this code does not work we can change this to just struct of ReadAction and sizeof(Seal?) array :)
-    uint8_t data[256];
-    if (key_scanner_flasher_.readData(data, read_action.size) != read_action.size) {
-      return EventHandlerResult::ERROR;
-    }
-    auto *data2 = reinterpret_cast<uint32_t *>(data);
-    for (int i = 0; i < read_action.size / sizeof(read_action.size); ++i) {
-      ::Focus.send(data2[i]);
-    }
+    Focus.send(info.hardwareVersion);
+    Focus.send(info.flashStart);
+    Focus.send(seal.programVersion);
+    Focus.send(seal.programCrc);
+    Focus.send(true);
   }
 
   if (strcmp_P(command + 8 + 11, PSTR("sendWrite")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
-    KeyScannerFlasher::WriteAction write_action{static_cast<uint32_t>(Runtime.serialPort().parseInt()), static_cast<uint32_t>(Runtime.serialPort().parseInt())};
-    if (!key_scanner_flasher_.sendWriteAction(write_action)) {
-      return EventHandlerResult::ERROR;
-    }
-    uint8_t data[256];
+    struct {
+      KeyScannerFlasher::WriteAction write_action;
+      uint8_t data[256];
+      uint32_t crc32Transmission;
+    }packet;
     watchdog_update();
-    Runtime.serialPort().read(data, write_action.size);
+    Serial.readBytes((uint8_t*)&packet,sizeof(packet));
+    watchdog_update();
+    auto info_action = key_scanner_flasher_.getInfoAction();
 
-    if (!key_scanner_flasher_.sendMessage(data, write_action.size)) {
-      Serial.printf("Shit");
+    uint32_t crc32InMemory = key_scanner_flasher_.crc32(packet.data, packet.write_action.size);
+    if (packet.crc32Transmission != crc32InMemory) {
+      ::Focus.send(false);
       return EventHandlerResult::ERROR;
     }
-  }
 
-  if (strcmp_P(command + 8 + 11, PSTR("sendValidateSeal")) == 0) {
-    if (!flashing) return EventHandlerResult::ERROR;
+    if (packet.write_action.addr % info_action.eraseAlignment==0) {
+      KeyScannerFlasher::EraseAction erase_action{packet.write_action.addr, info_action.eraseAlignment};
+      if (!key_scanner_flasher_.sendEraseAction(erase_action)) {
+        ::Focus.send(false);
+        return EventHandlerResult::ERROR;
+      }
+    }
 
-    KeyScannerFlasher::ValidateSealAction validateSeal{};
-    readStruct(validateSeal);
-    key_scanner_flasher_.sendValidateSealAction(validateSeal);
-  }
-
-  if (strcmp_P(command + 8 + 11, PSTR("sendGo")) == 0) {
-    uint32_t to_jump;
-    readStruct(to_jump);
-    if (!key_scanner_flasher_.sendGo(to_jump)) {
+    uint32_t crcKeyScannerCalculation = key_scanner_flasher_.sendWriteAction(packet.write_action, packet.data);
+    if (crcKeyScannerCalculation != packet.crc32Transmission) {
+      ::Focus.send(false);
       return EventHandlerResult::ERROR;
     }
+    ::Focus.send(true);
+  }
+
+  if (strcmp_P(command + 8 + 11, PSTR("sendStart")) == 0) {
+    auto info_action = key_scanner_flasher_.getInfoAction();
+    if (!key_scanner_flasher_.sendValidateProgram()) {
+      Focus.send(false);
+      return EventHandlerResult::ERROR;
+    }
+    if (!key_scanner_flasher_.sendGo(info_action.programSpaceStart)) {
+      Focus.send(false);
+      return EventHandlerResult::ERROR;
+    }
+    Focus.send(true);
   }
 
   return EventHandlerResult::EVENT_CONSUMED;
