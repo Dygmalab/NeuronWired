@@ -41,9 +41,14 @@ def checkError(line):
     pass
 
 
+def send(data):
+    print(data,end='')
+    print()
+    ser.write(data)
+
 def flash():
     # Lest get the info
-    ser.write(b"upgrade.keyscanner.getInfo\n")
+    send(b"upgrade.keyscanner.getInfo\n")
     line = ser.readline()
     ser.readline()
     checkError(line)
@@ -70,21 +75,15 @@ def flash():
         # exit(0)
     for i in range(0, len(program), 256):
         print("Writing " + str(i) + " of " + str(len(program)))
-
-        write_format = "upgrade.keyscanner.sendWrite "
         writeAction = struct.pack(b"<II", i + info.flashStart, 256)
-        ser.write(str.encode(write_format))
-        ser.write(writeAction)
-        chunk = program[i:(i + 256)]
-        crc32Chunk = zlib.crc32(chunk)
-        crc32Chunk = struct.pack(b"<I", crc32Chunk)
-        ser.write(chunk)
-        ser.write(crc32Chunk)
+        data = program[i:(i + 256)]
+        crc32Transmission = struct.pack(b"<I", zlib.crc32(data))
+        send(str.encode("upgrade.keyscanner.sendWrite ")+writeAction+data+crc32Transmission)
         line = ser.readline()
         checkError(line)
         ser.readline()
 
-    ser.write(b"upgrade.keyscanner.finish\n")
+    send(b"upgrade.keyscanner.finish\n")
     ser.readline()
     ser.readline()
 
@@ -97,11 +96,11 @@ def main():
         baudrate=115200,
     )
     ser.isOpen()
-    ser.write(b"upgrade.start\n")
+    send(b"upgrade.start\n")
     ser.readline()
     ser.readline()
     while True:
-        ser.write(b"upgrade.isReady\n")
+        send(b"upgrade.isReady\n")
         line1 = ser.readline()
 
         ser.readline()
@@ -112,13 +111,13 @@ def main():
 
     print("Can start upgrading")
 
-    ser.write(b"upgrade.keyscanner.beginLeft\n")
+    send(b"upgrade.keyscanner.beginLeft\n")
     line = ser.readline()
     checkError(line)
     ser.readline()
     flash()
 
-    ser.write(b"upgrade.keyscanner.beginRight\n")
+    send(b"upgrade.keyscanner.beginRight\n")
     line = ser.readline()
     checkError(line)
     ser.readline()
