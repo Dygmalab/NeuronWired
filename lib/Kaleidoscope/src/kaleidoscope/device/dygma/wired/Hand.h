@@ -61,7 +61,7 @@ typedef union {
 class Hand {
  public:
   explicit Hand(byte ad01) : ad01_(ad01) {
-	spiPort = ad01 ? &portRight : &portLeft;
+	spiPort = ad01 ? &spi_1 : &spi_0;
   }
 
   void setLedMode(LedModeSerializable *pSerializable);

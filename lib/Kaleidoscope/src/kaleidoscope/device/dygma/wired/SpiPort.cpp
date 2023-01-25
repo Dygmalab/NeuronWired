@@ -25,15 +25,15 @@
 
 namespace kaleidoscope::device::dygma::wired {
 
-SpiPort portLeft(0);
-SpiPort portRight(1);
+SpiPort spi_0(0);
+SpiPort spi_1(1);
 
 void __no_inline_not_in_flash_func(dma_irq_1_handler)() {
-  portRight.irq();
+  spi_1.irq();
 }
 
 void __no_inline_not_in_flash_func(dma_irq_0_handler)() {
-  portLeft.irq();
+  spi_0.irq();
 }
 
 void SpiPort::startDMA() {
@@ -81,9 +81,9 @@ void SpiPort::initInterrupt() {
 SpiPort::SpiPort(bool side)
   : portUSB(side) {
   if (side) {
-    spiSettings = {SPI_PORT1, SPI_MOSI1, SPI_MISO1, SPI_CLK1, SPI_CS1, SPI_SPEED, SIDE_nRESET_1, DMA_IRQ_1};
+    spiSettings = {SPI_PORT_0, SPI_MOSI_0, SPI_MISO_0, SPI_CLK_0, SPI_CS_0, SPI_SPEED, SIDE_nRESET_1, DMA_IRQ_1};
   } else {
-    spiSettings = {SPI_PORT2, SPI_MOSI2, SPI_MISO2, SPI_CLK2, SPI_CS2, SPI_SPEED, SIDE_nRESET_2, DMA_IRQ_0};
+    spiSettings = {SPI_PORT_1, SPI_MOSI_1, SPI_MISO_1, SPI_CLK_1, SPI_CS_1, SPI_SPEED, SIDE_nRESET_2, DMA_IRQ_0};
   }
   gpio_init(spiSettings.reset);
   gpio_set_dir(spiSettings.reset, GPIO_OUT);
@@ -118,7 +118,7 @@ bool SpiPort::sendPacket(Packet *data) {
 }
 
 uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
-  if (millis() - lasTimeCommunication > 500) {
+  if (millis() - lasTimeCommunication > 1000) {
     return 0;
   }
   if (queue_is_empty(&rxMessages)) {
@@ -153,19 +153,19 @@ void SpiPort::irq() {
     return;
   }
 
-  lasTimeCommunication = millis();
   sideCommunications   = spiSettings.rxMessage.context.device;
-  SpiPort &port        = sideCommunications == KEYSCANNER_DEFY_RIGHT ? portRight : portLeft;
+  SpiPort &spi = sideCommunications == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
+  spi.lasTimeCommunication = millis();
   if (spiSettings.rxMessage.context.command != IS_ALIVE) {
-    queue_add_blocking(&port.rxMessages, &spiSettings.rxMessage);
+    queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
   }
 
-  if (!queue_is_empty(&port.txMessages)) {
-    queue_remove_blocking(&port.txMessages, &spiSettings.txMessage);
+  if (!queue_is_empty(&spi.txMessages)) {
+    queue_remove_blocking(&spi.txMessages, &spiSettings.txMessage);
   } else {
     spiSettings.txMessage.context.command = Side_communications_protocol::IS_ALIVE;
   }
-  spiSettings.txMessage.context.has_more_packets = !queue_is_empty(&port.txMessages);
+  spiSettings.txMessage.context.has_more_packets = !queue_is_empty(&spi.txMessages);
   irq_set_enabled(spiSettings.irq, true);
   startDMA();
 }
