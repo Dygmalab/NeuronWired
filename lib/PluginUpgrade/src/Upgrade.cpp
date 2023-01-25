@@ -16,7 +16,10 @@
  */
 
 #include "Upgrade.h"
+#include "Wire.h"
 #include "kaleidoscope/plugin/FocusSerial.h"
+
+#define WIRE_               Wire1
 
 namespace kaleidoscope {
 namespace plugin {
@@ -121,7 +124,7 @@ uint32_t KeyScannerFlasher::sendWriteAction(KeyScannerFlasher::WriteAction write
   }
 
   sleep_us(500);
-  if (sendMessage(address,data, write_action.size)) {
+  if (sendMessage(address, data, write_action.size)) {
     return 0;
   }
 
@@ -139,8 +142,8 @@ bool KeyScannerFlasher::sendReadAction(KeyScannerFlasher::ReadAction read_action
 uint16_t KeyScannerFlasher::readData(uint8_t *data, size_t size) {
   return readData(address, data, size);
 }
-bool KeyScannerFlasher::sendGo(uint32_t address_to_jump) {
-  if (sendCommand(address, Action::GO)) return false;
+bool KeyScannerFlasher::sendJump(uint32_t address_to_jump) {
+  if (sendCommand(address, Action::JUMP_ADDRESS)) return false;
   if (sendMessage(address, (uint8_t *)&address_to_jump, sizeof(address_to_jump))) return false;
   return true;
 }
@@ -152,16 +155,28 @@ bool KeyScannerFlasher::sendValidateProgram() {
   return done;
 }
 
+bool KeyScannerFlasher::sendBegin() {
+  if (sendCommand(address, Action::BEGIN)) return false;
+  return true;
+}
+
+bool KeyScannerFlasher::sendFinish() {
+  if (sendCommand(address, Action::FINISH)) return false;
+  return true;
+}
+
 EventHandlerResult Upgrade::onFocusEvent(const char *command) {
   if (::Focus.handleHelp(command,
                          PSTR(
                            "upgrade.start\n"
                            "upgrade.neuron\n"
                            "upgrade.end\n"
-                           "upgrade.keyscanner.sideRight\n"   //Choose the side Right
-                           "upgrade.keyscanner.sideLeft\n"    //Choose the side Left
+                           "upgrade.keyscanner.beginRight\n"  //Choose the side Right
+                           "upgrade.keyscanner.beginLeft\n"   //Choose the side Left
                            "upgrade.keyscanner.getInfo\n"     //Version, and CRC, and is connected and start address, program is OK
                            "upgrade.keyscanner.sendWrite\n"   //Write //{Address size DATA crc} Check if we are going to support --? true false
+                           "upgrade.keyscanner.validate\n"    //Check validity
+                           "upgrade.keyscanner.finish\n"      //Finish bootloader
                            "upgrade.keyscanner.sendStart")))  //Start main application and check validy //true false
 
     return EventHandlerResult::OK;
@@ -193,19 +208,32 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
   if (strncmp_P(command + 8, PSTR("keyscanner."), 11) != 0)
     return EventHandlerResult::OK;
 
-  if (strcmp_P(command + 8 + 11, PSTR("sideRight")) == 0) {
+  if (strcmp_P(command + 8 + 11, PSTR("beginRight")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
     key_scanner_flasher_.setSide(KeyScannerFlasher::RIGHT);
+    Runtime.device().side.prepareForFlash();
+    Runtime.device().side.resetRight();
+    if (!key_scanner_flasher_.sendBegin()) {
+      Focus.send(false);
+      return EventHandlerResult::ERROR;
+    }
+    Focus.send(true);
   }
 
-  if (strcmp_P(command + 8 + 11, PSTR("sideLeft")) == 0) {
+  if (strcmp_P(command + 8 + 11, PSTR("beginLeft")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
     key_scanner_flasher_.setSide(KeyScannerFlasher::LEFT);
+    Runtime.device().side.prepareForFlash();
+    Runtime.device().side.resetLeft();
+    if (!key_scanner_flasher_.sendBegin()) {
+      Focus.send(false);
+      return EventHandlerResult::ERROR;
+    }
+    Focus.send(true);
   }
 
   if (strcmp_P(command + 8 + 11, PSTR("getInfo")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
-    Runtime.device().side.prepareForFlash();
     KeyScannerFlasher::InfoAction info{};
     if (!key_scanner_flasher_.getInfoFlasherKS(info)) {
       Focus.send(false);
@@ -257,9 +285,9 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
       KeyScannerFlasher::WriteAction write_action;
       uint8_t data[256];
       uint32_t crc32Transmission;
-    }packet;
+    } packet;
     watchdog_update();
-    Serial.readBytes((uint8_t*)&packet,sizeof(packet));
+    Serial.readBytes((uint8_t *)&packet, sizeof(packet));
     watchdog_update();
     auto info_action = key_scanner_flasher_.getInfoAction();
 
@@ -269,7 +297,7 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
       return EventHandlerResult::ERROR;
     }
 
-    if (packet.write_action.addr % info_action.eraseAlignment==0) {
+    if (packet.write_action.addr % info_action.eraseAlignment == 0) {
       KeyScannerFlasher::EraseAction erase_action{packet.write_action.addr, info_action.eraseAlignment};
       if (!key_scanner_flasher_.sendEraseAction(erase_action)) {
         ::Focus.send(false);
@@ -285,13 +313,29 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
     ::Focus.send(true);
   }
 
+  if (strcmp_P(command + 8 + 11, PSTR("validate")) == 0) {
+    if (!key_scanner_flasher_.sendValidateProgram()) {
+      Focus.send(false);
+      return EventHandlerResult::ERROR;
+    }
+    Focus.send(true);
+  }
+
+  if (strcmp_P(command + 8 + 11, PSTR("finish")) == 0) {
+    if (!key_scanner_flasher_.sendFinish()) {
+      Focus.send(false);
+      return EventHandlerResult::ERROR;
+    }
+    Focus.send(true);
+  }
+
   if (strcmp_P(command + 8 + 11, PSTR("sendStart")) == 0) {
     auto info_action = key_scanner_flasher_.getInfoAction();
     if (!key_scanner_flasher_.sendValidateProgram()) {
       Focus.send(false);
       return EventHandlerResult::ERROR;
     }
-    if (!key_scanner_flasher_.sendGo(info_action.programSpaceStart)) {
+    if (!key_scanner_flasher_.sendJump(info_action.programSpaceStart)) {
       Focus.send(false);
       return EventHandlerResult::ERROR;
     }

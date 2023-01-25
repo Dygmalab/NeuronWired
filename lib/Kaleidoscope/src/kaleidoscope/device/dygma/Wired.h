@@ -30,7 +30,6 @@
 #include "kaleidoscope/driver/led/Base.h"
 #include "kaleidoscope/driver/storage/Flash.h"
 #include "kaleidoscope/device/Base.h"
-#include "kaleidoscope/util/flasher/KeyboardioI2CBootloader.h"
 #include "LedModeSerializable.h"
 
 #include "kaleidoscope/driver/bootloader/rp2040/UF2.h"
@@ -50,9 +49,6 @@ struct WiredHands {
   static void syncLayers(wired::Hand &hand);
 
   static uint8_t layout;
-
-  static void setSidePower(bool power);
-  static bool getSidePower() { return side_power_; }
 
   static void keyscanInterval(uint16_t interval);
   static uint16_t keyscanInterval() { return keyscan_interval_; }
@@ -221,7 +217,6 @@ struct WiredStorageProps : public kaleidoscope::driver::storage::FlashProps {
   static constexpr uint16_t length = EEPROM_EMULATION_SIZE;
 };
 
-struct WiredSideFlasherProps : public kaleidoscope::util::flasher::BaseProps {};
 
 struct WiredProps : kaleidoscope::device::BaseProps {
   typedef WiredLEDDriverProps LEDDriverProps;
@@ -232,23 +227,16 @@ struct WiredProps : kaleidoscope::device::BaseProps {
   typedef kaleidoscope::driver::storage::Flash<StorageProps> Storage;
   typedef kaleidoscope::driver::bootloader::rp2040::UF2 Bootloader;
 
-  typedef WiredSideFlasherProps SideFlasherProps;
-  typedef kaleidoscope::util::flasher::KeyboardioI2CBootloader<SideFlasherProps> SideFlasher;
   static constexpr const char *short_name = "wired";
 };
 
 class Wired : public kaleidoscope::device::Base<WiredProps> {
 private:
-  static WiredProps::SideFlasher SideFlasher;
 public:
   static void setup();
 
   auto serialPort() -> decltype(Serial) & {
 	return Serial;
-  }
-
-  auto sideFlasher() -> decltype(SideFlasher) & {
-	return SideFlasher;
   }
 
   //Led Stuff
@@ -260,8 +248,14 @@ public:
   void syncLayers();
 
   struct side {
-	uint8_t getPower();
-	void setPower(uint8_t power);
+	uint8_t getPowerRight();
+	void setPowerRight(bool power);
+
+        uint8_t getPowerLeft();
+        void setPowerLeft(bool power);
+
+        void resetRight();
+        void resetLeft();
 
 	uint8_t leftVersion();
 	uint8_t rightVersion();

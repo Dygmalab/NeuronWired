@@ -25,12 +25,14 @@ namespace plugin {
 class KeyScannerFlasher {
  public:
   enum Action {
+    BEGIN            = 'B',
     INFO             = 'I',
     WRITE            = 'W',
     READ             = 'R',
     ERASE            = 'E',
     VALIDATE_PROGRAM = 'V',
-    GO               = 'G',
+    JUMP_ADDRESS     = 'J',
+    FINISH           = 'F',
   };
 
   struct WriteAction {
@@ -85,13 +87,15 @@ class KeyScannerFlasher {
   bool sendEraseAction(EraseAction erase_action);
   bool sendReadAction(ReadAction read_action);
   bool sendValidateProgram();
-  bool sendGo(uint32_t address_to_jump);
+  bool sendBegin();
+  bool sendFinish();
+  bool sendJump(uint32_t address_to_jump);
   uint16_t readData(uint8_t *data, size_t size);
   void setSide(Side side);
 
   void setSideInfo(InfoAction info_action) {
     InfoAction &info = side_ ? infoLeft : infoRight;
-    info=info_action;
+    info             = info_action;
   };
 
   InfoAction getInfoAction() {

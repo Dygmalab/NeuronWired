@@ -39,7 +39,6 @@
 #include "RaiseIdleLEDs.h"
 #include "RaiseFirmwareVersion.h"
 #include "kaleidoscope/device/dygma/wired/Focus.h"
-#include "kaleidoscope/device/dygma/wired/SideFlash.h"
 
 // Support for host power management (suspend & wakeup)
 #include "Kaleidoscope-HostPowerManagement.h"
@@ -55,7 +54,6 @@
 #include "Upgrade.h"
 
 
-#include "RP2040_firmware.h"
 #include "LEDEffect-Rainbow-Defy.h"
 #include "LEDEffect-SolidColor-Defy.h"
 #include "Colormap-Defy.h"
@@ -109,8 +107,6 @@ KEYMAPS(
 );
 // clang-format on
 
-
-kaleidoscope::device::dygma::wired::SideFlash<RP2040Firmware> SideFlash;
 
 /** toggleLedsOnSuspendResume toggles the LEDs off when the host goes to sleep,
  * and turns them back on when it wakes up.
@@ -203,7 +199,6 @@ KALEIDOSCOPE_INIT_PLUGINS(
   Qukeys,
   DynamicSuperKeys,
   DynamicMacros,
-  SideFlash,
   Focus,
   MouseKeys,
   OneShot,
@@ -223,7 +218,6 @@ void setup() {
   HID().begin();
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
-//  SideFlash.flashSides();
   // Reserve space in the keyboard's EEPROM for the keymaps
   EEPROMKeymap.setup(10);
   // Reserve space for the number of Colormap layers we will use

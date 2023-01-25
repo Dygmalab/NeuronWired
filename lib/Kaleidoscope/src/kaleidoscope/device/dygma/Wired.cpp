@@ -29,40 +29,40 @@
 #include "Wired.h"
 #include "Colormap-Defy.h"
 
-#define I2C_SDA_PIN 26  // SWe 20220719: I2C1 data out-/in-put, MASTER role
-#define I2C_SCL_PIN 27  // SWe 20220719: I2C1 clock output, MASTER role
-#define WIRE_ Wire1
-#define I2C_CLOCK_KHZ 100
+#define I2C_SDA_PIN         26  // SWe 20220719: I2C1 data out-/in-put, MASTER role
+#define I2C_SCL_PIN         27  // SWe 20220719: I2C1 clock output, MASTER role
+#define WIRE_               Wire1
+#define I2C_CLOCK_KHZ       100
 #define I2C_FLASH_CLOCK_KHZ 100  // flashing doesn't work reliably at higher clock speeds
 //#define SIDE_POWER 1  // side power switch pa10; SWe 20220719: old, used in Neuron
-#define SIDE_nRESET_1  22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
-#define SIDE_nRESET_2  10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
-#define nPWR_OK   1  // SWe 20220719: Power nOK IN-PULLUP from the 3.3V LDO, open drain, needs internal pull-up. NOTE: this is not implemented in the Development Board, only in the real WIRED Neuron2.
+#define SIDE_nRESET_1 22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
+#define SIDE_nRESET_2 10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
+#define nPWR_OK       1   // SWe 20220719: Power nOK IN-PULLUP from the 3.3V LDO, open drain, needs internal pull-up. NOTE: this is not implemented in the Development Board, only in the real WIRED Neuron2.
 // SWe 20220719: LED pins
-#define RGBW_LED_RED    6  // SWe 20220719: RED RGBW led OUT, PWM3 A can be used to control its intensity
-#define RGBW_LED_GREEN  0  // SWe 20220719: GREEN RGBW led OUT, PWM0 A can be used to control its intensity
-#define RGBW_LED_BLUE   2  // SWe 20220719: BLUE RGBW led OUT, PWM1 A can be used to control its intensity
-#define RGBW_LED_WHITE  4  // SWe 20220719: WHITE RGBW led OUT, PWM2 A can be used to control its intensity
-#define USB_VBUS_DET  7  // SWe 20220719: IN tied to 3.3V which is there when we have power, might be needed for the USB detection. NOTE: when powered from the keyboard side, we have 3.3V but no USB interface.
+#define RGBW_LED_RED   6  // SWe 20220719: RED RGBW led OUT, PWM3 A can be used to control its intensity
+#define RGBW_LED_GREEN 0  // SWe 20220719: GREEN RGBW led OUT, PWM0 A can be used to control its intensity
+#define RGBW_LED_BLUE  2  // SWe 20220719: BLUE RGBW led OUT, PWM1 A can be used to control its intensity
+#define RGBW_LED_WHITE 4  // SWe 20220719: WHITE RGBW led OUT, PWM2 A can be used to control its intensity
+#define USB_VBUS_DET   7  // SWe 20220719: IN tied to 3.3V which is there when we have power, might be needed for the USB detection. NOTE: when powered from the keyboard side, we have 3.3V but no USB interface.
 // SWe 20220719: analog pins
-#define USB_CC1  28  // SWe 20220719: USB CC1 pin, can be used to check how much power the host does support by checking its analog value
-#define USB_CC2  29  // SWe 20220719: USB CC2 pin, can be used to check how much power the host does support by checking its analog value
+#define USB_CC1 28  // SWe 20220719: USB CC1 pin, can be used to check how much power the host does support by checking its analog value
+#define USB_CC2 29  // SWe 20220719: USB CC2 pin, can be used to check how much power the host does support by checking its analog value
 // SWe 20220719: ADC Vref input, tied to 3.3V with resistor and capacitor for filtering and buffering
 // SWe 20220719: optional pins
-#define SW1          3  // SWe 20220719: not used, but is an option to be used as push button input (from the BOOTSEL switch)
+#define SW1 3  // SWe 20220719: not used, but is an option to be used as push button input (from the BOOTSEL switch)
 //#define UART0_CTS   14  // SWe 20220719: not connected, but has option to be used e.g. as UART interface
-#define UART0_RTS   15  // SWe 20220719: not connected, but has option to be used e.g. as UART interface
-#define UART0_RX    17  // SWe 20220719: not connected, but has option to be used e.g. as UART interface
+#define UART0_RTS 15  // SWe 20220719: not connected, but has option to be used e.g. as UART interface
+#define UART0_RX  17  // SWe 20220719: not connected, but has option to be used e.g. as UART interface
 // SWe 20220719: not connected pins, should be set as input
-#define NC5    5
-#define NC12  12
-#define NC13  13
+#define NC5  5
+#define NC12 12
+#define NC13 13
 //#define NC18  18
-#define NC19  19
-#define NC24  24
-#define NC25  25
+#define NC19        19
+#define NC24        24
+#define NC25        25
 
-#define LAYOUT_ISO 0
+#define LAYOUT_ISO  0
 #define LAYOUT_ANSI 1
 
 namespace kaleidoscope {
@@ -77,41 +77,35 @@ bool WiredHands::side_power_;
 uint16_t WiredHands::settings_base_;
 uint16_t WiredHands::settings_brightness_;
 uint8_t WiredHands::led_brightness_correction_ = 255;
-uint16_t WiredHands::keyscan_interval_ = 50;
+uint16_t WiredHands::keyscan_interval_         = 50;
 
-void WiredHands::setSidePower(bool power) {
-  //digitalWrite(SIDE_POWER, power ? HIGH : LOW);  // SWe 20220719: old Neuron power on/off
-  digitalWrite(SIDE_nRESET_1, power ? HIGH : LOW);  // SWe 20220719: new Neuron2 reset or no reset
-  digitalWrite(SIDE_nRESET_2, power ? HIGH : LOW);  // SWe 20220719: new Neuron2 reset or no reset
-  side_power_ = power;
-}
 
 void WiredHands::setup() {
   uint8_t NCS[6] = {NC5, NC12, NC13, NC19, NC24, NC25};
   for (size_t i = 0; i < 6; i++) {
-	pinMode(NCS[i], INPUT);      // set pin to input
+    pinMode(NCS[i], INPUT);  // set pin to input
   }
 
   settings_base_ = ::EEPROMSettings.requestSlice(sizeof(keyscan_interval_));
   settings_brightness_ =
-	  ::EEPROMSettings.requestSlice(sizeof(led_brightness_correction_));
+    ::EEPROMSettings.requestSlice(sizeof(led_brightness_correction_));
 
   // If keyscan is max, assume that EEPROM is uninitialized, and store the
   // defaults.
   //TODO: Fix commits of default settings
   uint16_t interval;
   Runtime.storage().get(settings_base_, interval);
-  if (interval==0xffff) {
-	Runtime.storage().put(settings_base_, keyscan_interval_);
-//	Runtime.storage().commit();
+  if (interval == 0xffff) {
+    Runtime.storage().put(settings_base_, keyscan_interval_);
+    //	Runtime.storage().commit();
   }
   Runtime.storage().get(settings_base_, keyscan_interval_);
 
   uint8_t brightness;
   Runtime.storage().get(settings_brightness_, brightness);
-  if (brightness==0xff) {
-	Runtime.storage().put(settings_brightness_, led_brightness_correction_);
-//	Runtime.storage().commit();
+  if (brightness == 0xff) {
+    Runtime.storage().put(settings_brightness_, led_brightness_correction_);
+    //	Runtime.storage().commit();
   }
   Runtime.storage().get(settings_brightness_, led_brightness_correction_);
 }
@@ -121,7 +115,7 @@ void WiredHands::keyscanInterval(uint16_t interval) {
   rightHand.setKeyscanInterval(interval);
   keyscan_interval_ = interval;
   Runtime.storage().put(settings_base_, keyscan_interval_);
-//  Runtime.storage().commit();
+  //  Runtime.storage().commit();
 }
 
 void WiredHands::ledBrightnessCorrection(uint8_t brightness) {
@@ -129,7 +123,7 @@ void WiredHands::ledBrightnessCorrection(uint8_t brightness) {
   rightHand.setBrightness(brightness);
   led_brightness_correction_ = brightness;
   Runtime.storage().put(settings_brightness_, led_brightness_correction_);
-//  Runtime.storage().commit();
+  //  Runtime.storage().commit();
 }
 
 String WiredHands::getChipID() {
@@ -148,18 +142,17 @@ void WiredHands::syncLayers(wired::Hand &hand) {
   ColormapEffectDefy.getColorPalette(palette);
   hand.sendPaletteColors(palette);
   uint8_t layerColors[WiredLEDDriverProps::led_count];
-  uint8_t baseKeymapIndex = hand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? WiredLEDDriverProps::key_matrix_leds : 0;
-  uint8_t baseUnderGlowIndex = hand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? (WiredLEDDriverProps::key_matrix_leds)*2+WiredLEDDriverProps::underglow_leds : WiredLEDDriverProps::key_matrix_leds*2;
+  uint8_t baseKeymapIndex    = hand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? WiredLEDDriverProps::key_matrix_leds : 0;
+  uint8_t baseUnderGlowIndex = hand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? (WiredLEDDriverProps::key_matrix_leds)*2 + WiredLEDDriverProps::underglow_leds : WiredLEDDriverProps::key_matrix_leds * 2;
   for (int i = 0; i < ColormapEffectDefy.getMaxLayers(); ++i) {
-	ColormapEffectDefy.getLayer(i, layerColors);
-	hand.sendLayerKeyMapColors(i, &layerColors[baseKeymapIndex]);
-	hand.sendLayerUnderGlowColors(i, &layerColors[baseUnderGlowIndex]);
+    ColormapEffectDefy.getLayer(i, layerColors);
+    hand.sendLayerKeyMapColors(i, &layerColors[baseKeymapIndex]);
+    hand.sendLayerUnderGlowColors(i, &layerColors[baseUnderGlowIndex]);
   }
   hand.setLedMode(ledMode);
 }
 
 void WiredHands::initializeSides() {
-
 }
 
 /********* LED Driver *********/
@@ -175,8 +168,8 @@ constexpr uint8_t WiredLEDDriverProps::key_led_map[];
 void WiredLEDDriver::setBrightness(uint8_t brightness) {
   WiredHands::ledBrightnessCorrection(brightness);
   for (uint8_t i = 0; i < LED_BANKS; i++) {
-	isLEDChangedLeft[i] = true;
-	isLEDChangedRight[i] = true;
+    isLEDChangedLeft[i]  = true;
+    isLEDChangedRight[i] = true;
   }
 }
 
@@ -187,27 +180,27 @@ uint8_t WiredLEDDriver::getBrightness() {
 void WiredLEDDriver::syncLeds() {
   // left and right sides
   for (uint8_t i = 0; i < LED_BANKS; i++) {
-	// only send the banks that have changed - try to improve jitter performance
-	if (isLEDChangedLeft[i]) {
-	  WiredHands::leftHand.sendLEDBank(i);
-	  isLEDChangedLeft[i] = false;
-	}
-	if (isLEDChangedRight[i]) {
-	  WiredHands::rightHand.sendLEDBank(i);
-	  isLEDChangedRight[i] = false;
-	}
+    // only send the banks that have changed - try to improve jitter performance
+    if (isLEDChangedLeft[i]) {
+      WiredHands::leftHand.sendLEDBank(i);
+      isLEDChangedLeft[i] = false;
+    }
+    if (isLEDChangedRight[i]) {
+      WiredHands::rightHand.sendLEDBank(i);
+      isLEDChangedRight[i] = false;
+    }
   }
 
   if (isLEDChangedNeuron) {
-	updateNeuronLED();
-	isLEDChangedNeuron = false;
+    updateNeuronLED();
+    isLEDChangedNeuron = false;
   }
 }
 
 void WiredLEDDriver::updateNeuronLED() {
   static constexpr struct {
-	uint8_t r, g, b, w;
-  } pins = {RGBW_LED_RED, RGBW_LED_GREEN, RGBW_LED_BLUE, RGBW_LED_WHITE};
+    uint8_t r, g, b, w;
+  } pins                = {RGBW_LED_RED, RGBW_LED_GREEN, RGBW_LED_BLUE, RGBW_LED_WHITE};
   auto constexpr gamma8 = kaleidoscope::driver::color::gamma_correction;
 
   // invert as these are common anode, and make sure we reach 65535 to be able
@@ -221,58 +214,58 @@ void WiredLEDDriver::updateNeuronLED() {
 void WiredLEDDriver::setCrgbAt(uint8_t i, cRGB crgb) {
   // prevent reading off the end of the led_map array
   if (i >= WiredLEDDriverProps::led_count)
-	return;
+    return;
 
   // neuron LED
-  if (i==WiredLEDDriverProps::led_count - 2) {
-	isLEDChangedNeuron |= !(neuronLED.r==crgb.r && neuronLED.g==crgb.g && neuronLED.b==crgb.b && neuronLED.w==crgb.w);
-	neuronLED = crgb;
-	return;
+  if (i == WiredLEDDriverProps::led_count - 2) {
+    isLEDChangedNeuron |= !(neuronLED.r == crgb.r && neuronLED.g == crgb.g && neuronLED.b == crgb.b && neuronLED.w == crgb.w);
+    neuronLED = crgb;
+    return;
   }
 
   // get the SLED index
   uint8_t sled_num = led_map[WiredHands::layout][i];
   if (sled_num < LEDS_PER_HAND) {
-	cRGB oldColor = WiredHands::leftHand.led_data.leds[sled_num];
-	WiredHands::leftHand.led_data.leds[sled_num] = crgb;
-	isLEDChangedLeft[uint8_t(sled_num/8)] |=
-		!(oldColor.r==crgb.r && oldColor.g==crgb.g && oldColor.b==crgb.b && oldColor.w==crgb.w);
-  } else if (sled_num < 2*LEDS_PER_HAND) {
-	cRGB oldColor =
-		WiredHands::rightHand.led_data.leds[sled_num - LEDS_PER_HAND];
-	WiredHands::rightHand.led_data.leds[sled_num - LEDS_PER_HAND] = crgb;
-	isLEDChangedRight[uint8_t((sled_num - LEDS_PER_HAND)/8)] |=
-		!(oldColor.r==crgb.r && oldColor.g==crgb.g && oldColor.b==crgb.b && oldColor.w==crgb.w);
+    cRGB oldColor                                = WiredHands::leftHand.led_data.leds[sled_num];
+    WiredHands::leftHand.led_data.leds[sled_num] = crgb;
+    isLEDChangedLeft[uint8_t(sled_num / 8)] |=
+      !(oldColor.r == crgb.r && oldColor.g == crgb.g && oldColor.b == crgb.b && oldColor.w == crgb.w);
+  } else if (sled_num < 2 * LEDS_PER_HAND) {
+    cRGB oldColor =
+      WiredHands::rightHand.led_data.leds[sled_num - LEDS_PER_HAND];
+    WiredHands::rightHand.led_data.leds[sled_num - LEDS_PER_HAND] = crgb;
+    isLEDChangedRight[uint8_t((sled_num - LEDS_PER_HAND) / 8)] |=
+      !(oldColor.r == crgb.r && oldColor.g == crgb.g && oldColor.b == crgb.b && oldColor.w == crgb.w);
   } else {
-	// TODO(anyone):
-	// how do we want to handle debugging assertions about crazy user
-	// code that would overwrite other memory?
+    // TODO(anyone):
+    // how do we want to handle debugging assertions about crazy user
+    // code that would overwrite other memory?
   }
 }
 
 void WiredLEDDriver::setCrgbNeuron(cRGB crgb) {
-  isLEDChangedNeuron |= !(neuronLED.r==crgb.r && neuronLED.g==crgb.g && neuronLED.b==crgb.b && neuronLED.w==crgb.w);
+  isLEDChangedNeuron |= !(neuronLED.r == crgb.r && neuronLED.g == crgb.g && neuronLED.b == crgb.b && neuronLED.w == crgb.w);
   neuronLED = crgb;
 }
 
 cRGB WiredLEDDriver::getCrgbAt(uint8_t i) {
   if (i >= WiredLEDDriverProps::led_count)
-	return {0, 0, 0};
+    return {0, 0, 0};
 
   uint8_t sled_num = led_map[WiredHands::layout][i];
   if (sled_num < LEDS_PER_HAND) {
-	return WiredHands::leftHand.led_data.leds[sled_num];
-  } else if (sled_num < 2*LEDS_PER_HAND) {
-	return WiredHands::rightHand.led_data.leds[sled_num - LEDS_PER_HAND];
+    return WiredHands::leftHand.led_data.leds[sled_num];
+  } else if (sled_num < 2 * LEDS_PER_HAND) {
+    return WiredHands::rightHand.led_data.leds[sled_num - LEDS_PER_HAND];
   } else {
-	return {0, 0, 0, 0};
+    return {0, 0, 0, 0};
   }
 }
 
 void WiredLEDDriver::setup() {
-//  pinMode(SIDE_nRESET_1, OUTPUT);
-//  pinMode(SIDE_nRESET_2, OUTPUT);
-//  WiredHands::setSidePower(false);
+  //  pinMode(SIDE_nRESET_1, OUTPUT);
+  //  pinMode(SIDE_nRESET_2, OUTPUT);
+  //  WiredHands::setSidePower(false);
 
   // arduino zero analogWrite(255) isn't fully on as its actually working with a
   // 16bit counter and the mapping is a bit shift.
@@ -280,7 +273,7 @@ void WiredLEDDriver::setup() {
   // ourselves in updateHubleLED() to ensure LEDs can be set fully off
   analogWriteResolution(16);
 
-//  WiredHands::setSidePower(true);
+  //  WiredHands::setSidePower(true);
 }
 
 /********* Key scanner *********/
@@ -295,74 +288,73 @@ bool WiredKeyScanner::lastLeftOnline;
 bool WiredKeyScanner::lastRightOnline;
 
 void WiredKeyScanner::readMatrix() {
-  previousLeftHandState = leftHandState;
+  previousLeftHandState  = leftHandState;
   previousRightHandState = rightHandState;
 
   if (WiredHands::leftHand.readKeys()) {
-	leftHandState = WiredHands::leftHand.getKeyData();
-	// if ANSI, then swap r3c0 and r3c1 to match the PCB
-	if (WiredHands::layout==LAYOUT_ANSI) {
-	  // only swap if bits are different
-	  if ((leftHandState.rows[3] & (1 << 0)) ^
-		  leftHandState.rows[3] & (1 << 1)) {
-		leftHandState.rows[3] ^= (1 << 0);  // flip the bit
-		leftHandState.rows[3] ^= (1 << 1);  // flip the bit
-	  }
-	}
+    leftHandState = WiredHands::leftHand.getKeyData();
+    // if ANSI, then swap r3c0 and r3c1 to match the PCB
+    if (WiredHands::layout == LAYOUT_ANSI) {
+      // only swap if bits are different
+      if ((leftHandState.rows[3] & (1 << 0)) ^
+          leftHandState.rows[3] & (1 << 1)) {
+        leftHandState.rows[3] ^= (1 << 0);  // flip the bit
+        leftHandState.rows[3] ^= (1 << 1);  // flip the bit
+      }
+    }
   }
 
   if (WiredHands::rightHand.readKeys()) {
-	rightHandState = WiredHands::rightHand.getKeyData();
-	// if ANSI, then swap r1c0 and r2c0 to match the PCB
-	if (WiredHands::layout==LAYOUT_ANSI) {
-	  if ((rightHandState.rows[1] & (1 << 0)) ^
-		  rightHandState.rows[2] & (1 << 0)) {
-		rightHandState.rows[1] ^= (1 << 0);
-		rightHandState.rows[2] ^= (1 << 0);
-	  }
-	}
+    rightHandState = WiredHands::rightHand.getKeyData();
+    // if ANSI, then swap r1c0 and r2c0 to match the PCB
+    if (WiredHands::layout == LAYOUT_ANSI) {
+      if ((rightHandState.rows[1] & (1 << 0)) ^
+          rightHandState.rows[2] & (1 << 0)) {
+        rightHandState.rows[1] ^= (1 << 0);
+        rightHandState.rows[2] ^= (1 << 0);
+      }
+    }
   }
 
   // if a side has just been replugged, initialise it
   if (WiredHands::leftHand.online && !lastLeftOnline) {
-	WiredHands::initializeSide(0);
+    WiredHands::initializeSide(0);
   }
   if (WiredHands::rightHand.online && !lastRightOnline) {
-	WiredHands::initializeSide(1);
+    WiredHands::initializeSide(1);
   }
 
   // if a side has just been unplugged, wipe its state
   if (!WiredHands::leftHand.online && lastLeftOnline)
-	leftHandState.all = 0;
+    leftHandState.all = 0;
 
   if (!WiredHands::rightHand.online && lastRightOnline)
-	rightHandState.all = 0;
+    rightHandState.all = 0;
 
   // store previous state of whether the sides are plugged in
-  lastLeftOnline = WiredHands::leftHand.online;
+  lastLeftOnline  = WiredHands::leftHand.online;
   lastRightOnline = WiredHands::rightHand.online;
 }
 
 void WiredKeyScanner::actOnMatrixScan() {
   for (byte row = 0; row < Props_::matrix_rows; row++) {
-	for (byte col = 0; col < Props_::left_columns; col++) {
-	  uint8_t keynum = (row*Props_::left_columns) + col;
-	  uint8_t keyState;
+    for (byte col = 0; col < Props_::left_columns; col++) {
+      uint8_t keynum = (row * Props_::left_columns) + col;
+      uint8_t keyState;
 
-	  // left
-	  keyState = (bitRead(previousLeftHandState.all, keynum) << 0) |
-		  (bitRead(leftHandState.all, keynum) << 1);
-	  if (keyState)
-		ThisType::handleKeyswitchEvent(Key_NoKey, KeyAddr(row, col), keyState);
+      // left
+      keyState = (bitRead(previousLeftHandState.all, keynum) << 0) |
+                 (bitRead(leftHandState.all, keynum) << 1);
+      if (keyState)
+        ThisType::handleKeyswitchEvent(Key_NoKey, KeyAddr(row, col), keyState);
 
-	  // right
-	  keyState = (bitRead(previousRightHandState.all, keynum) << 0) |
-		  (bitRead(rightHandState.all, keynum) << 1);
-	  if (keyState)
-		ThisType::handleKeyswitchEvent(
-			Key_NoKey, KeyAddr(row, (Props_::matrix_columns - 1) - col),
-			keyState);
-	}
+      // right
+      keyState = (bitRead(previousRightHandState.all, keynum) << 0) |
+                 (bitRead(rightHandState.all, keynum) << 1);
+      if (keyState)
+        ThisType::handleKeyswitchEvent(
+          Key_NoKey, KeyAddr(row, (Props_::matrix_columns - 1) - col), keyState);
+    }
   }
 }
 
@@ -373,45 +365,45 @@ void WiredKeyScanner::scanMatrix() {
 
 void WiredKeyScanner::maskKey(KeyAddr key_addr) {
   if (!key_addr.isValid())
-	return;
+    return;
 
   auto row = key_addr.row();
   auto col = key_addr.col();
 
   if (col >= Props_::left_columns) {
-	rightHandMask.rows[row] |=
-		1 << (Props_::right_columns - (col - Props_::left_columns));
+    rightHandMask.rows[row] |=
+      1 << (Props_::right_columns - (col - Props_::left_columns));
   } else {
-	leftHandMask.rows[row] |= 1 << (Props_::right_columns - col);
+    leftHandMask.rows[row] |= 1 << (Props_::right_columns - col);
   }
 }
 
 void WiredKeyScanner::unMaskKey(KeyAddr key_addr) {
   if (!key_addr.isValid())
-	return;
+    return;
 
   auto row = key_addr.row();
   auto col = key_addr.col();
 
   if (col >= Props_::left_columns) {
-	rightHandMask.rows[row] &=
-		~(1 << (Props_::right_columns - (col - Props_::left_columns)));
+    rightHandMask.rows[row] &=
+      ~(1 << (Props_::right_columns - (col - Props_::left_columns)));
   } else {
-	leftHandMask.rows[row] &= ~(1 << (Props_::right_columns - col));
+    leftHandMask.rows[row] &= ~(1 << (Props_::right_columns - col));
   }
 }
 
 bool WiredKeyScanner::isKeyMasked(KeyAddr key_addr) {
   if (!key_addr.isValid())
-	return false;
+    return false;
 
   auto row = key_addr.row();
   auto col = key_addr.col();
 
   if (col >= 8) {
-	return rightHandMask.rows[row] & (1 << (7 - (col - 8)));
+    return rightHandMask.rows[row] & (1 << (7 - (col - 8)));
   } else {
-	return leftHandMask.rows[row] & (1 << (7 - col));
+    return leftHandMask.rows[row] & (1 << (7 - col));
   }
 }
 
@@ -425,10 +417,10 @@ bool WiredKeyScanner::isKeyswitchPressed(KeyAddr key_addr) {
   auto col = key_addr.col();
 
   if (col >= Props_::left_columns) {
-	return (bitRead(rightHandState.rows[row],
-					(Props_::matrix_columns - 1) - col)!=0);
+    return (bitRead(rightHandState.rows[row],
+                    (Props_::matrix_columns - 1) - col) != 0);
   } else {
-	return (bitRead(leftHandState.rows[row], col)!=0);
+    return (bitRead(leftHandState.rows[row], col) != 0);
   }
 }
 
@@ -437,21 +429,21 @@ bool WiredKeyScanner::wasKeyswitchPressed(KeyAddr key_addr) {
   auto col = key_addr.col();
 
   if (col >= Props_::left_columns) {
-	return (bitRead(previousRightHandState.rows[row],
-					(Props_::matrix_columns - 1) - col)!=0);
+    return (bitRead(previousRightHandState.rows[row],
+                    (Props_::matrix_columns - 1) - col) != 0);
   } else {
-	return (bitRead(previousLeftHandState.rows[row], col)!=0);
+    return (bitRead(previousLeftHandState.rows[row], col) != 0);
   }
 }
 
 uint8_t WiredKeyScanner::pressedKeyswitchCount() {
   return __builtin_popcountll(leftHandState.all) +
-	  __builtin_popcountll(rightHandState.all);
+         __builtin_popcountll(rightHandState.all);
 }
 
 uint8_t WiredKeyScanner::previousPressedKeyswitchCount() {
   return __builtin_popcountll(previousLeftHandState.all) +
-	  __builtin_popcountll(previousRightHandState.all);
+         __builtin_popcountll(previousRightHandState.all);
 }
 
 void WiredKeyScanner::setKeyscanInterval(uint8_t interval) {
@@ -461,17 +453,15 @@ void WiredKeyScanner::setKeyscanInterval(uint8_t interval) {
 
 void WiredKeyScanner::setup() {
   static constexpr uint8_t keyscanner_pins[] = {
-	  2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-	  15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30,
-	  31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42};
+    2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42};
   for (int i = 0; i < sizeof(keyscanner_pins); i++) {
-	// pinMode(keyscanner_pins[i], OUTPUT);
-	// digitalWrite(keyscanner_pins[i], LOW);
+    // pinMode(keyscanner_pins[i], OUTPUT);
+    // digitalWrite(keyscanner_pins[i], LOW);
   }
 }
 
 void WiredKeyScanner::reset() {
-  leftHandState.all = 0;
+  leftHandState.all  = 0;
   rightHandState.all = 0;
   Runtime.hid().keyboard().releaseAllKeys();
   Runtime.hid().keyboard().sendReport();
@@ -500,30 +490,48 @@ void Wired::syncLayers() {
 
 void Wired::side::prepareForFlash() {
   WIRE_.end();
-
-  setPower(LOW);
   // also turn off i2c pins to stop attiny from getting enough current through
   // i2c to stay on
   pinMode(I2C_SDA_PIN, OUTPUT);
   pinMode(I2C_SCL_PIN, OUTPUT);
   digitalWrite(I2C_SDA_PIN, false);
   digitalWrite(I2C_SCL_PIN, false);
-  sleep_ms(1);
   // wipe key states, to prevent accidental key repeats
   WiredKeyScanner::reset();
-
-  setPower(HIGH);
 
   WIRE_.setSDA(I2C_SDA_PIN);
   WIRE_.setSCL(I2C_SCL_PIN);
   WIRE_.begin();
-  WIRE_.setClock(I2C_FLASH_CLOCK_KHZ*1000);
-  // wait for side bootloader to be ready
-  sleep_ms(50);
+  WIRE_.setClock(I2C_FLASH_CLOCK_KHZ * 1000);
 }
 
-uint8_t Wired::side::getPower() { return WiredHands::getSidePower(); }
-void Wired::side::setPower(uint8_t power) { WiredHands::setSidePower(power); }
+uint8_t Wired::side::getPowerRight() {
+  return digitalRead(SIDE_nRESET_1);
+}
+void Wired::side::setPowerRight(bool power) {
+  digitalWrite(SIDE_nRESET_1, power ? HIGH : LOW);
+}
+
+uint8_t Wired::side::getPowerLeft() {
+  return digitalRead(SIDE_nRESET_2);
+}
+void Wired::side::setPowerLeft(bool power) {
+  digitalWrite(SIDE_nRESET_2, power ? HIGH : LOW);
+}
+void Wired::side::resetRight() {
+  digitalWrite(SIDE_nRESET_1, LOW);
+  sleep_ms(10);
+  digitalWrite(SIDE_nRESET_1, HIGH);
+  sleep_ms(50); //For bootloader
+}
+
+void Wired::side::resetLeft() {
+  digitalWrite(SIDE_nRESET_2, LOW);
+  sleep_ms(10);
+  digitalWrite(SIDE_nRESET_2, HIGH);
+  sleep_ms(50); //For bootloader
+}
+
 
 uint8_t Wired::side::leftVersion() {
   return WiredHands::leftHand.readVersion();
@@ -558,9 +566,11 @@ void Wired::side::setSLEDCurrent(uint8_t current) {
 }
 
 Wired::settings::Layout Wired::settings::layout() {
-  return WiredHands::layout==LAYOUT_ANSI ? Layout::ANSI : Layout::ISO;
+  return WiredHands::layout == LAYOUT_ANSI ? Layout::ANSI : Layout::ISO;
 }
-uint8_t Wired::settings::joint() { return WiredHands::rightHand.readJoint(); }
+uint8_t Wired::settings::joint() {
+  return WiredHands::rightHand.readJoint();
+}
 
 uint16_t Wired::settings::keyscanInterval() {
   return WiredHands::keyscanInterval();
