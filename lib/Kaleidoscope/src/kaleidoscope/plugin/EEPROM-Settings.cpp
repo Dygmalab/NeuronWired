@@ -41,7 +41,7 @@ EventHandlerResult EEPROMSettings::onSetup() {
          uninitialized state, we do not override them, to avoid overwriting user
          settings. */
       settings_.ignore_hardcoded_layers = false;
-      settings_.default_layer = 0;
+      settings_.default_layer           = 0;
     }
 
     /* If the version is undefined, we'll set it to our current one. */
@@ -160,10 +160,15 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     DEFAULT_LAYER,
     IS_VALID,
     GET_VERSION,
+    ALIVE_INTERVAL,
     CRC,
   } sub_command;
 
-  if (::Focus.handleHelp(command, PSTR("settings.defaultLayer\nsettings.valid?\nsettings.version\nsettings.crc")))
+  if (::Focus.handleHelp(command, PSTR("settings.defaultLayer\n"
+                                       "settings.valid?\n"
+                                       "settings.version\n"
+                                       "settings.aliveInterval\n"
+                                       "settings.crc")))
     return EventHandlerResult::OK;
 
   if (strncmp_P(command, PSTR("settings."), 9) != 0)
@@ -175,12 +180,18 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     sub_command = IS_VALID;
   else if (strcmp_P(command + 9, PSTR("version")) == 0)
     sub_command = GET_VERSION;
+  else if (strcmp_P(command + 9, PSTR("aliveInterval")) == 0)
+    sub_command = ALIVE_INTERVAL;
   else if (strcmp_P(command + 9, PSTR("crc")) == 0)
     sub_command = CRC;
   else
     return EventHandlerResult::OK;
-
   switch (sub_command) {
+  case ALIVE_INTERVAL: {
+    uint32_t aliveIntervalInMs = Runtime.serialPort().parseInt();
+    Runtime.device().settings.aliveInterval(aliveIntervalInMs);
+    break;
+  }
   case DEFAULT_LAYER: {
     if (::Focus.isEOL()) {
       ::Focus.send(::EEPROMSettings.default_layer());
@@ -246,8 +257,8 @@ EventHandlerResult FocusEEPROMCommand::onFocusEvent(const char *command) {
   return EventHandlerResult::EVENT_CONSUMED;
 }
 
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
 
 kaleidoscope::plugin::EEPROMSettings EEPROMSettings;
 kaleidoscope::plugin::FocusSettingsCommand FocusSettingsCommand;

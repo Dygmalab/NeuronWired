@@ -294,6 +294,7 @@ public:
 	uint16_t keyscanInterval();
 	void keyscanInterval(uint16_t interval);
 	String getChipID();
+        void aliveInterval(uint32_t aliveInterval);
   } settings;
 };
 

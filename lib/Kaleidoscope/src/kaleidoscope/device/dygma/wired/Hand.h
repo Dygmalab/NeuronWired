@@ -65,6 +65,7 @@ class Hand {
   }
 
   void setLedMode(LedModeSerializable *pSerializable);
+  void setAliveInterval(uint32_t aliveInterval );
   void sendPaletteColors(const cRGB palette[16]);
   void sendLayerKeyMapColors(uint8_t layer, const uint8_t *keyMapColors);
   void sendLayerUnderGlowColors(uint8_t layer, const uint8_t *underGlowColors);

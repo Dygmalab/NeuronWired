@@ -82,7 +82,7 @@ KEYMAPS(
     , Key_LeftControl, Key_LeftGui, Key_Backspace, Key_Delete
     , Key_LeftShift, Key_LeftAlt, Key_Enter, Key_Space
 
-    , LT(1,Space), LT(2,Space), LT(3,Space), LT(4,Space), Key_Minus, Key_Equals, Key_Backspace
+    , Key_7, Key_8, Key_9, Key_0, Key_Minus, Key_Equals, Key_Backspace
     , Key_Y, Key_U, Key_I, Key_O, Key_P, Key_LeftBracket, Key_RightBracket
     , Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Quote, Key_RightShift
     , Key_N, Key_M, Key_Comma, Key_Period, Key_Slash, Key_RightShift
