@@ -32,7 +32,7 @@ using namespace Side_communications_protocol;
 #define SIDE_nRESET_2 10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
 
 #define SPI_PORT_0    spi0
-#define SPI_SPEED     (4000 * 1000)
+#define SPI_SPEED     (1000 * 1000)
 #define SPI_MOSI_0    20
 #define SPI_MISO_0    23
 #define SPI_CLK_0     18
