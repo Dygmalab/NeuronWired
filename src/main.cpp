@@ -54,7 +54,7 @@
 #include "EEPROMUpgrade.h"
 #include "FLASH_Upgrade.h"
 
-
+#include <pico/stdlib.h>
 #include "RP2040_firmware.h"
 #include "LEDEffect-Rainbow-Defy.h"
 #include "LEDEffect-SolidColor-Defy.h"
@@ -215,6 +215,8 @@ KALEIDOSCOPE_INIT_PLUGINS(
 
 
 void setup() {
+  uint32_t freq_khz=131000;
+  set_sys_clock_khz(freq_khz, true);
   TinyUSBDevice.setID(BOARD_VENDORID, BOARD_PRODUCTID);
   TinyUSBDevice.setManufacturerDescriptor(BOARD_MANUFACTURER);
   TinyUSBDevice.setProductDescriptor(BOARD_PRODUCT);
