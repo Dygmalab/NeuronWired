@@ -507,7 +507,7 @@ void Wired::side::prepareForFlash() {
   WIRE_.setClock(I2C_FLASH_CLOCK_KHZ * 1000);
   // wipe key states, to prevent accidental key repeats
   WiredKeyScanner::reset();
-
+  sleep_ms(10);
   setPower(HIGH);
 
   // wait for side bootloader to be ready
