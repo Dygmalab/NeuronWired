@@ -379,7 +379,6 @@ EventHandlerResult Upgrade::beforeReportingState() {
     return EventHandlerResult::OK;
   if (Runtime.hasTimeExpired(pressed_time, press_time)) {
     flashing = true;
-    Serial.println("Flashing!");
     return EventHandlerResult::OK;
   }
   return EventHandlerResult::OK;
