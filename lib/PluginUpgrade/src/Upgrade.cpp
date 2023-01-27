@@ -202,6 +202,7 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
   if (strcmp_P(command + 8, PSTR("end")) == 0) {
     serial_pre_activation = false;
     activated             = false;
+    flashing              = false;
     pressed_time          = 0;
   }
 
@@ -378,6 +379,7 @@ EventHandlerResult Upgrade::beforeReportingState() {
     return EventHandlerResult::OK;
   if (Runtime.hasTimeExpired(pressed_time, press_time)) {
     flashing = true;
+    Serial.println("Flashing!");
     return EventHandlerResult::OK;
   }
   return EventHandlerResult::OK;
