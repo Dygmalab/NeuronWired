@@ -508,7 +508,7 @@ void Wired::side::prepareForFlash() {
 
   // wipe key states, to prevent accidental key repeats
   WiredKeyScanner::reset();
-
+  sleep_ms(10);
   setPower(HIGH);
 
   WIRE_.setSDA(I2C_SDA_PIN);

@@ -28,10 +28,10 @@ namespace device {
 namespace dygma {
 namespace wired {
 
-template<typename _Firmware>
+template<typename Firmware>
 class SideFlash : public kaleidoscope::Plugin {
  private:
-  _Firmware firmware;
+  Firmware firmware;
  public:
   void flashSides(){
 	uint8_t left_boot_address = Runtime.device().side.left_boot_address;
