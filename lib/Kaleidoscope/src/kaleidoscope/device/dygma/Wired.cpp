@@ -32,8 +32,8 @@
 #define I2C_SDA_PIN         26  // SWe 20220719: I2C1 data out-/in-put, MASTER role
 #define I2C_SCL_PIN         27  // SWe 20220719: I2C1 clock output, MASTER role
 #define WIRE_               Wire1
-#define I2C_CLOCK_KHZ       200
-#define I2C_FLASH_CLOCK_KHZ 200  // flashing doesn't work reliably at higher clock speeds
+#define I2C_CLOCK_KHZ       100
+#define I2C_FLASH_CLOCK_KHZ 100  // flashing doesn't work reliably at higher clock speeds
 //#define SIDE_POWER 1  // side power switch pa10; SWe 20220719: old, used in Neuron
 #define SIDE_nRESET_1 22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
 #define SIDE_nRESET_2 10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
@@ -501,20 +501,15 @@ void Wired::side::prepareForFlash() {
   setPower(LOW);
   // also turn off i2c pins to stop attiny from getting enough current through
   // i2c to stay on
-  pinMode(I2C_SDA_PIN, OUTPUT);
-  pinMode(I2C_SCL_PIN, OUTPUT);
-  digitalWrite(I2C_SDA_PIN, false);
-  digitalWrite(I2C_SCL_PIN, false);
-
+  WIRE_.setSDA(I2C_SDA_PIN);
+  WIRE_.setSCL(I2C_SCL_PIN);
+  WIRE_.begin();
+  WIRE_.setClock(I2C_FLASH_CLOCK_KHZ * 1000);
   // wipe key states, to prevent accidental key repeats
   WiredKeyScanner::reset();
   sleep_ms(10);
   setPower(HIGH);
 
-  WIRE_.setSDA(I2C_SDA_PIN);
-  WIRE_.setSCL(I2C_SCL_PIN);
-  WIRE_.begin();
-  WIRE_.setClock(I2C_FLASH_CLOCK_KHZ * 1000);
   // wait for side bootloader to be ready
   sleep_ms(50);
 }
