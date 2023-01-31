@@ -293,7 +293,6 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
     auto info_action = key_scanner_flasher_.getInfoAction();
 
     uint32_t crc32InMemory = key_scanner_flasher_.crc32(packet.data, packet.write_action.size);
-    Serial.printf("%lu %lu %lu %lu\n",packet.write_action.size,packet.write_action.addr,crc32InMemory,packet.crc32Transmission);
     if (packet.crc32Transmission != crc32InMemory) {
       ::Focus.send(false);
       return EventHandlerResult::ERROR;
