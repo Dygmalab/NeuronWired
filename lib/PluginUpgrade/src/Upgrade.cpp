@@ -305,7 +305,6 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
         return EventHandlerResult::ERROR;
       }
     }
-
     uint32_t crcKeyScannerCalculation = key_scanner_flasher_.sendWriteAction(packet.write_action, packet.data);
     if (crcKeyScannerCalculation != packet.crc32Transmission) {
       ::Focus.send(false);
