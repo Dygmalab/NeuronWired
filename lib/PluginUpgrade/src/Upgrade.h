@@ -133,6 +133,7 @@ class Upgrade : public Plugin {
   uint16_t press_time{1};
   uint16_t pressed_time{0};
   bool serial_pre_activation = false;
+  void resetSide(KeyScannerFlasher::Side side) const;
 };
 
 }  // namespace plugin

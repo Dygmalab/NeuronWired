@@ -19,7 +19,7 @@
 #include "Wire.h"
 #include "kaleidoscope/plugin/FocusSerial.h"
 
-#define WIRE_               Wire1
+#define WIRE_ Wire1
 
 namespace kaleidoscope {
 namespace plugin {
@@ -212,25 +212,45 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
   if (strcmp_P(command + 8 + 11, PSTR("beginRight")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
     key_scanner_flasher_.setSide(KeyScannerFlasher::RIGHT);
-    Runtime.device().side.prepareForFlash();
-    Runtime.device().side.resetRight();
-    if (!key_scanner_flasher_.sendBegin()) {
-      Focus.send(false);
-      return EventHandlerResult::ERROR;
+    resetSide(KeyScannerFlasher::RIGHT);
+    bool rightSideBegin = key_scanner_flasher_.sendBegin();
+    if (rightSideBegin) {
+      Focus.send(true);
+      return EventHandlerResult::EVENT_CONSUMED;
     }
-    Focus.send(true);
+
+    key_scanner_flasher_.setSide(KeyScannerFlasher::LEFT);
+    resetSide(KeyScannerFlasher::LEFT);
+    bool rightSideLeft = key_scanner_flasher_.sendBegin();
+    if (rightSideLeft) {
+      Focus.send(true);
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+
+    Focus.send(false);
+    return EventHandlerResult::ERROR;
   }
 
   if (strcmp_P(command + 8 + 11, PSTR("beginLeft")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
     key_scanner_flasher_.setSide(KeyScannerFlasher::LEFT);
-    Runtime.device().side.prepareForFlash();
-    Runtime.device().side.resetLeft();
-    if (!key_scanner_flasher_.sendBegin()) {
-      Focus.send(false);
-      return EventHandlerResult::ERROR;
+    resetSide(KeyScannerFlasher::LEFT);
+    bool rightSideLeft = key_scanner_flasher_.sendBegin();
+    if (rightSideLeft) {
+      Focus.send(true);
+      return EventHandlerResult::EVENT_CONSUMED;
     }
-    Focus.send(true);
+
+    key_scanner_flasher_.setSide(KeyScannerFlasher::RIGHT);
+    resetSide(KeyScannerFlasher::RIGHT);
+    bool rightSideBegin = key_scanner_flasher_.sendBegin();
+    if (rightSideBegin) {
+      Focus.send(true);
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+
+    Focus.send(false);
+    return EventHandlerResult::ERROR;
   }
 
   if (strcmp_P(command + 8 + 11, PSTR("getInfo")) == 0) {
@@ -343,6 +363,14 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
   }
 
   return EventHandlerResult::EVENT_CONSUMED;
+}
+void Upgrade::resetSide(KeyScannerFlasher::Side side) const {
+  Runtime.device().side.prepareForFlash();
+  if (side == KeyScannerFlasher::RIGHT) {
+    Runtime.device().side.resetRight();
+    return;
+  }
+  Runtime.device().side.resetLeft();
 }
 EventHandlerResult Upgrade::onSetup() {
   return EventHandlerResult::OK;
