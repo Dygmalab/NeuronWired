@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.2.0...pre_release_1.2.1) (2023-01-25)
+
+
+### Bug Fixes
+
+* spi port commuting ([f2650a2](https://github.com/Dygmalab/NeuronWired/commit/f2650a24d6b338411310b07626e7b74cb877e361))
+
 # [1.2.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.1.0...pre_release_1.2.0) (2023-01-19)
 
 
