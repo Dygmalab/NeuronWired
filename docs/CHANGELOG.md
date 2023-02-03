@@ -1,3 +1,11 @@
+# [1.3.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.2.1...pre_release_1.3.0) (2023-02-03)
+
+
+### Features
+
+* added plugin to upgrade keyscanner ([532d35d](https://github.com/Dygmalab/NeuronWired/commit/532d35d539663f268cf6769a503b5dbf275c68fc))
+* new bootloader! ([ae73df3](https://github.com/Dygmalab/NeuronWired/commit/ae73df3ecc42d4edb1495844c3e9dc794a60e4e7))
+
 ## [1.2.1](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.2.0...pre_release_1.2.1) (2023-01-25)
 
 
