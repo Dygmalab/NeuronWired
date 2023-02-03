@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.3.0...pre_release_1.3.1) (2023-02-03)
+
+
+### Bug Fixes
+
+* macro hid ([9682604](https://github.com/Dygmalab/NeuronWired/commit/9682604702069fe960d687d618c305e8de4ebb63))
+
 # [1.3.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.2.1...pre_release_1.3.0) (2023-02-03)
 
 
