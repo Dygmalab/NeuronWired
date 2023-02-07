@@ -56,14 +56,14 @@ EventHandlerResult EEPROMSettings::onSetup() {
     Runtime.storage().commit();
   }
 
-//  if(settings_.validation!=0x421563){
-//    settings_.cpuSpeed=125000;
-//    settings_.validation=0x421563;
-//    Runtime.storage().put(0, settings_);
-//    Runtime.storage().commit();
-//  }
-//
-//  set_sys_clock_khz(settings_.cpuSpeed, true);
+  //  if(settings_.validation!=0x421563){
+  //    settings_.cpuSpeed=125000;
+  //    settings_.validation=0x421563;
+  //    Runtime.storage().put(0, settings_);
+  //    Runtime.storage().commit();
+  //  }
+  //
+  //  set_sys_clock_khz(settings_.cpuSpeed, true);
 
 
   return EventHandlerResult::OK;
@@ -172,16 +172,22 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     DEFAULT_LAYER,
     IS_VALID,
     GET_VERSION,
+    PRINT_CONFIG,
     ALIVE_INTERVAL,
-    NEURON_CPU_SPEED,
+    CPU_CLOCK,
+    SPI_CLOCK,
+    LED_DRIVER_PULL_UP,
     CRC,
   } sub_command;
 
   if (::Focus.handleHelp(command, PSTR("settings.defaultLayer\n"
                                        "settings.valid?\n"
                                        "settings.version\n"
+                                       "settings.printConfig\n"
                                        "settings.aliveInterval\n"
-                                       "settings.neuronCpuSpeed\n"
+                                       "settings.spiSpeed\n"
+                                       "settings.cpuSpeed\n"
+                                       "settings.ledDriverPullUp\n"
                                        "settings.crc")))
     return EventHandlerResult::OK;
 
@@ -194,24 +200,109 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     sub_command = IS_VALID;
   else if (strcmp_P(command + 9, PSTR("version")) == 0)
     sub_command = GET_VERSION;
+  else if (strcmp_P(command + 9, PSTR("printConfig")) == 0)
+    sub_command = PRINT_CONFIG;
   else if (strcmp_P(command + 9, PSTR("aliveInterval")) == 0)
     sub_command = ALIVE_INTERVAL;
-  else if (strcmp_P(command + 9, PSTR("neuronCpuSpeed")) == 0)
-    sub_command = NEURON_CPU_SPEED;
+  else if (strcmp_P(command + 9, PSTR("spiSpeed")) == 0)
+    sub_command = SPI_CLOCK;
+  else if (strcmp_P(command + 9, PSTR("cpuSpeed")) == 0)
+    sub_command = CPU_CLOCK;
+  else if (strcmp_P(command + 9, PSTR("ledDriverPullUp")) == 0)
+    sub_command = LED_DRIVER_PULL_UP;
   else if (strcmp_P(command + 9, PSTR("crc")) == 0)
     sub_command = CRC;
   else
     return EventHandlerResult::OK;
   switch (sub_command) {
-  case ALIVE_INTERVAL: {
-    uint32_t aliveIntervalInMs = Runtime.serialPort().parseInt();
-//    Runtime.device().settings.aliveInterval(aliveIntervalInMs);
+  case PRINT_CONFIG: {
+    uint32_t side      = Runtime.serialPort().parseInt();
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+      Runtime.device().printConfigLeftHand();
+    }
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+      Runtime.device().printConfigRightHand();
+    }
+    if (side == Side_communications_protocol::Devices::NEURON_DEFY_WIRED) {
+      Serial.printf("Neuron CPU is at: %lu\n",frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_SYS_CLKSRC_PRIMARY));
+    }
     break;
   }
-  case NEURON_CPU_SPEED: {
-    uint32_t cpuSpeed = Runtime.serialPort().parseInt();
-    Runtime.device().settings.setCPUSpeed(cpuSpeed);
-    ::EEPROMSettings.update();
+  case ALIVE_INTERVAL: {
+    uint32_t side      = Runtime.serialPort().parseInt();
+    uint32_t base      = Runtime.serialPort().parseInt();
+    uint32_t variation = Runtime.serialPort().parseInt();
+    Side_communications_protocol::Packet packet;
+    packet.context.command = Side_communications_protocol::SET_ALIVE_INTERVAL;
+    packet.context.size    = sizeof(uint32_t) * 2;
+    memcpy(&packet.data[0], &base, sizeof(uint32_t));
+    memcpy(&packet.data[sizeof(uint32_t)], &variation, sizeof(uint32_t));
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+      Serial.printf("Sending alive interval to left side base %lu and variation %lu\n", base, variation);
+      Runtime.device().sendPacketLeftHand(packet);
+    }
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+      Serial.printf("Sending alive interval to right side base %lu and variation %lu\n", base, variation);
+      Runtime.device().sendPacketRightHand(packet);
+    }
+    break;
+  }
+  case SPI_CLOCK: {
+    uint32_t side      = Runtime.serialPort().parseInt();
+    uint32_t base      = Runtime.serialPort().parseInt();
+    uint32_t variation = Runtime.serialPort().parseInt();
+    Side_communications_protocol::Packet packet;
+    packet.context.command = Side_communications_protocol::SET_SPI_SPEED;
+    packet.context.size    = sizeof(uint32_t) * 2;
+    memcpy(&packet.data[0], &base, sizeof(uint32_t));
+    memcpy(&packet.data[sizeof(uint32_t)], &variation, sizeof(uint32_t));
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+      Serial.printf("Sending spi speed to left side base %lu and variation %lu\n", base, variation);
+      Runtime.device().sendPacketLeftHand(packet);
+    }
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+      Serial.printf("Sending spi speed to right side base %lu and variation %lu\n", base, variation);
+      Runtime.device().sendPacketRightHand(packet);
+    }
+    break;
+  }
+  case CPU_CLOCK: {
+    uint32_t side     = Runtime.serialPort().parseInt();
+    uint32_t cpu_speed = Runtime.serialPort().parseInt();
+    Side_communications_protocol::Packet packet;
+    packet.context.command = Side_communications_protocol::SET_CLOCK_SPEED;
+    packet.context.size    = sizeof(uint32_t);
+    memcpy(&packet.data[0], &cpu_speed, sizeof(uint32_t));
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+      Serial.printf("Setting cpuSpeed in left side to %lu\n", cpu_speed);
+      Runtime.device().sendPacketLeftHand(packet);
+    }
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+      Serial.printf("Setting cpuSpeed in right side to %lu\n", cpu_speed);
+      Runtime.device().sendPacketRightHand(packet);
+    }
+    if (side == Side_communications_protocol::Devices::NEURON_DEFY_WIRED) {
+      Serial.printf("Setting cpuSpeed in neuron to %lu\n", cpu_speed);
+      Runtime.device().settings.setCPUSpeed(cpu_speed);
+      ::EEPROMSettings.update();
+    }
+    break;
+  }
+  case LED_DRIVER_PULL_UP: {
+    uint32_t side               = Runtime.serialPort().parseInt();
+    uint8_t led_driver_pull_up = Runtime.serialPort().parseInt();
+    Side_communications_protocol::Packet packet;
+    packet.context.command = Side_communications_protocol::SET_LED_DRIVER_PULLUP;
+    packet.context.size    = sizeof(uint8_t);
+    memcpy(&packet.data[0], &led_driver_pull_up, sizeof(uint8_t));
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+      Serial.printf("Setting ledDriver pullup in left side to %i\n", led_driver_pull_up);
+      Runtime.device().sendPacketLeftHand(packet);
+    }
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+      Serial.printf("Setting  ledDriver pullup in right side to %i\n", led_driver_pull_up);
+      Runtime.device().sendPacketRightHand(packet);
+    }
     break;
   }
   case DEFAULT_LAYER: {

@@ -153,11 +153,13 @@ void SpiPort::irq() {
     return;
   }
 
-  SpiPort &spi = spiSettings.rxMessage.context.device == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
+  SpiPort &spi             = spiSettings.rxMessage.context.device == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
   spi.sideCommunications   = spiSettings.rxMessage.context.device;
   spi.lasTimeCommunication = millis();
   if (spiSettings.rxMessage.context.command != IS_ALIVE) {
     queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
+  } else {
+    memcpy(&spi.config, spiSettings.rxMessage.data, spiSettings.rxMessage.context.size);
   }
 
   if (!queue_is_empty(&spi.txMessages)) {
@@ -174,6 +176,16 @@ void SpiPort::disableSide() {
   spi_deinit(spiSettings.port);
   dma_channel_unclaim(spiSettings.dmaIndexTx);
   dma_channel_unclaim(spiSettings.dmaIndexRx);
+}
+void SpiPort::printConfig() {
+  Serial.printf("This is the configuration\n crc: %lu\n pull_up_config: %lu\n cpu_speed: %lu\n spi_speed_base: %lu\n spi_speed_variation: %lu\n pooling_rate_base: %lu\n pooling_rate_variation: %lu\n",
+                config.crc,
+                config.pull_up_config,
+                config.cpu_speed,
+                config.spi_speed_base,
+                config.spi_speed_variation,
+                config.pooling_rate_base,
+                config.pooling_rate_variation);
 }
 
 }  // namespace kaleidoscope::device::dygma::wired

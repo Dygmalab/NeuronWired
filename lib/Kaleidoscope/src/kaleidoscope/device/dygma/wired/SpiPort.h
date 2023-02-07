@@ -65,6 +65,8 @@ class SpiPort {
   queue_t rxMessages;
   Devices sideCommunications;
 
+  void printConfig();
+
  private:
   void initInterrupt();
   void startDMA();
@@ -86,6 +88,16 @@ class SpiPort {
     Packet txMessage;
     Packet rxMessage;
   };
+
+  struct StartInfo {
+    uint32_t crc;
+    uint32_t pull_up_config;
+    uint32_t cpu_speed;
+    uint32_t spi_speed_base;
+    uint32_t spi_speed_variation;
+    uint32_t pooling_rate_base;
+    uint32_t pooling_rate_variation;
+  }config;
 
   Spi_settings spiSettings;
   bool portUSB;

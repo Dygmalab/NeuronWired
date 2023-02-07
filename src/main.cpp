@@ -174,6 +174,7 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidRedDefy(255, 0, 0, 0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidGreenDefy(0, 255, 0, 0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidBlueDefy(0, 0, 255, 0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0, 255);
+static kaleidoscope::plugin::LEDSolidColorDefy solidBlackDefy(0, 0, 0, 0);
 
 // clang-format off
 KALEIDOSCOPE_INIT_PLUGINS(
@@ -193,7 +194,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   LEDPaletteThemeDefy,
   JointPadding,
   ColormapEffectDefy,
-  LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
+  LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,solidBlackDefy,
   PersistentIdleLEDs,
   WiredFocus,
   Qukeys,

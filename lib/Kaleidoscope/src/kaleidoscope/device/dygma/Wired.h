@@ -296,6 +296,10 @@ public:
 	String getChipID();
         void setCPUSpeed(uint32_t cpuSpeed);
   } settings;
+  void sendPacketRightHand(Side_communications_protocol::Packet packet);
+  void sendPacketLeftHand(Side_communications_protocol::Packet packet);
+  void printConfigLeftHand();
+  void printConfigRightHand();
 };
 
 }

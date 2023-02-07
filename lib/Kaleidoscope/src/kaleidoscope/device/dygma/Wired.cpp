@@ -500,6 +500,39 @@ void Wired::syncLayers() {
   WiredHands::syncLayers(WiredHands::leftHand);
 }
 
+void Wired::sendPacketRightHand(Side_communications_protocol::Packet packet) {
+  if (WiredHands::rightHand.online && WiredHands::rightHand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+    WiredHands::rightHand.sendPacket(packet);
+  } else if (WiredHands::leftHand.online && WiredHands::leftHand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+    WiredHands::leftHand.sendPacket(packet);
+  }
+}
+
+void Wired::sendPacketLeftHand(Side_communications_protocol::Packet packet) {
+  if (WiredHands::rightHand.online && WiredHands::rightHand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+    WiredHands::rightHand.sendPacket(packet);
+  } else if (WiredHands::leftHand.online && WiredHands::leftHand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+    WiredHands::leftHand.sendPacket(packet);
+  }
+}
+
+void Wired::printConfigLeftHand() {
+  if (WiredHands::rightHand.online && WiredHands::rightHand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+    WiredHands::rightHand.printConfig();
+  } else if (WiredHands::leftHand.online && WiredHands::leftHand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+    WiredHands::leftHand.printConfig();
+  }
+}
+
+void Wired::printConfigRightHand() {
+  if (WiredHands::rightHand.online && WiredHands::rightHand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+    WiredHands::rightHand.printConfig();
+  } else if (WiredHands::leftHand.online && WiredHands::leftHand.getActualSide() == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+    WiredHands::leftHand.printConfig();
+  }
+}
+
+
 void Wired::side::prepareForFlash() {
   WIRE_.end();
   // also turn off i2c pins to stop attiny from getting enough current through

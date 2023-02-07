@@ -65,7 +65,8 @@ class Hand {
   }
 
   void setLedMode(LedModeSerializable *pSerializable);
-  void setAliveInterval(uint32_t aliveInterval );
+  void sendPacket(Packet packet);
+  void printConfig();
   void sendPaletteColors(const cRGB palette[16]);
   void sendLayerKeyMapColors(uint8_t layer, const uint8_t *keyMapColors);
   void sendLayerUnderGlowColors(uint8_t layer, const uint8_t *underGlowColors);
@@ -101,6 +102,7 @@ class Hand {
   uint8_t getBrightness() {
     return 255 - brightness_adjustment_;
   }
+
 
   LEDData_t led_data;
   bool online = false;

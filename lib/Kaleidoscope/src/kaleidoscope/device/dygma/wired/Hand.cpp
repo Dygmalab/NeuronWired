@@ -285,12 +285,12 @@ void Hand::sendLayerUnderGlowColors(uint8_t layer, const uint8_t *underGlowColor
 uint8_t Hand::getActualSide() {
   return spiPort->sideCommunications;
 }
-void Hand::setAliveInterval(uint32_t aliveInterval) {
-  Packet message;
-  message.context.command = Side_communications_protocol::SET_ALIVE_INTERVAL;
-  message.context.size = sizeof(aliveInterval);
-  memcpy(&message.data[0], &aliveInterval, message.context.size);
-  spiPort->sendPacket(&message);
+
+void Hand::sendPacket(Packet packet) {
+  spiPort->sendPacket(&packet);
+}
+void Hand::printConfig() {
+  spiPort->printConfig();
 }
 
 }
