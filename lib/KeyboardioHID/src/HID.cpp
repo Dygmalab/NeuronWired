@@ -63,6 +63,7 @@ int HID_::SendReport_(uint8_t id, const void *data, int len) {
 	return ret2;
   return ret + ret2;
 #endif
+  while(!usb_hid.ready()){tight_loop_contents();}
   bool b = usb_hid.sendReport(id, data, len);
   return b;
 

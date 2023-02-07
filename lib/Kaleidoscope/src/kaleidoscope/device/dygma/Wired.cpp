@@ -79,12 +79,6 @@ uint16_t WiredHands::settings_brightness_;
 uint8_t WiredHands::led_brightness_correction_ = 255;
 uint16_t WiredHands::keyscan_interval_         = 50;
 
-void WiredHands::setSidePower(bool power) {
-  //digitalWrite(SIDE_POWER, power ? HIGH : LOW);  // SWe 20220719: old Neuron power on/off
-  digitalWrite(SIDE_nRESET_1, power ? HIGH : LOW);  // SWe 20220719: new Neuron2 reset or no reset
-  digitalWrite(SIDE_nRESET_2, power ? HIGH : LOW);  // SWe 20220719: new Neuron2 reset or no reset
-  side_power_ = power;
-}
 
 void WiredHands::setup() {
   uint8_t NCS[6] = {NC5, NC12, NC13, NC19, NC24, NC25};
@@ -278,7 +272,6 @@ void WiredLEDDriver::setup() {
   // so change to 16 bit resolution to avoid the mapping and do the mapping
   // ourselves in updateHubleLED() to ensure LEDs can be set fully off
   analogWriteResolution(16);
-  updateNeuronLED();
 
   //  WiredHands::setSidePower(true);
 }
@@ -497,29 +490,48 @@ void Wired::syncLayers() {
 
 void Wired::side::prepareForFlash() {
   WIRE_.end();
-
-  setPower(LOW);
   // also turn off i2c pins to stop attiny from getting enough current through
   // i2c to stay on
+  pinMode(I2C_SDA_PIN, OUTPUT);
+  pinMode(I2C_SCL_PIN, OUTPUT);
+  digitalWrite(I2C_SDA_PIN, false);
+  digitalWrite(I2C_SCL_PIN, false);
+  // wipe key states, to prevent accidental key repeats
+  WiredKeyScanner::reset();
+
   WIRE_.setSDA(I2C_SDA_PIN);
   WIRE_.setSCL(I2C_SCL_PIN);
   WIRE_.begin();
   WIRE_.setClock(I2C_FLASH_CLOCK_KHZ * 1000);
-  // wipe key states, to prevent accidental key repeats
-  WiredKeyScanner::reset();
+}
+
+uint8_t Wired::side::getPowerRight() {
+  return digitalRead(SIDE_nRESET_1);
+}
+void Wired::side::setPowerRight(bool power) {
+  digitalWrite(SIDE_nRESET_1, power ? HIGH : LOW);
+}
+
+uint8_t Wired::side::getPowerLeft() {
+  return digitalRead(SIDE_nRESET_2);
+}
+void Wired::side::setPowerLeft(bool power) {
+  digitalWrite(SIDE_nRESET_2, power ? HIGH : LOW);
+}
+void Wired::side::resetRight() {
+  digitalWrite(SIDE_nRESET_1, LOW);
   sleep_ms(10);
-  setPower(HIGH);
-
-  // wait for side bootloader to be ready
-  sleep_ms(50);
+  digitalWrite(SIDE_nRESET_1, HIGH);
+  sleep_ms(50); //For bootloader
 }
 
-uint8_t Wired::side::getPower() {
-  return WiredHands::getSidePower();
+void Wired::side::resetLeft() {
+  digitalWrite(SIDE_nRESET_2, LOW);
+  sleep_ms(10);
+  digitalWrite(SIDE_nRESET_2, HIGH);
+  sleep_ms(50); //For bootloader
 }
-void Wired::side::setPower(uint8_t power) {
-  WiredHands::setSidePower(power);
-}
+
 
 uint8_t Wired::side::leftVersion() {
   return WiredHands::leftHand.readVersion();
@@ -563,12 +575,6 @@ uint8_t Wired::settings::joint() {
 uint16_t Wired::settings::keyscanInterval() {
   return WiredHands::keyscanInterval();
 }
-
-void Wired::settings::aliveInterval(uint32_t aliveInterval) {
-  WiredHands::rightHand.setAliveInterval(aliveInterval);
-  WiredHands::leftHand.setAliveInterval(aliveInterval);
-}
-
 String Wired::settings::getChipID() {
   return WiredHands::getChipID();
 }
