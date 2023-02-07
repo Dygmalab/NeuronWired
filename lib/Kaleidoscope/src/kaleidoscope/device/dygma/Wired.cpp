@@ -480,7 +480,7 @@ void Wired::setup() {
   Runtime.storage().get(config_base, config_);
   if (config_.validation != 0x4321) {
     config_.validation = 0x4321;
-    config_.cpuSpeed   = 125000;
+    config_.cpuSpeed   = 61000;
     Runtime.storage().put(config_base, config_);
     Runtime.storage().commit();
   }
