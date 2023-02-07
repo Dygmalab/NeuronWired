@@ -21,6 +21,7 @@
 #include "kaleidoscope/Runtime.h"
 #include <Kaleidoscope-EEPROM-Settings.h>
 #include <Wire.h>
+#include <pico/stdlib.h>
 #include "pico/unique_id.h"
 
 #include "kaleidoscope/util/crc16.h"
@@ -468,11 +469,22 @@ void WiredKeyScanner::reset() {
 }
 
 /********* Hardware plugin *********/
+
+
 void Wired::setup() {
   WiredHands::setup();
   KeyScanner::setup();
   LEDDriver::setup();
   WiredHands::initializeSides();
+  config_base = ::EEPROMSettings.requestSlice(sizeof(config));
+  Runtime.storage().get(config_base, config_);
+  if (config_.validation != 0x4321) {
+    config_.validation = 0x4321;
+    config_.cpuSpeed   = 125000;
+    Runtime.storage().put(config_base, config_);
+    Runtime.storage().commit();
+  }
+  set_sys_clock_khz(config_.cpuSpeed, true);
 }
 
 void Wired::setLedMode(LedModeSerializable *ledMode) {
@@ -522,14 +534,14 @@ void Wired::side::resetRight() {
   digitalWrite(SIDE_nRESET_1, LOW);
   sleep_ms(10);
   digitalWrite(SIDE_nRESET_1, HIGH);
-  sleep_ms(50); //For bootloader
+  sleep_ms(50);  //For bootloader
 }
 
 void Wired::side::resetLeft() {
   digitalWrite(SIDE_nRESET_2, LOW);
   sleep_ms(10);
   digitalWrite(SIDE_nRESET_2, HIGH);
-  sleep_ms(50); //For bootloader
+  sleep_ms(50);  //For bootloader
 }
 
 
@@ -580,6 +592,13 @@ String Wired::settings::getChipID() {
 }
 void Wired::settings::keyscanInterval(uint16_t interval) {
   WiredHands::keyscanInterval(interval);
+}
+void Wired::settings::setCPUSpeed(uint32_t cpuSpeed) {
+  config_.validation = 0x4321;
+  config_.cpuSpeed   = cpuSpeed;
+  Serial.println(set_sys_clock_khz(config_.cpuSpeed, true));
+  Runtime.storage().put(config_base, config_);
+  Runtime.storage().commit();
 }
 
 }  // namespace dygma

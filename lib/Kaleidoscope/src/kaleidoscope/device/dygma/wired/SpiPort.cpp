@@ -153,8 +153,8 @@ void SpiPort::irq() {
     return;
   }
 
-  sideCommunications   = spiSettings.rxMessage.context.device;
-  SpiPort &spi = sideCommunications == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
+  SpiPort &spi = spiSettings.rxMessage.context.device == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
+  spi.sideCommunications   = spiSettings.rxMessage.context.device;
   spi.lasTimeCommunication = millis();
   if (spiSettings.rxMessage.context.command != IS_ALIVE) {
     queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);

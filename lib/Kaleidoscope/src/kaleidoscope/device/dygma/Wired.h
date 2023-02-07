@@ -232,6 +232,11 @@ struct WiredProps : kaleidoscope::device::BaseProps {
 
 class Wired : public kaleidoscope::device::Base<WiredProps> {
 private:
+ inline static struct config{
+   uint32_t validation;
+   uint32_t cpuSpeed;
+ }config_;
+ inline static uint32_t config_base;
 public:
   static void setup();
 
@@ -275,6 +280,7 @@ public:
 	// Side bootloader addresses
 	static constexpr uint8_t left_boot_address = 0x5A;
 	static constexpr uint8_t right_boot_address = 0x5B;
+
   } side;
 
   struct settings {
@@ -288,7 +294,7 @@ public:
 	uint16_t keyscanInterval();
 	void keyscanInterval(uint16_t interval);
 	String getChipID();
-        void aliveInterval(uint32_t aliveInterval);
+        void setCPUSpeed(uint32_t cpuSpeed);
   } settings;
 };
 

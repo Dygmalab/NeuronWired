@@ -17,6 +17,7 @@
 
 #include <Kaleidoscope-EEPROM-Settings.h>
 #include <Kaleidoscope-FocusSerial.h>
+#include <pico/stdlib.h>
 #include "kaleidoscope/plugin/EEPROM-Settings/crc.h"
 #include "kaleidoscope/layers.h"
 
@@ -54,6 +55,17 @@ EventHandlerResult EEPROMSettings::onSetup() {
     Runtime.storage().put(0, settings_);
     Runtime.storage().commit();
   }
+
+//  if(settings_.validation!=0x421563){
+//    settings_.cpuSpeed=125000;
+//    settings_.validation=0x421563;
+//    Runtime.storage().put(0, settings_);
+//    Runtime.storage().commit();
+//  }
+//
+//  set_sys_clock_khz(settings_.cpuSpeed, true);
+
+
   return EventHandlerResult::OK;
 }
 
@@ -161,6 +173,7 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     IS_VALID,
     GET_VERSION,
     ALIVE_INTERVAL,
+    NEURON_CPU_SPEED,
     CRC,
   } sub_command;
 
@@ -168,6 +181,7 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
                                        "settings.valid?\n"
                                        "settings.version\n"
                                        "settings.aliveInterval\n"
+                                       "settings.neuronCpuSpeed\n"
                                        "settings.crc")))
     return EventHandlerResult::OK;
 
@@ -182,6 +196,8 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     sub_command = GET_VERSION;
   else if (strcmp_P(command + 9, PSTR("aliveInterval")) == 0)
     sub_command = ALIVE_INTERVAL;
+  else if (strcmp_P(command + 9, PSTR("neuronCpuSpeed")) == 0)
+    sub_command = NEURON_CPU_SPEED;
   else if (strcmp_P(command + 9, PSTR("crc")) == 0)
     sub_command = CRC;
   else
@@ -189,7 +205,13 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
   switch (sub_command) {
   case ALIVE_INTERVAL: {
     uint32_t aliveIntervalInMs = Runtime.serialPort().parseInt();
-    Runtime.device().settings.aliveInterval(aliveIntervalInMs);
+//    Runtime.device().settings.aliveInterval(aliveIntervalInMs);
+    break;
+  }
+  case NEURON_CPU_SPEED: {
+    uint32_t cpuSpeed = Runtime.serialPort().parseInt();
+    Runtime.device().settings.setCPUSpeed(cpuSpeed);
+    ::EEPROMSettings.update();
     break;
   }
   case DEFAULT_LAYER: {
