@@ -216,7 +216,12 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     return EventHandlerResult::OK;
   switch (sub_command) {
   case PRINT_CONFIG: {
-    uint32_t side      = Runtime.serialPort().parseInt();
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint32_t side = Runtime.serialPort().parseInt();
+    if (side != 1 && side != 2 && side != 3) {
+      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side or 3 for neuron");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
     if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
       Runtime.device().printConfigLeftHand();
     }
@@ -224,14 +229,29 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
       Runtime.device().printConfigRightHand();
     }
     if (side == Side_communications_protocol::Devices::NEURON_DEFY_WIRED) {
-      Serial.printf("Neuron CPU is at: %lu\n",frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_SYS_CLKSRC_PRIMARY));
+      Serial.printf("Neuron CPU is at: %lu\n", frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_SYS_CLKSRC_PRIMARY));
     }
     break;
   }
   case ALIVE_INTERVAL: {
-    uint32_t side      = Runtime.serialPort().parseInt();
-    uint32_t base      = Runtime.serialPort().parseInt();
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint32_t side = Runtime.serialPort().parseInt();
+    if (side != 1 && side != 2) {
+      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint32_t base = Runtime.serialPort().parseInt();
+    if (base < 1 || base >= 500) {
+      Serial.println("The time alive interval needs to be greater than 1ms and less than 500ms");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
     uint32_t variation = Runtime.serialPort().parseInt();
+    if (variation > 100) {
+      Serial.println("The time alive interval variation needs to be less than 100ms");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
     Side_communications_protocol::Packet packet;
     packet.context.command = Side_communications_protocol::SET_ALIVE_INTERVAL;
     packet.context.size    = sizeof(uint32_t) * 2;
@@ -248,9 +268,24 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     break;
   }
   case SPI_CLOCK: {
-    uint32_t side      = Runtime.serialPort().parseInt();
-    uint32_t base      = Runtime.serialPort().parseInt();
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint32_t side = Runtime.serialPort().parseInt();
+    if (side != 1 && side != 2) {
+      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint32_t base = Runtime.serialPort().parseInt();
+    if (base < 500000 || base >= 7000000) {
+      Serial.println("The spi speed needs to be greater than 0.5MHz and less than 7Mhz");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
     uint32_t variation = Runtime.serialPort().parseInt();
+    if (variation > 2000000) {
+      Serial.println("The spi speed variation needs to be less than 2Mhz");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
     Side_communications_protocol::Packet packet;
     packet.context.command = Side_communications_protocol::SET_SPI_SPEED;
     packet.context.size    = sizeof(uint32_t) * 2;
@@ -267,8 +302,18 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     break;
   }
   case CPU_CLOCK: {
-    uint32_t side     = Runtime.serialPort().parseInt();
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint32_t side = Runtime.serialPort().parseInt();
+    if (side != 1 && side != 2 && side != 3) {
+      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side or 3 for neuron");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
     uint32_t cpu_speed = Runtime.serialPort().parseInt();
+    if (cpu_speed < 45000 || cpu_speed >= 133000) {
+      Serial.println("The time cpu speed needs to be greater than 45MHz and less than 133Mhz");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
     Side_communications_protocol::Packet packet;
     packet.context.command = Side_communications_protocol::SET_CLOCK_SPEED;
     packet.context.size    = sizeof(uint32_t);
@@ -289,7 +334,9 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     break;
   }
   case LED_DRIVER_PULL_UP: {
-    uint32_t side               = Runtime.serialPort().parseInt();
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint32_t side = Runtime.serialPort().parseInt();
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
     uint8_t led_driver_pull_up = Runtime.serialPort().parseInt();
     Side_communications_protocol::Packet packet;
     packet.context.command = Side_communications_protocol::SET_LED_DRIVER_PULLUP;
