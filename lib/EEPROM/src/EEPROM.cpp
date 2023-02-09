@@ -37,6 +37,7 @@ extern "C" uint8_t _EEPROM_start;
 
 EEPROMClass::EEPROMClass(void)
 	: _sector(&_EEPROM_start) {
+  _sector-=4096;
 }
 
 void EEPROMClass::begin(size_t size) {
@@ -105,6 +106,7 @@ void EEPROMClass::write(int const address, uint8_t const value) {
 }
 
 bool EEPROMClass::commit() {
+  Serial.printf("Addres %lu\n",(intptr_t)_sector);
   if (!_size) {
 	return false;
   }
@@ -115,6 +117,9 @@ bool EEPROMClass::commit() {
 	return false;
   }
 
+  //Shutdown keyboard side
+  gpio_put(22, false);
+  gpio_put(10, false);
   noInterrupts();
   rp2040.idleOtherCore();
   flash_range_erase((intptr_t)_sector - (intptr_t)XIP_BASE, 8192/2);
@@ -132,6 +137,9 @@ bool EEPROMClass::commit() {
 	rp2040.resumeOtherCore();
 	interrupts();
   }
+  //Power up keyboard
+  gpio_put(22, true);
+  gpio_put(10, true);
   return true;
 }
 
