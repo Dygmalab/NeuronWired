@@ -396,20 +396,35 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     break;
   }
   case LED_DRIVER_PULL_UP: {
+    union Register {
+      struct {
+        uint8_t CSPUR : 3;
+        uint8_t D3 : 1;
+        uint8_t SWPDR : 3;
+        uint8_t PHC : 1;
+      };
+      uint8_t data;
+    };
+
     if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
     uint32_t side = Runtime.serialPort().parseInt();
     if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
-    uint8_t led_driver_pull_up = Runtime.serialPort().parseInt();
+    Register r{};
+    r.PHC = Runtime.serialPort().parseInt();
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    r.SWPDR = Runtime.serialPort().parseInt();
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    r.CSPUR = Runtime.serialPort().parseInt();
     Side_communications_protocol::Packet packet;
     packet.context.command = Side_communications_protocol::SET_LED_DRIVER_PULLUP;
     packet.context.size    = sizeof(uint8_t);
-    memcpy(&packet.data[0], &led_driver_pull_up, sizeof(uint8_t));
+    memcpy(&packet.data[0], &r.data, sizeof(uint8_t));
     if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
-      Serial.printf("Setting ledDriver pullup in left side to %i\n", led_driver_pull_up);
+      Serial.printf("Setting ledDriver pullup in left side to %i\n", r.data);
       Runtime.device().sendPacketLeftHand(packet);
     }
     if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
-      Serial.printf("Setting  ledDriver pullup in right side to %i\n", led_driver_pull_up);
+      Serial.printf("Setting  ledDriver pullup in right side to %i\n", r.data);
       Runtime.device().sendPacketRightHand(packet);
     }
     break;
