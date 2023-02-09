@@ -31,6 +31,8 @@ enum Commands : uint8_t {
   SET_PALETTE_COLORS,
   SET_LAYER_KEYMAP_COLORS,
   SET_LAYER_UNDERGLOW_COLORS,
+  SET_ENABLE_UNDERGLOW,
+  SET_ENABLE_LED_DRIVER,
 };
 static_assert(sizeof(Commands) == sizeof(uint8_t));
 

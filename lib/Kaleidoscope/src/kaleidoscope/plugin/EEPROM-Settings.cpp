@@ -174,6 +174,8 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     GET_VERSION,
     PRINT_CONFIG,
     ALIVE_INTERVAL,
+    UNDERGLOW,
+    LED_DRIVER,
     CPU_CLOCK,
     SPI_CLOCK,
     LED_DRIVER_PULL_UP,
@@ -185,6 +187,8 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
                                        "settings.version\n"
                                        "settings.printConfig\n"
                                        "settings.aliveInterval\n"
+                                       "settings.underGlow\n"
+                                       "settings.ledDriver\n"
                                        "settings.spiSpeed\n"
                                        "settings.cpuSpeed\n"
                                        "settings.ledDriverPullUp\n"
@@ -202,6 +206,10 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
     sub_command = GET_VERSION;
   else if (strcmp_P(command + 9, PSTR("printConfig")) == 0)
     sub_command = PRINT_CONFIG;
+  else if (strcmp_P(command + 9, PSTR("underGlow")) == 0)
+    sub_command = UNDERGLOW;
+  else if (strcmp_P(command + 9, PSTR("ledDriver")) == 0)
+    sub_command = LED_DRIVER;
   else if (strcmp_P(command + 9, PSTR("aliveInterval")) == 0)
     sub_command = ALIVE_INTERVAL;
   else if (strcmp_P(command + 9, PSTR("spiSpeed")) == 0)
@@ -330,6 +338,60 @@ EventHandlerResult FocusSettingsCommand::onFocusEvent(const char *command) {
       Serial.printf("Setting cpuSpeed in neuron to %lu\n", cpu_speed);
       Runtime.device().settings.setCPUSpeed(cpu_speed);
       ::EEPROMSettings.update();
+    }
+    break;
+  }
+  case UNDERGLOW: {
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint32_t side = Runtime.serialPort().parseInt();
+    if (side != 1 && side != 2) {
+      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint8_t enabled = Runtime.serialPort().parseInt();
+    if (enabled != 1 && enabled != 0) {
+      Serial.println("The underglow must be 0 for off or 1 for on");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+    Side_communications_protocol::Packet packet;
+    packet.context.command = Side_communications_protocol::SET_ENABLE_UNDERGLOW;
+    packet.context.size    = sizeof(uint8_t);
+    memcpy(&packet.data[0], &enabled, sizeof(uint8_t));
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+      Serial.printf("Setting underglow in left side to %i\n", enabled);
+      Runtime.device().sendPacketLeftHand(packet);
+    }
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+      Serial.printf("Setting underglow in right side to %i\n", enabled);
+      Runtime.device().sendPacketRightHand(packet);
+    }
+    break;
+  }
+  case LED_DRIVER: {
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint32_t side = Runtime.serialPort().parseInt();
+    if (side != 1 && side != 2) {
+      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+    if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
+    uint8_t enabled = Runtime.serialPort().parseInt();
+    if (enabled != 1 && enabled != 0) {
+      Serial.println("The ledDriver must be 0 for off or 1 for on");
+      return EventHandlerResult::EVENT_CONSUMED;
+    }
+    Side_communications_protocol::Packet packet;
+    packet.context.command = Side_communications_protocol::SET_ENABLE_LED_DRIVER;
+    packet.context.size    = sizeof(uint8_t);
+    memcpy(&packet.data[0], &enabled, sizeof(uint8_t));
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT) {
+      Serial.printf("Setting ledDriver in left side to %i\n", enabled);
+      Runtime.device().sendPacketLeftHand(packet);
+    }
+    if (side == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
+      Serial.printf("Setting ledDriver in right side to %i\n", enabled);
+      Runtime.device().sendPacketRightHand(packet);
     }
     break;
   }
