@@ -178,14 +178,16 @@ void SpiPort::disableSide() {
   dma_channel_unclaim(spiSettings.dmaIndexRx);
 }
 void SpiPort::printConfig() {
-  Serial.printf("This is the configuration\n crc: %lu\n pull_up_config: %lu\n cpu_speed: %lu\n spi_speed_base: %lu\n spi_speed_variation: %lu\n pooling_rate_base: %lu\n pooling_rate_variation: %lu\n",
+  Serial.printf("This is the configuration\n crc: %lu\n pull_up_config: %lu\n cpu_speed: %lu\n spi_speed_base: %lu\n spi_speed_variation: %lu\n pooling_rate_base: %lu\n pooling_rate_variation: %lu\n underGlow_enabled: %i\n led_driver_enabled: %i\n",
                 config.crc,
                 config.pull_up_config,
                 config.cpu_speed,
                 config.spi_speed_base,
                 config.spi_speed_variation,
                 config.pooling_rate_base,
-                config.pooling_rate_variation);
+                config.pooling_rate_variation,
+                config.underGlow_enabled,
+                config.led_driver_enabled);
 }
 
 }  // namespace kaleidoscope::device::dygma::wired

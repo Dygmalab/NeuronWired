@@ -97,6 +97,8 @@ class SpiPort {
     uint32_t spi_speed_variation;
     uint32_t pooling_rate_base;
     uint32_t pooling_rate_variation;
+    uint8_t led_driver_enabled;
+    uint8_t underGlow_enabled;
   }config;
 
   Spi_settings spiSettings;
