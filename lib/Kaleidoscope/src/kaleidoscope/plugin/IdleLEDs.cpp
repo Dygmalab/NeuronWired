@@ -42,7 +42,7 @@ EventHandlerResult IdleLEDs::beforeEachCycle() {
 
   if (::LEDControl.isEnabled() &&
       Runtime.hasTimeExpired(start_time_, idle_time_limit)) {
-    ::LEDControl.disable();
+//    ::LEDControl.disable();
     idle_ = true;
   }
 
