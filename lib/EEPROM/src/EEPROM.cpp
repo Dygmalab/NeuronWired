@@ -37,6 +37,7 @@ extern "C" uint8_t _EEPROM_start;
 
 EEPROMClass::EEPROMClass(void)
   : _sector(&_EEPROM_start) {
+  _sector-=4096;
 }
 
 void EEPROMClass::begin(size_t size) {
