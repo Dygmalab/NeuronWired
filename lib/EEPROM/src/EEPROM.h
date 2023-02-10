@@ -76,6 +76,7 @@ public:
         return getConstDataPtr()[address];
     }
 
+    void erase();
 protected:
     uint8_t* _sector;
     uint8_t* _data = nullptr;

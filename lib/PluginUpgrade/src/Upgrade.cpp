@@ -18,7 +18,7 @@
 #include "Upgrade.h"
 #include "Wire.h"
 #include "kaleidoscope/plugin/FocusSerial.h"
-
+#include "../../EEPROM/src/EEPROM.h"
 #define WIRE_ Wire1
 
 namespace kaleidoscope {
@@ -192,6 +192,7 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
 
   if (strcmp_P(command + 8, PSTR("neuron")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
+    EEPROM.erase();
     Runtime.rebootBootloader();
   }
 
@@ -212,17 +213,10 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
   if (strcmp_P(command + 8 + 11, PSTR("beginRight")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
     key_scanner_flasher_.setSide(KeyScannerFlasher::RIGHT);
-    resetSide(KeyScannerFlasher::RIGHT);
-    bool rightSideBegin = key_scanner_flasher_.sendBegin();
-    if (rightSideBegin) {
-      Focus.send(true);
-      return EventHandlerResult::EVENT_CONSUMED;
-    }
-
-    key_scanner_flasher_.setSide(KeyScannerFlasher::LEFT);
     resetSide(KeyScannerFlasher::LEFT);
-    bool rightSideLeft = key_scanner_flasher_.sendBegin();
-    if (rightSideLeft) {
+    resetSide(KeyScannerFlasher::RIGHT);
+    bool right_side = key_scanner_flasher_.sendBegin();
+    if (right_side) {
       Focus.send(true);
       return EventHandlerResult::EVENT_CONSUMED;
     }
@@ -234,17 +228,10 @@ EventHandlerResult Upgrade::onFocusEvent(const char *command) {
   if (strcmp_P(command + 8 + 11, PSTR("beginLeft")) == 0) {
     if (!flashing) return EventHandlerResult::ERROR;
     key_scanner_flasher_.setSide(KeyScannerFlasher::LEFT);
-    resetSide(KeyScannerFlasher::LEFT);
-    bool rightSideLeft = key_scanner_flasher_.sendBegin();
-    if (rightSideLeft) {
-      Focus.send(true);
-      return EventHandlerResult::EVENT_CONSUMED;
-    }
-
-    key_scanner_flasher_.setSide(KeyScannerFlasher::RIGHT);
-    resetSide(KeyScannerFlasher::RIGHT);
-    bool rightSideBegin = key_scanner_flasher_.sendBegin();
-    if (rightSideBegin) {
+	resetSide(KeyScannerFlasher::RIGHT);
+	resetSide(KeyScannerFlasher::LEFT);
+    bool right_side = key_scanner_flasher_.sendBegin();
+    if (right_side) {
       Focus.send(true);
       return EventHandlerResult::EVENT_CONSUMED;
     }

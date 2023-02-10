@@ -118,16 +118,7 @@ bool EEPROMClass::commit() {
   //Shutdown keyboard side
   gpio_put(22, false);
   gpio_put(10, false);
-  noInterrupts();
-  rp2040.idleOtherCore();
-  flash_range_erase((intptr_t)_sector - (intptr_t)XIP_BASE, 8192 / 2);
-  rp2040.resumeOtherCore();
-  interrupts();
-  noInterrupts();
-  rp2040.idleOtherCore();
-  flash_range_erase((intptr_t)_sector - (intptr_t)XIP_BASE + (8192 / 2), 8192 / 2);
-  rp2040.resumeOtherCore();
-  interrupts();
+  erase();
   for (int i = 0; i < 8192 / 256; ++i) {
     noInterrupts();
     rp2040.idleOtherCore();
@@ -148,6 +139,19 @@ uint8_t *EEPROMClass::getDataPtr() {
 
 uint8_t const *EEPROMClass::getConstDataPtr() const {
   return &_data[0];
+}
+
+void EEPROMClass::erase() {
+  noInterrupts();
+  rp2040.idleOtherCore();
+  flash_range_erase((intptr_t)_sector - (intptr_t)XIP_BASE, 8192 / 2);
+  rp2040.resumeOtherCore();
+  interrupts();
+  noInterrupts();
+  rp2040.idleOtherCore();
+  flash_range_erase((intptr_t)_sector - (intptr_t)XIP_BASE + (8192 / 2), 8192 / 2);
+  rp2040.resumeOtherCore();
+  interrupts();
 }
 
 EEPROMClass EEPROM;
