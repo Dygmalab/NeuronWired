@@ -89,7 +89,7 @@ class SpiPort {
 
   Spi_settings spiSettings;
   bool portUSB;
-  uint32_t lastTimeCommunication = 2000;
+  uint32_t lasTimeCommunication = 2000;
 };
 
 extern SpiPort spi_0;
