@@ -64,6 +64,7 @@ public:
   private:
 
 	LEDRainbowEffectDefy *parent_;
+        uint16_t rainbowLastUpdateKeyScanner=0;
   };
 
 private:
@@ -104,6 +105,7 @@ public:
 		: parent_(parent) {}
 
 	void update() final;
+        uint16_t rainbowWaveLastUpdateKeyScanner=0;
 
   protected:
 	void onActivate() override;

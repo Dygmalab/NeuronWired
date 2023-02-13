@@ -118,7 +118,7 @@ bool SpiPort::sendPacket(Packet *data) {
 }
 
 uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
-  if (millis() - lasTimeCommunication > 1000) {
+  if (millis() - lasTimeCommunication > 250) {
     return 0;
   }
   if (queue_is_empty(&rxMessages)) {
