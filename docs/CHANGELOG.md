@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.3.1...pre_release_1.3.2) (2023-02-14)
+
+
+### Bug Fixes
+
+* Error in macros, save changes and switch sides ([#18](https://github.com/Dygmalab/NeuronWired/issues/18)) ([2e9e5a3](https://github.com/Dygmalab/NeuronWired/commit/2e9e5a36e55f05eb605b1c1e6eeb214d7c023f74))
+
 ## [1.3.1](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.3.0...pre_release_1.3.1) (2023-02-03)
 
 
