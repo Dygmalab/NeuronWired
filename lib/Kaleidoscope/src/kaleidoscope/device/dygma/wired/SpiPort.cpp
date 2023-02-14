@@ -22,9 +22,7 @@
 #include "SpiPort.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
-#include "kaleidoscope/device/dygma/Wired.h"
 
-namespace kaleidoscope::device::dygma::wired {
 
 SpiPort spi_0(0);
 SpiPort spi_1(1);
@@ -119,7 +117,7 @@ bool SpiPort::sendPacket(Packet *data) {
 }
 
 uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
-  if (millis() - lasTimeCommunication > 200) {
+  if (millis() - lastTimeCommunication > 200) {
     return 0;
   }
   if (queue_is_empty(&rxMessages)) {
@@ -154,13 +152,9 @@ void SpiPort::irq() {
     return;
   }
 
-//  if (spiSettings.rxMessage.context.command == IS_DEAD) {
-//    WiredHands::initializeSide(spiSettings.rxMessage.context.device - 1);
-//  }
-
   SpiPort &spi             = spiSettings.rxMessage.context.device == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
   spi.sideCommunications   = spiSettings.rxMessage.context.device;
-  spi.lasTimeCommunication = millis();
+  spi.lastTimeCommunication = millis();
   if (spiSettings.rxMessage.context.command != IS_ALIVE) {
     queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
   }
@@ -181,6 +175,5 @@ void SpiPort::disableSide() {
   dma_channel_unclaim(spiSettings.dmaIndexRx);
 }
 
-}  // namespace kaleidoscope::device::dygma::wired
 
 #endif

@@ -26,7 +26,6 @@
 #include "hardware/spi.h"
 #include "Side_communications_protocol.h"
 
-namespace kaleidoscope::device::dygma::wired {
 using namespace Side_communications_protocol;
 #define SIDE_nRESET_1 22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
 #define SIDE_nRESET_2 10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
@@ -89,12 +88,11 @@ class SpiPort {
 
   Spi_settings spiSettings;
   bool portUSB;
-  uint32_t lasTimeCommunication = 2000;
+  uint32_t lastTimeCommunication = 2000;
 };
 
 extern SpiPort spi_0;
 extern SpiPort spi_1;
 
-}  // namespace kaleidoscope::device::dygma::wired
 #endif
 #endif  //NEURONWIRED_SRC_SPICOMUNICATIONS_H_
