@@ -9,7 +9,7 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidRedDefy(0, 0, 0, 0);
 KALEIDOSCOPE_INIT_PLUGINS(LEDControl)
 
 
-void userVerification(){
+void userVerification() {
   sleep_ms(1000);
 }
 void sendPacket(Packet &message) {
@@ -30,25 +30,25 @@ void sendColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
 
 void sendColorRed() {
   TEST_MESSAGE("Setting Keyboard COLOR RED");
-  sendColor(255,0,0,0);
+  sendColor(255, 0, 0, 0);
   userVerification();
 }
 
 void sendColorGreen() {
   TEST_MESSAGE("Setting Keyboard COLOR Green");
-  sendColor(0,255,0,0);
+  sendColor(0, 255, 0, 0);
   userVerification();
 }
 
 void sendColorBlue() {
   TEST_MESSAGE("Setting Keyboard COLOR Blue");
-  sendColor(0,0,255,0);
+  sendColor(0, 0, 255, 0);
   userVerification();
 }
 
 void sendColorWhite() {
   TEST_MESSAGE("Setting Keyboard COLOR White");
-  sendColor(0,0,0,255);
+  sendColor(0, 0, 0, 255);
   userVerification();
 }
 
@@ -81,8 +81,8 @@ void setup() {
   kaleidoscope::Runtime.device().side.resetRight();
   kaleidoscope::Runtime.device().side.resetLeft();
   sleep_ms(1000);
-
-  Serial.println("Start testing!");
+  spi_1.bind(Side_communications_protocol::HAS_KEYS, [](Packet) { Serial.printf("Got new key \n"); });
+    Serial.println("Start testing!");
 
   runUnityTests();
 }

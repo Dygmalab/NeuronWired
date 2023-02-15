@@ -21,7 +21,7 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <Arduino.h>
-#include "SpiPort.h"
+#include "SpiComms.h"
 #include "LedModeSerializable.h"
 
 struct cRGB {
@@ -108,7 +108,7 @@ class Hand {
 private:
   uint8_t brightness_adjustment_ = 0;
   int ad01_;
-  SpiPort *spiPort;
+  SpiComms *spiPort;
   uint8_t next_led_bank_ = 0;
   uint8_t red_max_fraction_ = (LED_RED_CHANNEL_MAX * 100) / 255;
 

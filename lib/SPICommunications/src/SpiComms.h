@@ -25,6 +25,7 @@
 #include <hardware/dma.h>
 #include "hardware/spi.h"
 #include "Side_communications_protocol.h"
+#include "Callback.h"
 
 using namespace Side_communications_protocol;
 #define SIDE_nRESET_1 22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
@@ -43,11 +44,13 @@ using namespace Side_communications_protocol;
 #define SPI_CLK_1     14
 #define SPI_CS_1      9
 
-class SpiPort {
+class SpiComms {
  public:
-  explicit SpiPort(bool side);
+  explicit SpiComms(bool side);
 
   void initCommunications();
+
+  void bind(Commands command, std::function<void(Packet)> function);
 
   uint8_t writeTo(uint8_t *data, size_t length);
 
@@ -58,13 +61,14 @@ class SpiPort {
   void disable();
 
   uint8_t crc_errors();
-  virtual ~SpiPort();
+  virtual ~SpiComms();
   void irq();
   queue_t txMessages;
   queue_t rxMessages;
   Devices sideCommunications;
 
  private:
+  Callback<Packet> callback_;
   void initInterrupt();
   void startDMA();
   void disableSide();
@@ -91,8 +95,8 @@ class SpiPort {
   uint32_t lastTimeCommunication = 2000;
 };
 
-extern SpiPort spi_0;
-extern SpiPort spi_1;
+extern SpiComms spi_0;
+extern SpiComms spi_1;
 
 #endif
 #endif  //NEURONWIRED_SRC_SPICOMUNICATIONS_H_

@@ -19,13 +19,13 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <pico/time.h>
-#include "SpiPort.h"
+#include "SpiComms.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
 
 
-SpiPort spi_0(0);
-SpiPort spi_1(1);
+SpiComms spi_0(0);
+SpiComms spi_1(1);
 
 void __no_inline_not_in_flash_func(dma_irq_1_handler)() {
   spi_1.irq();
@@ -35,7 +35,7 @@ void __no_inline_not_in_flash_func(dma_irq_0_handler)() {
   spi_0.irq();
 }
 
-void SpiPort::startDMA() {
+void SpiComms::startDMA() {
   channel_config_set_transfer_data_size(&spiSettings.channelConfigTx, DMA_SIZE_8);
   channel_config_set_dreq(&spiSettings.channelConfigTx, spi_get_dreq(spiSettings.port, true));
 
@@ -57,7 +57,7 @@ void SpiPort::startDMA() {
   dma_start_channel_mask((1u << spiSettings.dmaIndexTx) | (1u << spiSettings.dmaIndexRx));
 }
 
-void SpiPort::initInterrupt() {
+void SpiComms::initInterrupt() {
   // Enable SPI 0 at 1 MHz and connect to GPIOs
   spi_init(spiSettings.port, spiSettings.speed);
   spi_set_format(spiSettings.port, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
@@ -77,7 +77,7 @@ void SpiPort::initInterrupt() {
   startDMA();
 }
 
-SpiPort::SpiPort(bool side)
+SpiComms::SpiComms(bool side)
   : portUSB(side) {
   if (side) {
     spiSettings = {SPI_PORT_0, SPI_MOSI_0, SPI_MISO_0, SPI_CLK_0, SPI_CS_0, SPI_SPEED, SIDE_nRESET_1, DMA_IRQ_1};
@@ -93,22 +93,22 @@ SpiPort::SpiPort(bool side)
   queue_init(&rxMessages, sizeof(Packet), 40);
 }
 
-void SpiPort::initCommunications() {
+void SpiComms::initCommunications() {
   initInterrupt();
 }
 
-SpiPort::~SpiPort() {
+SpiComms::~SpiComms() {
   disableSide();
 }
 
-uint8_t SpiPort::crc_errors() {
+uint8_t SpiComms::crc_errors() {
   return 0;
 }
-uint8_t SpiPort::writeTo(uint8_t *data, size_t length) {
+uint8_t SpiComms::writeTo(uint8_t *data, size_t length) {
   return 0;
 }
 
-bool SpiPort::sendPacket(Packet *data) {
+bool SpiComms::sendPacket(Packet *data) {
   if (queue_is_full(&txMessages)) {
     return false;
   }
@@ -116,7 +116,11 @@ bool SpiPort::sendPacket(Packet *data) {
   return true;
 }
 
-uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
+void SpiComms::bind(Commands command,std::function<void(Packet)> function) {
+  callback_.addListener(function);
+}
+
+uint8_t SpiComms::readFrom(uint8_t *data, size_t length) {
   if (millis() - lastTimeCommunication > 200) {
     return 0;
   }
@@ -135,7 +139,7 @@ uint8_t SpiPort::readFrom(uint8_t *data, size_t length) {
   return 6;
 }
 
-void SpiPort::irq() {
+void SpiComms::irq() {
   irq_set_enabled(spiSettings.irq, false);
   irq_clear(spiSettings.irq);
   portUSB ? dma_channel_acknowledge_irq1(spiSettings.dmaIndexRx)
@@ -152,10 +156,11 @@ void SpiPort::irq() {
     return;
   }
 
-  SpiPort &spi             = spiSettings.rxMessage.context.device == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
-  spi.sideCommunications   = spiSettings.rxMessage.context.device;
+  SpiComms &spi             = spiSettings.rxMessage.context.device == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
+  spi.sideCommunications    = spiSettings.rxMessage.context.device;
   spi.lastTimeCommunication = millis();
   if (spiSettings.rxMessage.context.command != IS_ALIVE) {
+      if (spiSettings.rxMessage.context.command == Side_communications_protocol::HAS_KEYS) callback_(spiSettings.rxMessage);
     queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
   }
 
@@ -169,7 +174,7 @@ void SpiPort::irq() {
   startDMA();
 }
 
-void SpiPort::disableSide() {
+void SpiComms::disableSide() {
   spi_deinit(spiSettings.port);
   dma_channel_unclaim(spiSettings.dmaIndexTx);
   dma_channel_unclaim(spiSettings.dmaIndexRx);
