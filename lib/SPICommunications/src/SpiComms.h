@@ -50,23 +50,21 @@ class SpiComms {
 
   void initCommunications();
 
-  uint8_t writeTo(uint8_t *data, size_t length);
-
   bool sendPacket(Side_communications_protocol::Packet *data);
 
-  uint8_t readFrom(uint8_t *data, size_t length);
+  void run();
 
-  void disable();
-
-  uint8_t crc_errors();
+  uint8_t crc_errors() { return 0; };
   virtual ~SpiComms();
   void irq();
   queue_t txMessages;
   queue_t rxMessages;
   Devices sideCommunications;
   BindingCallbacks<Commands, Packet> callbacks_;
+  Callback<bool> active_callback_;
 
  private:
+  bool active = false;
   void initInterrupt();
   void startDMA();
   void disableSide();
@@ -90,7 +88,8 @@ class SpiComms {
 
   Spi_settings spiSettings;
   bool portUSB;
-  uint32_t lastTimeCommunication = 2000;
+  uint32_t lastTimeCommunication   = 0;
+  static constexpr uint8_t timeout = 250;
 };
 
 extern SpiComms spi_0;

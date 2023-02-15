@@ -20,23 +20,57 @@
 
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
-#include "kaleidoscope/plugin.h"
+#include <Arduino.h>
+#include "SpiComms.h"
+#include "LedModeSerializable.h"
+
+struct cRGB {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  uint8_t w;
+};
 
 namespace kaleidoscope {
 namespace device {
 namespace dygma {
-namespace wired {
+namespace defyWN {
 
-class Focus : public kaleidoscope::Plugin {
+#define LED_BANKS           11
+
+#define LEDS_PER_HAND       88
+#define LPH                 LEDS_PER_HAND
+#define LEDS_PER_BANK       8
+#define LED_BYTES_PER_BANK  (sizeof(cRGB) * LEDS_PER_BANK)
+
+#define LED_RED_CHANNEL_MAX 254
+
+typedef union {
+  cRGB leds[LEDS_PER_HAND];
+  byte bytes[LED_BANKS][LED_BYTES_PER_BANK];
+} LEDData_t;
+
+// return what bank the led is in
+#define LED_TO_BANK(led) (led / LEDS_PER_BANK)
+
+typedef union {
+  uint8_t rows[5];
+  uint64_t all;
+} keydata_t;
+
+class Hand {
  public:
-  EventHandlerResult onFocusEvent(const char *command);
+  LEDData_t led_data;
+  explicit Hand(Devices device);
+  volatile bool online_{false};
+  bool new_key_{false};
+  keydata_t key_data_;
+  SpiComms *spiPort;
 };
 
-}
-}
-}
-}
-
-extern kaleidoscope::device::dygma::wired::Focus WiredFocus;
+}  // namespace wired
+}  // namespace dygma
+}  // namespace device
+}  // namespace kaleidoscope
 
 #endif

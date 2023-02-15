@@ -175,9 +175,8 @@ EventHandlerResult LEDPaletteThemeDefy::themeFocusEvent(const char *command,
     Runtime.storage().update(theme_base + pos, indexes);
     pos++;
   }
-  Runtime.device().syncLayers();
+//  Runtime.device().syncLayers();
   Runtime.storage().commit();
-
   ::LEDControl.refreshAll();
 
   return EventHandlerResult::EVENT_CONSUMED;

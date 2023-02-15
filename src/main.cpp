@@ -38,7 +38,6 @@
 #include "Kaleidoscope-LayerFocus.h"
 #include "RaiseIdleLEDs.h"
 #include "RaiseFirmwareVersion.h"
-#include "kaleidoscope/device/dygma/wired/Focus.h"
 
 // Support for host power management (suspend & wakeup)
 #include "Kaleidoscope-HostPowerManagement.h"
@@ -60,6 +59,7 @@
 #include "Colormap-Defy.h"
 #include "LED-Palette-Theme-Defy.h"
 #include "DefaultColormap.h"
+#include "kaleidoscope/device/dygma/defyWN/SettingsConfigurator.h"
 
 enum {
   QWERTY,
@@ -196,7 +196,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   ColormapEffectDefy,
   LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
   PersistentIdleLEDs,
-  WiredFocus,
+  SettingsConfigurator,
   Qukeys,
   DynamicSuperKeys,
   DynamicMacros,
@@ -242,4 +242,11 @@ void loop() {
 void setup1() {
   spi_1.initCommunications();
   spi_0.initCommunications();
+}
+
+
+void loop1() {
+  spi_0.run();
+  spi_1.run();
+  delay(1);
 }

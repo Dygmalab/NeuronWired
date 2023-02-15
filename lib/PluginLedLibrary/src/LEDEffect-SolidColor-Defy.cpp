@@ -24,7 +24,7 @@ void LEDSolidColorDefy::TransientLEDMode::onActivate(void) {
   parent_->led_mode.g_ = parent_->g_;
   parent_->led_mode.b_ = parent_->b_;
   parent_->led_mode.w_ = parent_->w_;
-  Runtime.device().setLedMode(&(parent_->led_mode));
+//  Runtime.device().setLedMode(&(parent_->led_mode));
 }
 
 void LEDSolidColorDefy::TransientLEDMode::update(void) {

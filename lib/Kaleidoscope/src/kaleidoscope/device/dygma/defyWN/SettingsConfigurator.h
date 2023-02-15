@@ -20,34 +20,23 @@
 
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
-#include <Arduino.h>
+#include "kaleidoscope/plugin.h"
 
 namespace kaleidoscope {
 namespace device {
 namespace dygma {
-namespace wired {
+namespace defyWN {
 
-class TWI {
+class SettingsConfigurator : public kaleidoscope::Plugin {
  public:
-  explicit TWI(int addr) : addr_(addr), crc_errors_(0) {}
-
-  uint8_t writeTo(uint8_t *data, size_t length);
-  uint8_t readFrom(uint8_t* data, size_t length);
-  void recovery();
-  void disable();
-  void init(uint16_t clock_khz);
-  uint8_t crc_errors() {
-    return crc_errors_;
-  }
-
- private:
-  int addr_;
-  uint8_t crc_errors_;
-  uint16_t clock_khz_;
+  EventHandlerResult onFocusEvent(const char *command);
 };
 
 }
 }
 }
 }
+
+extern kaleidoscope::device::dygma::defyWN::SettingsConfigurator SettingsConfigurator;
+
 #endif

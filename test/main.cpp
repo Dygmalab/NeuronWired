@@ -81,9 +81,7 @@ void setup() {
   kaleidoscope::Runtime.device().side.resetRight();
   kaleidoscope::Runtime.device().side.resetLeft();
   sleep_ms(1000);
-  spi_1.bind(Side_communications_protocol::HAS_KEYS, [](Packet) { Serial.printf("Got new key \n"); });
-    Serial.println("Start testing!");
-
+  Serial.println("Start testing!");
   runUnityTests();
 }
 

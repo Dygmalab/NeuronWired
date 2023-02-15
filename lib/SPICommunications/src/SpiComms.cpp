@@ -101,38 +101,12 @@ SpiComms::~SpiComms() {
   disableSide();
 }
 
-uint8_t SpiComms::crc_errors() {
-  return 0;
-}
-uint8_t SpiComms::writeTo(uint8_t *data, size_t length) {
-  return 0;
-}
-
 bool SpiComms::sendPacket(Packet *data) {
   if (queue_is_full(&txMessages)) {
     return false;
   }
   queue_add_blocking(&txMessages, data);
   return true;
-}
-
-uint8_t SpiComms::readFrom(uint8_t *data, size_t length) {
-  if (millis() - lastTimeCommunication > 200) {
-    return 0;
-  }
-  if (queue_is_empty(&rxMessages)) {
-    data[0] = 0;
-    return 6;
-  }
-  Packet message;
-  queue_remove_blocking(&rxMessages, &message);
-  data[0] = 1;
-  data[1] = message.data[0];
-  data[2] = message.data[1];
-  data[3] = message.data[2];
-  data[4] = message.data[3];
-  data[5] = message.data[4];
-  return 6;
 }
 
 void SpiComms::irq() {
@@ -156,6 +130,7 @@ void SpiComms::irq() {
   spi.sideCommunications    = spiSettings.rxMessage.context.device;
   spi.lastTimeCommunication = millis();
   if (spiSettings.rxMessage.context.command != IS_ALIVE) {
+    if (spiSettings.rxMessage.context.command == Side_communications_protocol::HAS_KEYS) callbacks_.call(HAS_KEYS, spiSettings.rxMessage);
     queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
   }
 
@@ -173,6 +148,30 @@ void SpiComms::disableSide() {
   spi_deinit(spiSettings.port);
   dma_channel_unclaim(spiSettings.dmaIndexTx);
   dma_channel_unclaim(spiSettings.dmaIndexRx);
+}
+void SpiComms::run() {
+
+  const bool now_active = millis() - lastTimeCommunication <= timeout;
+
+  //If it was active and there and now it no longer active then notify the chanel
+  if (active && !now_active) {
+    active = now_active;
+    active_callback_(active);
+  }
+
+  //If it was not active and now is active then notify the chanel that now is active
+  if (!active && now_active) {
+    active = now_active;
+    active_callback_(active);
+  }
+
+  if (queue_is_empty(&rxMessages)) {
+    return;
+  }
+
+  Packet packet;
+  queue_remove_blocking(&rxMessages, &packet);
+  callbacks_.call(packet.context.command, packet);
 }
 
 

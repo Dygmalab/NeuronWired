@@ -128,8 +128,8 @@ class Upgrade : public Plugin {
 
  private:
   KeyScannerFlasher key_scanner_flasher_{};
-  bool activated = false;
-  bool flashing  = false;
+  bool activated = true;
+  bool flashing  = true;
   uint16_t press_time{1};
   uint16_t pressed_time{0};
   bool serial_pre_activation = false;

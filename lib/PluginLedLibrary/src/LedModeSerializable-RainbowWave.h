@@ -37,7 +37,7 @@ class LedModeSerializable_RainbowWave : public LedModeSerializable {
       rainbowHue -= 255;
     }
     base_settings.step = rainbowHue;
-    kaleidoscope::Runtime.device().setCrgbNeuron(rainbow);
+    kaleidoscope::Runtime.device().ledDriver().setCrgbNeuron(rainbow);
   }
 #endif
 

@@ -18,4 +18,4 @@
 
 #pragma once
 
-#include "kaleidoscope/device/dygma/Wired.h"
+#include "kaleidoscope/device/dygma/DefyWN.h"
