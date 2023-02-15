@@ -50,8 +50,6 @@ class SpiComms {
 
   void initCommunications();
 
-  void bind(Commands command, std::function<void(Packet)> function);
-
   uint8_t writeTo(uint8_t *data, size_t length);
 
   bool sendPacket(Side_communications_protocol::Packet *data);
@@ -66,9 +64,9 @@ class SpiComms {
   queue_t txMessages;
   queue_t rxMessages;
   Devices sideCommunications;
+  BindingCallbacks<Commands, Packet> callbacks_;
 
  private:
-  Callback<Packet> callback_;
   void initInterrupt();
   void startDMA();
   void disableSide();

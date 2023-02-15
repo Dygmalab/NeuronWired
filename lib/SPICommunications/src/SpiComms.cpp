@@ -116,10 +116,6 @@ bool SpiComms::sendPacket(Packet *data) {
   return true;
 }
 
-void SpiComms::bind(Commands command,std::function<void(Packet)> function) {
-  callback_.addListener(function);
-}
-
 uint8_t SpiComms::readFrom(uint8_t *data, size_t length) {
   if (millis() - lastTimeCommunication > 200) {
     return 0;
@@ -160,7 +156,6 @@ void SpiComms::irq() {
   spi.sideCommunications    = spiSettings.rxMessage.context.device;
   spi.lastTimeCommunication = millis();
   if (spiSettings.rxMessage.context.command != IS_ALIVE) {
-      if (spiSettings.rxMessage.context.command == Side_communications_protocol::HAS_KEYS) callback_(spiSettings.rxMessage);
     queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
   }
 

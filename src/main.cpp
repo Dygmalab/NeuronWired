@@ -52,6 +52,7 @@
 
 #include "EEPROMUpgrade.h"
 #include "Upgrade.h"
+#include "SpiComms.h"
 
 
 #include "LEDEffect-Rainbow-Defy.h"
