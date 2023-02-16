@@ -18,107 +18,107 @@
 
 #include "Kaleidoscope-LEDControl.h"
 #include "LedModeSerializable-Rainbow.h"
+#include "LedModeCommunication.h"
 #include "LedModeSerializable-RainbowWave.h"
 
 namespace kaleidoscope {
 namespace plugin {
 class LEDRainbowEffectDefy : public Plugin,
-							 public LEDModeInterface {
-public:
+                             public LEDModeInterface,
+                             public LedModeCommunication {
+ public:
   LEDRainbowEffectDefy(void) {
-	led_mode.base_settings.brightness = 50;
-	led_mode.base_settings.delay_ms = 40;
+    led_mode.base_settings.brightness = 50;
+    led_mode.base_settings.delay_ms   = 40;
   }
 
   void brightness(uint8_t);
 
   uint8_t brightness() {
-	return led_mode.base_settings.brightness;
+    return led_mode.base_settings.brightness;
   }
 
   void update_delay(uint8_t);
 
   uint8_t update_delay(void) {
-	return led_mode.base_settings.delay_ms;
+    return led_mode.base_settings.delay_ms;
   }
 
-  LedModeSerializable_Rainbow& led_mode = ledModeSerializableRainbow;
+  LedModeSerializable_Rainbow &led_mode = ledModeSerializableRainbow;
 
   // This class' instance has dynamic lifetime
   //
   class TransientLEDMode : public LEDMode {
-  public:
+   public:
+    // Please note that storing the parent ptr is only required
+    // for those LED modes that require access to
+    // members of their parent class. Most LED modes can do without.
+    //
+    explicit TransientLEDMode(LEDRainbowEffectDefy *parent)
+      : parent_(parent) {}
 
-	// Please note that storing the parent ptr is only required
-	// for those LED modes that require access to
-	// members of their parent class. Most LED modes can do without.
-	//
-	explicit TransientLEDMode(LEDRainbowEffectDefy *parent)
-		: parent_(parent) {}
+    void update() final;
 
-	void update() final;
+   protected:
+    void onActivate() override;
 
-  protected:
-	void onActivate() override;
-
-  private:
-
-	LEDRainbowEffectDefy *parent_;
-        uint16_t rainbowLastUpdateKeyScanner=0;
+   private:
+    LEDRainbowEffectDefy *parent_;
+    uint16_t rainbowLastUpdateKeyScanner = 0;
   };
 
-private:
+ private:
 };
+
 
 class LEDRainbowWaveEffectDefy : public Plugin,
-							 public LEDModeInterface {
-public:
+                                 public LEDModeInterface,
+                                 public LedModeCommunication {
+ public:
   LEDRainbowWaveEffectDefy(void) {
-	led_mode.base_settings.brightness = 50;
-	led_mode.base_settings.delay_ms = 40;
+    led_mode.base_settings.brightness = 50;
+    led_mode.base_settings.delay_ms   = 40;
   }
 
   void brightness(uint8_t);
 
   uint8_t brightness() {
-	return led_mode.base_settings.brightness;
+    return led_mode.base_settings.brightness;
   }
 
   void update_delay(uint8_t);
 
   uint8_t update_delay(void) {
-	return led_mode.base_settings.delay_ms;
+    return led_mode.base_settings.delay_ms;
   }
 
-  LedModeSerializable_RainbowWave& led_mode = ledModeSerializableRainbowWave;
+  LedModeSerializable_RainbowWave &led_mode = ledModeSerializableRainbowWave;
 
   // This class' instance has dynamic lifetime
   //
   class TransientLEDMode : public LEDMode {
-  public:
+   public:
+    // Please note that storing the parent ptr is only required
+    // for those LED modes that require access to
+    // members of their parent class. Most LED modes can do without.
+    //
+    explicit TransientLEDMode(LEDRainbowWaveEffectDefy *parent)
+      : parent_(parent) {}
 
-	// Please note that storing the parent ptr is only required
-	// for those LED modes that require access to
-	// members of their parent class. Most LED modes can do without.
-	//
-	explicit TransientLEDMode(LEDRainbowWaveEffectDefy *parent)
-		: parent_(parent) {}
+    void update() final;
+    uint16_t rainbowWaveLastUpdateKeyScanner = 0;
 
-	void update() final;
-        uint16_t rainbowWaveLastUpdateKeyScanner=0;
+   protected:
+    void onActivate() override;
 
-  protected:
-	void onActivate() override;
-
-  private:
-
-	LEDRainbowWaveEffectDefy *parent_;
+   private:
+    LEDRainbowWaveEffectDefy *parent_;
   };
 
-private:
+ private:
 };
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
 
 extern kaleidoscope::plugin::LEDRainbowEffectDefy LEDRainbowEffectDefy;
 extern kaleidoscope::plugin::LEDRainbowWaveEffectDefy LEDRainbowWaveEffectDefy;

@@ -43,8 +43,7 @@ void ColormapEffectDefy::TransientLEDMode::onActivate(void) {
 
   parent_->top_layer_     = Layer.mostRecent();
   parent_->led_mode.layer = parent_->top_layer_;
-//  Runtime.device().setLedMode(&(parent_->led_mode));
-
+  sendLedMode(parent_->led_mode);
   if (parent_->top_layer_ <= parent_->max_layers_)
     ::LEDPaletteThemeDefy.updateHandler(parent_->map_base_, parent_->top_layer_);
 }

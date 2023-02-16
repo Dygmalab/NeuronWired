@@ -212,6 +212,7 @@ void KeyScannerWN::actOnMatrixScan() {
 }
 
 void KeyScannerWN::scanMatrix() {
+  readMatrix();
   actOnMatrixScan();
 }
 
@@ -374,6 +375,11 @@ std::string DefyWN::getChipID() {
   char buf[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1];
   pico_get_unique_board_id_string(buf, sizeof(buf));
   return {buf};
+}
+void DefyWN::sendPacket(Packet &p) {
+  //TODO: Check here if is online
+  spi_1.sendPacket(p);
+  spi_0.sendPacket(p);
 }
 
 }  // namespace dygma

@@ -101,11 +101,11 @@ SpiComms::~SpiComms() {
   disableSide();
 }
 
-bool SpiComms::sendPacket(Packet *data) {
+bool SpiComms::sendPacket(const Packet &data) {
   if (queue_is_full(&txMessages)) {
     return false;
   }
-  queue_add_blocking(&txMessages, data);
+  queue_add_blocking(&txMessages, &data);
   return true;
 }
 

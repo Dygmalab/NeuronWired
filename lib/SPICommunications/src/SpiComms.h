@@ -50,7 +50,7 @@ class SpiComms {
 
   void initCommunications();
 
-  bool sendPacket(Side_communications_protocol::Packet *data);
+  bool sendPacket(const Side_communications_protocol::Packet &data);
 
   void run();
 

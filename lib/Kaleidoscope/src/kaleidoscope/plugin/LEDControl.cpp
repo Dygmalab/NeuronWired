@@ -39,7 +39,6 @@ LEDControl::LEDControl(void) {
 
 void LEDControl::next_mode(void) {
   mode_id++;
-
   if (mode_id >= num_led_modes_) {
     return set_mode(0);
   }

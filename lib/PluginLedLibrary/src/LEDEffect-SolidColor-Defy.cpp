@@ -20,11 +20,12 @@ namespace kaleidoscope {
 namespace plugin {
 
 void LEDSolidColorDefy::TransientLEDMode::onActivate(void) {
+  Serial.println("Solid Color activated\n");
   parent_->led_mode.r_ = parent_->r_;
   parent_->led_mode.g_ = parent_->g_;
   parent_->led_mode.b_ = parent_->b_;
   parent_->led_mode.w_ = parent_->w_;
-//  Runtime.device().setLedMode(&(parent_->led_mode));
+  sendLedMode(parent_->led_mode);
 }
 
 void LEDSolidColorDefy::TransientLEDMode::update(void) {

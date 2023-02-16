@@ -20,12 +20,14 @@
 #include <Kaleidoscope-LEDControl.h>
 #include <Kaleidoscope-LED-Palette-Theme.h>
 #include "LedModeSerializable-Layer.h"
+#include "LedModeCommunication.h"
 
 namespace kaleidoscope {
 namespace plugin {
 class ColormapEffectDefy : public Plugin,
-  public LEDModeInterface,
-  public AccessTransientLEDMode {
+                           public LEDModeInterface,
+                           public LedModeCommunication,
+                           public AccessTransientLEDMode {
  public:
   ColormapEffectDefy(void) {}
 
@@ -37,39 +39,40 @@ class ColormapEffectDefy : public Plugin,
   uint8_t getColorIndexAtPosition(uint8_t layer, uint16_t position);
   LedModeSerializable_Layer &led_mode = ledModeSerializableLayer;
   void getColorPalette(cRGB output_palette[16]);
-  void getLayer(uint8_t layer,uint8_t output_buf[Runtime.device().led_count]);
+  void getLayer(uint8_t layer, uint8_t output_buf[Runtime.device().led_count]);
 
   // This class' instance has dynamic lifetime
   //
   class TransientLEDMode : public LEDMode {
    public:
-
     // Please note that storing the parent ptr is only required
     // for those LED modes that require access to
     // members of their parent class. Most LED modes can do without.
     //
-    explicit TransientLEDMode(ColormapEffectDefy *parent) : parent_(parent) {}
+    explicit TransientLEDMode(ColormapEffectDefy *parent)
+      : parent_(parent) {}
 
    protected:
-
     friend class ColormapEffectDefy;
 
     void onActivate(void) final;
     void refreshAt(KeyAddr key_addr) final;
-   private:
 
+   private:
     ColormapEffectDefy *parent_;
   };
 
  private:
   static uint8_t top_layer_;
-public:
+
+ public:
   static uint8_t getMaxLayers();
-private:
+
+ private:
   static uint8_t max_layers_;
   static uint16_t map_base_;
 };
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
 
 extern kaleidoscope::plugin::ColormapEffectDefy ColormapEffectDefy;

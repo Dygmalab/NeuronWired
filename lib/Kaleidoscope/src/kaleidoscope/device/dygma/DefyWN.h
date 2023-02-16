@@ -176,6 +176,8 @@ class DefyWN : public kaleidoscope::device::Base<PropsWN> {
 
   static std::string getChipID();
 
+  static void sendPacket(Packet &p);
+
   struct side {
     uint8_t getPowerRight();
     void setPowerRight(bool power);

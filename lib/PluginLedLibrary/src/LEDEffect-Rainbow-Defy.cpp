@@ -26,11 +26,11 @@ void LEDRainbowEffectDefy::TransientLEDMode::update(void) {
     return;
   }
   rainbowLastUpdateKeyScanner += 1000;
-//  Runtime.device().setLedMode(&(parent_->led_mode));
+  sendLedMode(parent_->led_mode);
 }
 
 void LEDRainbowEffectDefy::TransientLEDMode::onActivate() {
-//  Runtime.device().setLedMode(&(parent_->led_mode));
+  sendLedMode(parent_->led_mode);
 }
 
 void LEDRainbowEffectDefy::brightness(uint8_t brightness) {
@@ -50,10 +50,11 @@ void LEDRainbowWaveEffectDefy::TransientLEDMode::update(void) {
     return;
   }
   rainbowWaveLastUpdateKeyScanner += 1000;
-//  Runtime.device().setLedMode(&(parent_->led_mode));
+  sendLedMode(parent_->led_mode);
 }
+
 void LEDRainbowWaveEffectDefy::TransientLEDMode::onActivate() {
-//  Runtime.device().setLedMode(&(parent_->led_mode));
+  sendLedMode(parent_->led_mode);
 }
 
 void LEDRainbowWaveEffectDefy::brightness(uint8_t brightness) {

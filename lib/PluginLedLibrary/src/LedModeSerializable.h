@@ -113,7 +113,6 @@ constexpr unsigned int CRC32(const char *s, size_t len) {
 #define CRC32_STR(A) crcdetail::CRC32(A,sizeof(A))
 
 
-
 class LedModeSerializable {
 public:
   struct Settings {
