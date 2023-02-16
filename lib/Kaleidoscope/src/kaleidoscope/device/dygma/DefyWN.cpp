@@ -28,7 +28,7 @@
 #include "kaleidoscope/driver/keyscanner/Base_Impl.h"
 #include "DefyWN.h"
 #include "Colormap-Defy.h"
-#include "Side_communications_protocol.h"
+#include "KeyScanner_communications_protocol.h"
 #include "kaleidoscope/device/dygma/defyWN/Hand.h"
 
 #define I2C_SDA_PIN         26  // SWe 20220719: I2C1 data out-/in-put, MASTER role
@@ -57,8 +57,8 @@ namespace dygma {
 
 class Hands {
  public:
-  inline static defyWN::Hand leftHand{Side_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT};
-  inline static defyWN::Hand rightHand{Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT};
+  inline static defyWN::Hand leftHand{KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT};
+  inline static defyWN::Hand rightHand{KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT};
 
   static void setup();
 
@@ -93,8 +93,8 @@ void Hands::setKeyscanInterval(uint16_t interval) {
 void Hands::setLedBrightnessCorrection(uint8_t brightness) {
   //TODO: set brightness in flash and send message each connection
   Packet p;
-  p.context.command = Side_communications_protocol::SET_BRIGHTNESS;
-  p.context.size    = 1;
+  p.header.command = KeyScanner_communications_protocol::SET_BRIGHTNESS;
+  p.header.size    = 1;
   p.data[0]         = brightness;
   spi_1.sendPacket(p);
   spi_0.sendPacket(p);

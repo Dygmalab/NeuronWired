@@ -116,7 +116,7 @@ void SpiComms::irq() {
   portUSB ? dma_channel_acknowledge_irq1(spiSettings.dmaIndexRx)
           : dma_channel_acknowledge_irq0(spiSettings.dmaIndexRx);
 
-  if (spiSettings.rxMessage.context.command == IS_DEAD) {
+  if (spiSettings.rxMessage.header.command == IS_DEAD) {
     //Something happened lest restart the communication
     if (Serial.available())
       Serial.printf("Lost Connections with hand %i\n", portUSB);
@@ -127,19 +127,19 @@ void SpiComms::irq() {
     return;
   }
 
-  SpiComms &spi             = spiSettings.rxMessage.context.device == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
-  spi.sideCommunications    = spiSettings.rxMessage.context.device;
+  SpiComms &spi             = spiSettings.rxMessage.header.device == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
+  spi.sideCommunications    = spiSettings.rxMessage.header.device;
   spi.lastTimeCommunication = millis();
-  if (spiSettings.rxMessage.context.command != IS_ALIVE) {
+  if (spiSettings.rxMessage.header.command != IS_ALIVE) {
     queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
   }
 
   if (!queue_is_empty(&spi.txMessages)) {
     queue_remove_blocking(&spi.txMessages, &spiSettings.txMessage);
   } else {
-    spiSettings.txMessage.context.command = Side_communications_protocol::IS_ALIVE;
+    spiSettings.txMessage.header.command = KeyScanner_communications_protocol::IS_ALIVE;
   }
-  spiSettings.txMessage.context.has_more_packets = !queue_is_empty(&spi.txMessages);
+  spiSettings.txMessage.header.has_more_packets = !queue_is_empty(&spi.txMessages);
   irq_set_enabled(spiSettings.irq, true);
   startDMA();
 }
@@ -177,7 +177,7 @@ void SpiComms::run() {
 
   Packet packet;
   queue_remove_blocking(&rxMessages, &packet);
-  callbacks_.call(packet.context.command, packet);
+  callbacks_.call(packet.header.command, packet);
 }
 
 

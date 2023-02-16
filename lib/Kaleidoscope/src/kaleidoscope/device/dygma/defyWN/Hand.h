@@ -63,7 +63,7 @@ class Hand {
   explicit Hand(Devices device)
     : this_device_(device) {
     auto keyScanFunction = [this](Packet packet) {
-      if (packet.context.device == this_device_) {
+      if (packet.header.device == this_device_) {
         new_key_ = true;
         memcpy(key_data_.rows, packet.data, sizeof(key_data));
       }

@@ -21,12 +21,12 @@ void sendPacket(Packet &message) {
 
 void sendColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
   Packet message{};
-  message.context.command  = SET_MODE_LED;
+  message.header.command  = SET_MODE_LED;
   solidRedDefy.led_mode.r_ = r;
   solidRedDefy.led_mode.g_ = g;
   solidRedDefy.led_mode.b_ = b;
   solidRedDefy.led_mode.w_ = w;
-  message.context.size     = solidRedDefy.led_mode.serialize(message.data);
+  message.header.size     = solidRedDefy.led_mode.serialize(message.data);
   sendPacket(message);
 }
 

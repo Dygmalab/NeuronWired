@@ -24,10 +24,10 @@
 #include <Arduino.h>
 #include <hardware/dma.h>
 #include "hardware/spi.h"
-#include "Side_communications_protocol.h"
+#include "KeyScanner_communications_protocol.h"
 #include "Callback.h"
 
-using namespace Side_communications_protocol;
+using namespace KeyScanner_communications_protocol;
 #define SIDE_nRESET_1 22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
 #define SIDE_nRESET_2 10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
 
@@ -50,7 +50,7 @@ class SpiComms {
 
   void initCommunications();
 
-  bool sendPacket(const Side_communications_protocol::Packet &data);
+  bool sendPacket(const KeyScanner_communications_protocol::Packet &data);
 
   void run();
 
