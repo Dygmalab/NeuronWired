@@ -75,6 +75,8 @@ class LedDriverWN : public kaleidoscope::driver::led::Base<LedDriverProps> {
 
   static void updateNeuronLED();
 
+  static constexpr uint8_t underglow_leds  = LedDriverProps::underglow_leds;
+  static constexpr uint8_t key_matrix_leds = LedDriverProps::key_matrix_leds;
  private:
   inline static bool isLEDChangedNeuron;
   inline static uint8_t isLEDChangedLeft[LED_BANKS];

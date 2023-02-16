@@ -88,7 +88,7 @@ class SpiComms {
 
   Spi_settings spiSettings;
   bool portUSB;
-  uint32_t lastTimeCommunication   = 0;
+  uint32_t lastTimeCommunication   = 1000;
   static constexpr uint8_t timeout = 250;
 };
 

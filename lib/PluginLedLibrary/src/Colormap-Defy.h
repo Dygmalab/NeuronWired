@@ -21,6 +21,7 @@
 #include <Kaleidoscope-LED-Palette-Theme.h>
 #include "LedModeSerializable-Layer.h"
 #include "LedModeCommunication.h"
+#include "SpiComms.h"
 
 namespace kaleidoscope {
 namespace plugin {
@@ -29,7 +30,62 @@ class ColormapEffectDefy : public Plugin,
                            public LedModeCommunication,
                            public AccessTransientLEDMode {
  public:
-  ColormapEffectDefy(void) {}
+  ColormapEffectDefy(void) {
+    spi_1.active_callback_.addListener([this](bool active) {
+      if (active) {
+        Packet packet;
+        packet.context.command = Side_communications_protocol::SET_PALETTE_COLORS;
+        packet.context.size = sizeof(cRGB)*16;
+        cRGB palette[16];
+        getColorPalette(palette);
+        memcpy(packet.data, palette, packet.context.size);
+        spi_1.sendPacket(packet);
+        uint8_t layerColors[Runtime.device().led_count];
+        uint8_t baseKeymapIndex    = spi_1.sideCommunications == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? Runtime.device().ledDriver().key_matrix_leds : 0;
+        uint8_t baseUnderGlowIndex = spi_1.sideCommunications == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? (Runtime.device().ledDriver().key_matrix_leds) * 2 + Runtime.device().ledDriver().underglow_leds : Runtime.device().ledDriver().key_matrix_leds * 2;
+        for (int i = 0; i < getMaxLayers(); ++i) {
+          getLayer(i, layerColors);
+          packet.context.command = SET_LAYER_KEYMAP_COLORS;
+          packet.context.size    = Runtime.device().ledDriver().key_matrix_leds + 1;
+          packet.data[0]         = i;
+          memcpy(&packet.data[1], &layerColors[baseKeymapIndex], packet.context.size - 1);
+          spi_1.sendPacket(packet);
+          packet.context.command = SET_LAYER_UNDERGLOW_COLORS;
+          packet.context.size    = Runtime.device().ledDriver().underglow_leds + 1;
+          memcpy(&packet.data[1], &layerColors[baseUnderGlowIndex], packet.context.size - 1);
+          spi_1.sendPacket(packet);
+          sendLedMode(led_mode);
+        }
+      }
+    });
+    spi_0.active_callback_.addListener([this](bool active) {
+      if (active) {
+        Packet packet;
+        packet.context.command = Side_communications_protocol::SET_PALETTE_COLORS;
+        packet.context.size = sizeof(cRGB)*16;
+        cRGB palette[16];
+        getColorPalette(palette);
+        memcpy(packet.data, palette, packet.context.size);
+        spi_0.sendPacket(packet);
+        uint8_t layerColors[Runtime.device().led_count];
+        uint8_t baseKeymapIndex    = spi_0.sideCommunications == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? Runtime.device().ledDriver().key_matrix_leds : 0;
+        uint8_t baseUnderGlowIndex = spi_0.sideCommunications == Side_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? (Runtime.device().ledDriver().key_matrix_leds) * 2 + Runtime.device().ledDriver().underglow_leds : Runtime.device().ledDriver().key_matrix_leds * 2;
+        for (int i = 0; i < getMaxLayers(); ++i) {
+          getLayer(i, layerColors);
+          packet.context.command = SET_LAYER_KEYMAP_COLORS;
+          packet.context.size    = Runtime.device().ledDriver().key_matrix_leds + 1;
+          packet.data[0]         = i;
+          memcpy(&packet.data[1], &layerColors[baseKeymapIndex], packet.context.size - 1);
+          spi_0.sendPacket(packet);
+          packet.context.command = SET_LAYER_UNDERGLOW_COLORS;
+          packet.context.size    = Runtime.device().ledDriver().underglow_leds + 1;
+          memcpy(&packet.data[1], &layerColors[baseUnderGlowIndex], packet.context.size - 1);
+          spi_0.sendPacket(packet);
+          sendLedMode(led_mode);
+        }
+      }
+    });
+  }
 
   void max_layers(uint8_t max_);
 

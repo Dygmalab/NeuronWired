@@ -72,7 +72,6 @@ class Hand {
     spi_0.callbacks_.bind(HAS_KEYS, keyScanFunction);
   };
 
-
   Devices this_device_;
   LEDData_t led_data{};
 
