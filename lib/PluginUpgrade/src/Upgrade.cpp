@@ -19,6 +19,7 @@
 #include "Wire.h"
 #include "kaleidoscope/plugin/FocusSerial.h"
 #include "../../EEPROM/src/EEPROM.h"
+#include "LedModeSerializable.h"
 #define WIRE_ Wire1
 
 namespace kaleidoscope {

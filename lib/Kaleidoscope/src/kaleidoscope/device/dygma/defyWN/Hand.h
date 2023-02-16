@@ -62,6 +62,7 @@ class Hand {
  public:
   explicit Hand(Devices device)
     : this_device_(device) {
+
     auto keyScanFunction = [this](Packet packet) {
       if (packet.header.device == this_device_) {
         new_key_ = true;

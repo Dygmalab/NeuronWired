@@ -60,6 +60,7 @@
 #include "LED-Palette-Theme-Defy.h"
 #include "DefaultColormap.h"
 #include "kaleidoscope/device/dygma/defyWN/SettingsConfigurator.h"
+#include "Communications.h"
 
 enum {
   QWERTY,
@@ -180,6 +181,7 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0, 255);
 KALEIDOSCOPE_INIT_PLUGINS(
   FirmwareVersion,
   Upgrade,
+  Communications,
   USBQuirks,
   MagicCombo,
   RaiseIdleLEDs,

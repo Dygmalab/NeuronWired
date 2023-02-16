@@ -1,3 +1,5 @@
+#ifndef _CALLBACK_H_
+#define _CALLBACK_H_
 
 #include <functional>
 #include <memory>
@@ -66,3 +68,5 @@ class BindingCallbacks {
 
   std::unordered_map<Key, std::unique_ptr<Callback<Value>>> callbacks;
 };
+
+#endif
