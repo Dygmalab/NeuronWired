@@ -28,7 +28,7 @@ class LEDRainbowEffectDefy : public Plugin,
                              public LedModeCommunication {
  public:
   LEDRainbowEffectDefy(void) {
-    led_mode.base_settings.brightness = 50;
+    led_mode.base_settings.brightness = 255;
     led_mode.base_settings.delay_ms   = 40;
   }
 
@@ -76,7 +76,7 @@ class LEDRainbowWaveEffectDefy : public Plugin,
                                  public LedModeCommunication {
  public:
   LEDRainbowWaveEffectDefy(void) {
-    led_mode.base_settings.brightness = 50;
+    led_mode.base_settings.brightness = 255;
     led_mode.base_settings.delay_ms   = 40;
   }
 

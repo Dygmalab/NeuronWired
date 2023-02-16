@@ -91,7 +91,13 @@ void Hands::setKeyscanInterval(uint16_t interval) {
 }
 
 void Hands::setLedBrightnessCorrection(uint8_t brightness) {
-  //TODO: set brightness in flash and send message
+  //TODO: set brightness in flash and send message each connection
+  Packet p;
+  p.context.command = Side_communications_protocol::SET_BRIGHTNESS;
+  p.context.size    = 1;
+  p.data[0]         = brightness;
+  spi_1.sendPacket(p);
+  spi_0.sendPacket(p);
 }
 
 
@@ -384,7 +390,6 @@ std::string DefyWN::getChipID() {
   return {buf};
 }
 void DefyWN::sendPacket(Packet &p) {
-  //TODO: Check here if is online
   spi_1.sendPacket(p);
   spi_0.sendPacket(p);
 }

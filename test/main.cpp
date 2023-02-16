@@ -3,6 +3,7 @@
 #include "Kaleidoscope.h"
 #include "unity.h"
 #include "LEDEffect-SolidColor-Defy.h"
+#include "SpiComms.h"
 
 static kaleidoscope::plugin::LEDSolidColorDefy solidRedDefy(0, 0, 0, 0);
 
@@ -12,6 +13,7 @@ KALEIDOSCOPE_INIT_PLUGINS(LEDControl)
 void userVerification() {
   sleep_ms(1000);
 }
+
 void sendPacket(Packet &message) {
   spi_1.sendPacket(&message);
   spi_0.sendPacket(&message);
@@ -86,13 +88,7 @@ void setup() {
 }
 
 void loop() {
-  uint8_t keys[6];
-  spi_1.readFrom(keys, sizeof(keys));
-  if (keys[0] != 0)
-    Serial.printf("%i %i %i %i %i %i\n", keys[0], keys[1], keys[2], keys[3], keys[4], keys[5]);
-  spi_0.readFrom(keys, sizeof(keys));
-  if (keys[0] != 0)
-    Serial.printf("%i %i %i %i %i %i\n", keys[0], keys[1], keys[2], keys[3], keys[4], keys[5]);
+
 }
 
 void setup1() {
