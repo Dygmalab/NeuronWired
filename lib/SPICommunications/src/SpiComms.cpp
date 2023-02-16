@@ -102,6 +102,7 @@ SpiComms::~SpiComms() {
 }
 
 bool SpiComms::sendPacket(const Packet &data) {
+  if (!active) return false;
   if (queue_is_full(&txMessages)) {
     return false;
   }
@@ -155,6 +156,12 @@ void SpiComms::run() {
   //If it was active and there and now it no longer active then notify the chanel
   if (active && !now_active) {
     active = now_active;
+    //Clear the packets as now the channel is no longer active
+    Packet packet;
+    if (!queue_is_empty(&rxMessages))
+      queue_remove_blocking(&rxMessages, &packet);
+    if (!queue_is_empty(&txMessages))
+      queue_remove_blocking(&txMessages, &packet);
     active_callback_(active);
   }
 
