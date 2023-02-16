@@ -64,6 +64,7 @@ class Hand {
     : this_device_(device) {
     auto keyScanFunction = [this](Packet packet) {
       if (packet.context.device == this_device_) {
+        new_key_ = true;
         memcpy(key_data_.rows, packet.data, sizeof(key_data));
       }
     };
@@ -71,14 +72,24 @@ class Hand {
     spi_0.callbacks_.bind(HAS_KEYS, keyScanFunction);
   };
 
-  defyWN::key_data key_data_;
-  defyWN::key_data previous_key_data;
-  defyWN::key_data keyMask;
 
-  bool online;
   Devices this_device_;
-  LEDData_t led_data;
+  LEDData_t led_data{};
+
+ private:
+  defyWN::key_data key_data_{};
+  bool new_key_;
   bool online_{false};
+
+ public:
+  const key_data &getKeyData() {
+    new_key_ = false;
+    return key_data_;
+  }
+
+  [[nodiscard]] bool newKey() const {
+    return new_key_;
+  }
 };
 
 }  // namespace defyWN

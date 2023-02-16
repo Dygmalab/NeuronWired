@@ -185,8 +185,15 @@ void LedDriverWN::setup() {
 /********* Key scanner *********/
 
 void KeyScannerWN::readMatrix() {
-  Hands::leftHand.previous_key_data  = Hands::leftHand.key_data_;
-  Hands::rightHand.previous_key_data = Hands::rightHand.key_data_;
+  previousLeftHandState  = leftHandState;
+  previousRightHandState = rightHandState;
+
+  if (Hands::leftHand.newKey()) {
+    leftHandState = Hands::leftHand.getKeyData();
+  }
+  if (Hands::rightHand.newKey()) {
+    rightHandState = Hands::rightHand.getKeyData();
+  }
 }
 
 void KeyScannerWN::actOnMatrixScan() {
@@ -196,14 +203,14 @@ void KeyScannerWN::actOnMatrixScan() {
       uint8_t keyState;
 
       // left
-      keyState = (bitRead(Hands::leftHand.previous_key_data.all, keynum) << 0) |
-                 (bitRead(Hands::leftHand.key_data_.all, keynum) << 1);
+      keyState = (bitRead(previousLeftHandState.all, keynum) << 0) |
+                 (bitRead(leftHandState.all, keynum) << 1);
       if (keyState)
         ThisType::handleKeyswitchEvent(Key_NoKey, KeyAddr(row, col), keyState);
 
       // right
-      keyState = (bitRead(Hands::rightHand.previous_key_data.all, keynum) << 0) |
-                 (bitRead(Hands::rightHand.key_data_.all, keynum) << 1);
+      keyState = (bitRead(previousRightHandState.all, keynum) << 0) |
+                 (bitRead(rightHandState.all, keynum) << 1);
       if (keyState)
         ThisType::handleKeyswitchEvent(
           Key_NoKey, KeyAddr(row, (Props_::matrix_columns - 1) - col), keyState);
@@ -224,10 +231,10 @@ void KeyScannerWN::maskKey(KeyAddr key_addr) {
   auto col = key_addr.col();
 
   if (col >= Props_::left_columns) {
-    Hands::rightHand.keyMask.rows[row] |=
+    rightHandMask.rows[row] |=
       1 << (Props_::right_columns - (col - Props_::left_columns));
   } else {
-    Hands::leftHand.keyMask.rows[row] |= 1 << (Props_::right_columns - col);
+    leftHandMask.rows[row] |= 1 << (Props_::right_columns - col);
   }
 }
 
@@ -239,10 +246,10 @@ void KeyScannerWN::unMaskKey(KeyAddr key_addr) {
   auto col = key_addr.col();
 
   if (col >= Props_::left_columns) {
-    Hands::rightHand.keyMask.rows[row] &=
+    rightHandMask.rows[row] &=
       ~(1 << (Props_::right_columns - (col - Props_::left_columns)));
   } else {
-    Hands::leftHand.keyMask.rows[row] &= ~(1 << (Props_::right_columns - col));
+    leftHandMask.rows[row] &= ~(1 << (Props_::right_columns - col));
   }
 }
 
@@ -254,15 +261,15 @@ bool KeyScannerWN::isKeyMasked(KeyAddr key_addr) {
   auto col = key_addr.col();
 
   if (col >= 8) {
-    return Hands::rightHand.keyMask.rows[row] & (1 << (7 - (col - 8)));
+    return rightHandMask.rows[row] & (1 << (7 - (col - 8)));
   } else {
-    return Hands::leftHand.keyMask.rows[row] & (1 << (7 - col));
+    return leftHandMask.rows[row] & (1 << (7 - col));
   }
 }
 
 void KeyScannerWN::maskHeldKeys() {
-  memcpy(Hands::leftHand.keyMask.rows, Hands::leftHand.key_data_.rows, sizeof(Hands::leftHand.keyMask));
-  memcpy(Hands::rightHand.keyMask.rows, Hands::rightHand.key_data_.rows, sizeof(Hands::rightHand.keyMask));
+  memcpy(leftHandMask.rows, leftHandState.rows, sizeof(leftHandMask));
+  memcpy(rightHandMask.rows, rightHandState.rows, sizeof(rightHandMask));
 }
 
 bool KeyScannerWN::isKeyswitchPressed(KeyAddr key_addr) {
@@ -270,10 +277,10 @@ bool KeyScannerWN::isKeyswitchPressed(KeyAddr key_addr) {
   auto col = key_addr.col();
 
   if (col >= Props_::left_columns) {
-    return (bitRead(Hands::rightHand.key_data_.rows[row],
+    return (bitRead(rightHandState.rows[row],
                     (Props_::matrix_columns - 1) - col) != 0);
   } else {
-    return (bitRead(Hands::leftHand.key_data_.rows[row], col) != 0);
+    return (bitRead(leftHandState.rows[row], col) != 0);
   }
 }
 
@@ -282,21 +289,21 @@ bool KeyScannerWN::wasKeyswitchPressed(KeyAddr key_addr) {
   auto col = key_addr.col();
 
   if (col >= Props_::left_columns) {
-    return (bitRead(Hands::rightHand.previous_key_data.rows[row],
+    return (bitRead(previousRightHandState.rows[row],
                     (Props_::matrix_columns - 1) - col) != 0);
   } else {
-    return (bitRead(Hands::leftHand.previous_key_data.rows[row], col) != 0);
+    return (bitRead(previousLeftHandState.rows[row], col) != 0);
   }
 }
 
 uint8_t KeyScannerWN::pressedKeyswitchCount() {
-  return __builtin_popcountll(Hands::leftHand.key_data_.all) +
-         __builtin_popcountll(Hands::rightHand.key_data_.all);
+  return __builtin_popcountll(leftHandState.all) +
+         __builtin_popcountll(rightHandState.all);
 }
 
 uint8_t KeyScannerWN::previousPressedKeyswitchCount() {
-  return __builtin_popcountll(Hands::leftHand.previous_key_data.all) +
-         __builtin_popcountll(Hands::rightHand.previous_key_data.all);
+  return __builtin_popcountll(previousLeftHandState.all) +
+         __builtin_popcountll(previousRightHandState.all);
 }
 
 void KeyScannerWN::setKeyscanInterval(uint8_t interval) {
@@ -314,8 +321,8 @@ void KeyScannerWN::setup() {
 }
 
 void KeyScannerWN::reset() {
-  Hands::leftHand.key_data_.all  = 0;
-  Hands::rightHand.key_data_.all = 0;
+  leftHandState.all  = 0;
+  rightHandState.all = 0;
   Runtime.hid().keyboard().releaseAllKeys();
   Runtime.hid().keyboard().sendReport();
 }

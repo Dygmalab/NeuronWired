@@ -146,6 +146,13 @@ class KeyScannerWN : public kaleidoscope::driver::keyscanner::Base<KeyScannerPro
   static void setKeyscanInterval(uint8_t interval);
 
   static void reset();
+
+  inline static defyWN::key_data leftHandState;
+  inline static defyWN::key_data rightHandState;
+  inline static defyWN::key_data previousLeftHandState;
+  inline static defyWN::key_data previousRightHandState;
+  inline static defyWN::key_data leftHandMask;
+  inline static defyWN::key_data rightHandMask;
 };
 
 struct StoragePropsWN : public kaleidoscope::driver::storage::FlashProps {
