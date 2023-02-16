@@ -25,8 +25,5 @@
 
 namespace kaleidoscope::device::dygma::defyWN {
 
-Hand::Hand(Side_communications_protocol::Devices device) {
-}
-
 }  // namespace kaleidoscope::device::dygma::defyWN
 #endif

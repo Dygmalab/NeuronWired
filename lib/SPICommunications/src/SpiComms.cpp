@@ -130,7 +130,6 @@ void SpiComms::irq() {
   spi.sideCommunications    = spiSettings.rxMessage.context.device;
   spi.lastTimeCommunication = millis();
   if (spiSettings.rxMessage.context.command != IS_ALIVE) {
-    if (spiSettings.rxMessage.context.command == Side_communications_protocol::HAS_KEYS) callbacks_.call(HAS_KEYS, spiSettings.rxMessage);
     queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
   }
 

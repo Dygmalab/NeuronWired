@@ -235,6 +235,8 @@ void setup() {
 void loop() {
   // Application code goes here...
   Kaleidoscope.loop();
+  spi_0.run();
+  spi_1.run();
   protocolBreathe();
   watchdog_update();
 }
@@ -242,11 +244,4 @@ void loop() {
 void setup1() {
   spi_1.initCommunications();
   spi_0.initCommunications();
-}
-
-
-void loop1() {
-  spi_0.run();
-  spi_1.run();
-  delay(1);
 }

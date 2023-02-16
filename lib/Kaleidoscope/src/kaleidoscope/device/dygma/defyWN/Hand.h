@@ -56,19 +56,32 @@ typedef union {
 typedef union {
   uint8_t rows[5];
   uint64_t all;
-} keydata_t;
+} key_data;
 
 class Hand {
  public:
+  explicit Hand(Devices device)
+    : this_device_(device) {
+    auto keyScanFunction = [this](Packet packet) {
+      if (packet.context.device == this_device_) {
+        memcpy(key_data_.rows, packet.data, sizeof(key_data));
+      }
+    };
+    spi_1.callbacks_.bind(HAS_KEYS, keyScanFunction);
+    spi_0.callbacks_.bind(HAS_KEYS, keyScanFunction);
+  };
+
+  defyWN::key_data key_data_;
+  defyWN::key_data previous_key_data;
+  defyWN::key_data keyMask;
+
+  bool online;
+  Devices this_device_;
   LEDData_t led_data;
-  explicit Hand(Devices device);
-  volatile bool online_{false};
-  bool new_key_{false};
-  keydata_t key_data_;
-  SpiComms *spiPort;
+  bool online_{false};
 };
 
-}  // namespace wired
+}  // namespace defyWN
 }  // namespace dygma
 }  // namespace device
 }  // namespace kaleidoscope
