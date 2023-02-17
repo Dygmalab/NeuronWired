@@ -30,6 +30,7 @@
 #include "Colormap-Defy.h"
 #include "KeyScanner_communications_protocol.h"
 #include "kaleidoscope/device/dygma/defyWN/Hand.h"
+#include "KeyScanner_communications_protocol.h"
 
 #define I2C_SDA_PIN         26  // SWe 20220719: I2C1 data out-/in-put, MASTER role
 #define I2C_SCL_PIN         27  // SWe 20220719: I2C1 clock output, MASTER role
@@ -92,12 +93,6 @@ void Hands::setKeyscanInterval(uint16_t interval) {
 
 void Hands::setLedBrightnessCorrection(uint8_t brightness) {
   //TODO: set brightness in flash and send message each connection
-  Packet p;
-  p.header.command = KeyScanner_communications_protocol::SET_BRIGHTNESS;
-  p.header.size    = 1;
-  p.data[0]         = brightness;
-  spi_1.sendPacket(p);
-  spi_0.sendPacket(p);
 }
 
 
@@ -389,9 +384,8 @@ std::string DefyWN::getChipID() {
   pico_get_unique_board_id_string(buf, sizeof(buf));
   return {buf};
 }
-void DefyWN::sendPacket(Packet &p) {
-  spi_1.sendPacket(p);
-  spi_0.sendPacket(p);
+void DefyWN::sendPacket(KeyScanner_communications_protocol::Packet &p) {
+
 }
 
 }  // namespace dygma

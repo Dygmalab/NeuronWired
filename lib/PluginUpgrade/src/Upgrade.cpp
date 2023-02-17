@@ -15,6 +15,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <hardware/dma.h>
 #include "Upgrade.h"
 #include "Wire.h"
 #include "kaleidoscope/plugin/FocusSerial.h"

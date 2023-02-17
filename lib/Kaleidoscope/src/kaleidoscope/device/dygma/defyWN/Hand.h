@@ -21,8 +21,8 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <Arduino.h>
-#include "SpiComms.h"
-#include "LedModeSerializable.h"
+#include "KeyScanner_communications_protocol.h"
+//#include "Communications.h"
 
 struct cRGB {
   uint8_t r;
@@ -57,21 +57,10 @@ typedef union {
   uint8_t rows[5];
   uint64_t all;
 } key_data;
-
+using namespace KeyScanner_communications_protocol;
 class Hand {
  public:
-  explicit Hand(Devices device)
-    : this_device_(device) {
-
-    auto keyScanFunction = [this](Packet packet) {
-      if (packet.header.device == this_device_) {
-        new_key_ = true;
-        memcpy(key_data_.rows, packet.data, sizeof(key_data));
-      }
-    };
-    spi_1.callbacks_.bind(HAS_KEYS, keyScanFunction);
-    spi_0.callbacks_.bind(HAS_KEYS, keyScanFunction);
-  };
+  explicit Hand(KeyScanner_communications_protocol::Devices device);;
 
   Devices this_device_;
   LEDData_t led_data{};

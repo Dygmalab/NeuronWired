@@ -3,7 +3,7 @@
 #include "Kaleidoscope.h"
 #include "unity.h"
 #include "LEDEffect-SolidColor-Defy.h"
-#include "SpiComms.h"
+#include "SPISlave.h"
 
 static kaleidoscope::plugin::LEDSolidColorDefy solidRedDefy(0, 0, 0, 0);
 
@@ -15,8 +15,8 @@ void userVerification() {
 }
 
 void sendPacket(Packet &message) {
-  spi_1.sendPacket(&message);
-  spi_0.sendPacket(&message);
+  port1.sendPacket(&message);
+  port0.sendPacket(&message);
 }
 
 void sendColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
@@ -56,9 +56,9 @@ void sendColorWhite() {
 
 void spiSidesAreOnline() {
   uint8_t keys[6];
-  uint8_t online = spi_1.readFrom(keys, sizeof(keys));
+  uint8_t online = port1.readFrom(keys, sizeof(keys));
   TEST_ASSERT_MESSAGE(online != 0, "SPI1 is not online, maybe the cable is not connected?");
-  online = spi_0.readFrom(keys, sizeof(keys));
+  online = port0.readFrom(keys, sizeof(keys));
   TEST_ASSERT_MESSAGE(online != 0, "SPI0 is not online, maybe the cable is not connected?");
 }
 
@@ -92,6 +92,6 @@ void loop() {
 }
 
 void setup1() {
-  spi_1.initCommunications();
-  spi_0.initCommunications();
+  port1.init();
+  port0.init();
 };

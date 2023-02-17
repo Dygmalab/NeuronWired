@@ -20,10 +20,20 @@
 
 #include <Arduino.h>
 #include "Hand.h"
-#include "kaleidoscope/driver/color/GammaCorrection.h"
-#include "kaleidoscope/device/dygma/DefyWN.h"
+#include "Communications.h"
 
 namespace kaleidoscope::device::dygma::defyWN {
 
+Hand::Hand(KeyScanner_communications_protocol::Devices device)
+  : this_device_(device) {
+
+  auto keyScanFunction = [this](Packet packet) {
+    if (packet.header.device == this_device_) {
+      new_key_ = true;
+      memcpy(key_data_.rows, packet.data, sizeof(key_data));
+    }
+  };
+  Communications.callbacks_.bind(HAS_KEYS, keyScanFunction);
+}
 }  // namespace kaleidoscope::device::dygma::defyWN
 #endif

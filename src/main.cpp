@@ -51,8 +51,6 @@
 
 #include "EEPROMUpgrade.h"
 #include "Upgrade.h"
-#include "SpiComms.h"
-
 
 #include "LEDEffect-Rainbow-Defy.h"
 #include "LEDEffect-SolidColor-Defy.h"
@@ -61,6 +59,7 @@
 #include "DefaultColormap.h"
 #include "kaleidoscope/device/dygma/defyWN/SettingsConfigurator.h"
 #include "Communications.h"
+#include "SPISlave.h"
 
 enum {
   QWERTY,
@@ -181,7 +180,7 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0, 255);
 KALEIDOSCOPE_INIT_PLUGINS(
   FirmwareVersion,
   Upgrade,
-  Communications,
+//  Communications,
   USBQuirks,
   MagicCombo,
   RaiseIdleLEDs,
@@ -237,13 +236,12 @@ void setup() {
 void loop() {
   // Application code goes here...
   Kaleidoscope.loop();
-  spi_0.run();
-  spi_1.run();
+  Communications.run();
   protocolBreathe();
   watchdog_update();
 }
 
+
 void setup1() {
-  spi_1.initCommunications();
-  spi_0.initCommunications();
+  Communications.init();
 }

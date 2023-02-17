@@ -21,6 +21,7 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <Arduino.h>
+#include <string>
 #include "kaleidoscope/device/dygma/defyWN/Hand.h"
 
 #define CRGB(r, g, b) \
@@ -185,7 +186,7 @@ class DefyWN : public kaleidoscope::device::Base<PropsWN> {
 
   static std::string getChipID();
 
-  static void sendPacket(Packet &p);
+  static void sendPacket(KeyScanner_communications_protocol::Packet &p);
 
   struct side {
     uint8_t getPowerRight();

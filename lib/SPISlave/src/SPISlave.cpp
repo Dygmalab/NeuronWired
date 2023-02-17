@@ -19,23 +19,23 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <pico/time.h>
-#include "SpiComms.h"
+#include "SPISlave.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
 
 
-SpiComms spi_0(0);
-SpiComms spi_1(1);
+SPISlave port0(0);
+SPISlave port1(1);
 
 void __no_inline_not_in_flash_func(dma_irq_1_handler)() {
-  spi_1.irq();
+  port1.irq();
 }
 
 void __no_inline_not_in_flash_func(dma_irq_0_handler)() {
-  spi_0.irq();
+  port0.irq();
 }
 
-void SpiComms::startDMA() {
+void SPISlave::startDMA() {
   channel_config_set_transfer_data_size(&spiSettings.channelConfigTx, DMA_SIZE_8);
   channel_config_set_dreq(&spiSettings.channelConfigTx, spi_get_dreq(spiSettings.port, true));
 
@@ -57,7 +57,7 @@ void SpiComms::startDMA() {
   dma_start_channel_mask((1u << spiSettings.dmaIndexTx) | (1u << spiSettings.dmaIndexRx));
 }
 
-void SpiComms::initInterrupt() {
+void SPISlave::initInterrupt() {
   // Enable SPI 0 at 1 MHz and connect to GPIOs
   spi_init(spiSettings.port, spiSettings.speed);
   spi_set_format(spiSettings.port, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
@@ -77,7 +77,7 @@ void SpiComms::initInterrupt() {
   startDMA();
 }
 
-SpiComms::SpiComms(bool side)
+SPISlave::SPISlave(bool side)
   : portUSB(side) {
   if (side) {
     spiSettings = {SPI_PORT_0, SPI_MOSI_0, SPI_MISO_0, SPI_CLK_0, SPI_CS_0, SPI_SPEED, SIDE_nRESET_1, DMA_IRQ_1};
@@ -89,96 +89,56 @@ SpiComms::SpiComms(bool side)
   gpio_put(spiSettings.reset, false);
   sleep_us(1);
   gpio_put(spiSettings.reset, true);
-  queue_init(&txMessages, sizeof(Packet), 40);
-  queue_init(&rxMessages, sizeof(Packet), 40);
+  queue_init(&tx_messages_, sizeof(Packet), 40);
+  queue_init(&rx_messages_, sizeof(Packet), 40);
 }
 
-void SpiComms::initCommunications() {
+void SPISlave::init() {
   initInterrupt();
 }
 
-SpiComms::~SpiComms() {
+SPISlave::~SPISlave() {
   disableSide();
 }
 
-bool SpiComms::sendPacket(const Packet &data) {
-  if (!active) return false;
-  if (queue_is_full(&txMessages)) {
-    return false;
-  }
-  queue_add_blocking(&txMessages, &data);
-  return true;
-}
-
-void SpiComms::irq() {
+void SPISlave::irq() {
   irq_set_enabled(spiSettings.irq, false);
   irq_clear(spiSettings.irq);
   portUSB ? dma_channel_acknowledge_irq1(spiSettings.dmaIndexRx)
           : dma_channel_acknowledge_irq0(spiSettings.dmaIndexRx);
 
-  if (spiSettings.rxMessage.header.command == IS_DEAD) {
-    //Something happened lest restart the communication
-    if (Serial.available())
-      Serial.printf("Lost Connections with hand %i\n", portUSB);
-    disableSide();
-    gpio_put(spiSettings.reset, false);
-    initInterrupt();
-    gpio_put(spiSettings.reset, true);
-    return;
-  }
+//  if (spiSettings.rxMessage.header.command == IS_DEAD) {
+//    //Something happened lest restart the communication
+//    if (Serial.available())
+//      Serial.printf("Lost Connections with hand %i\n", portUSB);
+//    disableSide();
+//    gpio_put(spiSettings.reset, false);
+//    initInterrupt();
+//    gpio_put(spiSettings.reset, true);
+//    return;
+//  }
 
-  SpiComms &spi             = spiSettings.rxMessage.header.device == KEYSCANNER_DEFY_RIGHT ? spi_1 : spi_0;
-  spi.sideCommunications    = spiSettings.rxMessage.header.device;
-  spi.lastTimeCommunication = millis();
+  SPISlave &spi             = spiSettings.rxMessage.header.device == KEYSCANNER_DEFY_RIGHT ? port1 : port0;
   if (spiSettings.rxMessage.header.command != IS_ALIVE) {
-    queue_add_blocking(&spi.rxMessages, &spiSettings.rxMessage);
+    queue_add_blocking(&spi.rx_messages_, &spiSettings.rxMessage);
   }
 
-  if (!queue_is_empty(&spi.txMessages)) {
-    queue_remove_blocking(&spi.txMessages, &spiSettings.txMessage);
+  if (!queue_is_empty(&spi.tx_messages_)) {
+    queue_remove_blocking(&spi.tx_messages_, &spiSettings.txMessage);
   } else {
     spiSettings.txMessage.header.command = KeyScanner_communications_protocol::IS_ALIVE;
   }
-  spiSettings.txMessage.header.has_more_packets = !queue_is_empty(&spi.txMessages);
+  spiSettings.txMessage.header.has_more_packets = !queue_is_empty(&spi.tx_messages_);
   irq_set_enabled(spiSettings.irq, true);
   startDMA();
 }
 
-void SpiComms::disableSide() {
+void SPISlave::disableSide() {
   spi_deinit(spiSettings.port);
   dma_channel_unclaim(spiSettings.dmaIndexTx);
   dma_channel_unclaim(spiSettings.dmaIndexRx);
 }
-void SpiComms::run() {
 
-  const bool now_active = millis() - lastTimeCommunication <= timeout;
-
-  //If it was active and there and now it no longer active then notify the chanel
-  if (active && !now_active) {
-    active = now_active;
-    //Clear the packets as now the channel is no longer active
-    Packet packet;
-    if (!queue_is_empty(&rxMessages))
-      queue_remove_blocking(&rxMessages, &packet);
-    if (!queue_is_empty(&txMessages))
-      queue_remove_blocking(&txMessages, &packet);
-    active_callback_(active);
-  }
-
-  //If it was not active and now is active then notify the chanel that now is active
-  if (!active && now_active) {
-    active = now_active;
-    active_callback_(active);
-  }
-
-  if (queue_is_empty(&rxMessages)) {
-    return;
-  }
-
-  Packet packet;
-  queue_remove_blocking(&rxMessages, &packet);
-  callbacks_.call(packet.header.command, packet);
-}
 
 
 #endif

@@ -1,5 +1,6 @@
 #ifndef KEYSCANNER_COMMUNICATIONS_PROTOCOL_H_
 #define KEYSCANNER_COMMUNICATIONS_PROTOCOL_H_
+#include "stdio.h"
 
 namespace KeyScanner_communications_protocol {
 
@@ -36,8 +37,8 @@ struct Header {
   Commands command;
   Devices device;
   struct {
-	uint8_t size : 7;
-	bool has_more_packets : 1;
+    uint8_t size : 7;
+    bool has_more_packets : 1;
   };
 };
 static_assert(sizeof(Header) == (sizeof(uint8_t) * 3));
@@ -45,12 +46,12 @@ static_assert(sizeof(Header) == (sizeof(uint8_t) * 3));
 static const constexpr uint8_t MAX_TRANSFER_SIZE = 128;
 union Packet {
   struct {
-        Header header;
-	uint8_t data[MAX_TRANSFER_SIZE - sizeof(Header)];
+    Header header;
+    uint8_t data[MAX_TRANSFER_SIZE - sizeof(Header)];
   };
   uint8_t buf[MAX_TRANSFER_SIZE];
 };
 static_assert(sizeof(Packet) == MAX_TRANSFER_SIZE);
 
-}  // namespace Side_communications_protocol
+}  // namespace KeyScanner_communications_protocol
 #endif

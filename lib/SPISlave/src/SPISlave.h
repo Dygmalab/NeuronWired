@@ -16,8 +16,8 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SPICOMUNICATIONS_H_
-#define SPICOMUNICATIONS_H_
+#ifndef _SPISLAVE_H
+#define _SPISLAVE_H
 
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
@@ -25,7 +25,6 @@
 #include <hardware/dma.h>
 #include "hardware/spi.h"
 #include "KeyScanner_communications_protocol.h"
-#include "Callback.h"
 
 using namespace KeyScanner_communications_protocol;
 #define SIDE_nRESET_1 22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
@@ -44,27 +43,19 @@ using namespace KeyScanner_communications_protocol;
 #define SPI_CLK_1     14
 #define SPI_CS_1      9
 
-class SpiComms {
+//TODO: Refactor SPI class to have a port parameter
+class SPISlave {
  public:
-  explicit SpiComms(bool side);
+  explicit SPISlave(bool side);
 
-  void initCommunications();
+  void init();
 
-  bool sendPacket(const KeyScanner_communications_protocol::Packet &data);
-
-  void run();
-
-  uint8_t crc_errors() { return 0; };
-  virtual ~SpiComms();
+  virtual ~SPISlave();
+  queue_t tx_messages_;
+  queue_t rx_messages_;
   void irq();
-  queue_t txMessages;
-  queue_t rxMessages;
-  Devices sideCommunications;
-  BindingCallbacks<Commands, Packet> callbacks_;
-  Callback<bool> active_callback_;
 
  private:
-  bool active = false;
   void initInterrupt();
   void startDMA();
   void disableSide();
@@ -88,12 +79,10 @@ class SpiComms {
 
   Spi_settings spiSettings;
   bool portUSB;
-  uint32_t lastTimeCommunication   = 1000;
-  static constexpr uint8_t timeout = 250;
 };
 
-extern SpiComms spi_0;
-extern SpiComms spi_1;
+extern SPISlave port0;
+extern SPISlave port1;
 
 #endif
 #endif  //NEURONWIRED_SRC_SPICOMUNICATIONS_H_
