@@ -31,43 +31,38 @@ class ColormapEffectDefy : public Plugin,
                            public AccessTransientLEDMode {
  public:
   ColormapEffectDefy(void) {
-//    port1.active_callback_.addListener([this](bool active) {
-//      if (active) {
-//        syncData(port1);
-//      }
-//    });
-//    port0.active_callback_.addListener([this](bool active) {
-//      if (active) {
-//        syncData(port0);
-//      }
-//    });
+    Communications.active.addListener([this](Devices device) {
+      Serial.printf("Sync data %i\n", device);
+      syncData(device);
+    });
   }
 
-//  void syncData(SPISlave &spi) {
-//    Packet packet;
-//    packet.header.command = KeyScanner_communications_protocol::SET_PALETTE_COLORS;
-//    packet.header.size    = sizeof(cRGB) * 16;
-//    cRGB palette[16];
-//    getColorPalette(palette);
-//    memcpy(packet.data, palette, packet.header.size);
-//    spi.sendPacket(packet);
-//    uint8_t layerColors[Runtime.device().led_count];
-//    uint8_t baseKeymapIndex    = spi.sideCommunications == KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? Runtime.device().ledDriver().key_matrix_leds : 0;
-//    uint8_t baseUnderGlowIndex = spi.sideCommunications == KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? (Runtime.device().ledDriver().key_matrix_leds) * 2 + Runtime.device().ledDriver().underglow_leds : Runtime.device().ledDriver().key_matrix_leds * 2;
-//    for (int i = 0; i < getMaxLayers(); ++i) {
-//      getLayer(i, layerColors);
-//      packet.header.command = SET_LAYER_KEYMAP_COLORS;
-//      packet.header.size    = Runtime.device().ledDriver().key_matrix_leds + 1;
-//      packet.data[0]         = i;
-//      memcpy(&packet.data[1], &layerColors[baseKeymapIndex], packet.header.size - 1);
-//      spi.sendPacket(packet);
-//      packet.header.command = SET_LAYER_UNDERGLOW_COLORS;
-//      packet.header.size    = Runtime.device().ledDriver().underglow_leds + 1;
-//      memcpy(&packet.data[1], &layerColors[baseUnderGlowIndex], packet.header.size - 1);
-//      spi.sendPacket(packet);
-//      ::LEDControl.set_mode(::LEDControl.get_mode_index());
-//    }
-//  }
+  void syncData(Devices device) {
+    Packet packet{};
+    packet.header.command = KeyScanner_communications_protocol::SET_PALETTE_COLORS;
+    packet.header.size    = sizeof(cRGB) * 16;
+    packet.header.device  = device;
+    cRGB palette[16];
+    getColorPalette(palette);
+    memcpy(packet.data, palette, packet.header.size);
+    Communications.sendPacket(packet);
+    uint8_t layerColors[Runtime.device().led_count];
+    uint8_t baseKeymapIndex    = device == KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? Runtime.device().ledDriver().key_matrix_leds : 0;
+    uint8_t baseUnderGlowIndex = device == KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? (Runtime.device().ledDriver().key_matrix_leds) * 2 + Runtime.device().ledDriver().underglow_leds : Runtime.device().ledDriver().key_matrix_leds * 2;
+    for (int i = 0; i < getMaxLayers(); ++i) {
+      getLayer(i, layerColors);
+      packet.header.command = SET_LAYER_KEYMAP_COLORS;
+      packet.header.size    = Runtime.device().ledDriver().key_matrix_leds + 1;
+      packet.data[0]        = i;
+      memcpy(&packet.data[1], &layerColors[baseKeymapIndex], packet.header.size - 1);
+      Communications.sendPacket(packet);
+      packet.header.command = SET_LAYER_UNDERGLOW_COLORS;
+      packet.header.size    = Runtime.device().ledDriver().underglow_leds + 1;
+      memcpy(&packet.data[1], &layerColors[baseUnderGlowIndex], packet.header.size - 1);
+      Communications.sendPacket(packet);
+      ::LEDControl.set_mode(::LEDControl.get_mode_index());
+    }
+  }
 
 
   void max_layers(uint8_t max_);

@@ -58,7 +58,6 @@
 #include "LED-Palette-Theme-Defy.h"
 #include "DefaultColormap.h"
 #include "kaleidoscope/device/dygma/defyWN/SettingsConfigurator.h"
-#include "Communications.h"
 #include "SPISlave.h"
 
 enum {

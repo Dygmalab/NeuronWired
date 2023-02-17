@@ -33,7 +33,7 @@ Hand::Hand(KeyScanner_communications_protocol::Devices device)
       memcpy(key_data_.rows, packet.data, sizeof(key_data));
     }
   };
-  Communications.callbacks_.bind(HAS_KEYS, keyScanFunction);
+  Communications.callbacks.bind(HAS_KEYS, keyScanFunction);
 }
 }  // namespace kaleidoscope::device::dygma::defyWN
 #endif

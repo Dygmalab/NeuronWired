@@ -54,6 +54,7 @@ class SPISlave {
   queue_t tx_messages_;
   queue_t rx_messages_;
   void irq();
+  Devices device;
 
  private:
   void initInterrupt();
@@ -76,7 +77,6 @@ class SPISlave {
     Packet txMessage;
     Packet rxMessage;
   };
-
   Spi_settings spiSettings;
   bool portUSB;
 };

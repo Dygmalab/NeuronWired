@@ -384,9 +384,6 @@ std::string DefyWN::getChipID() {
   pico_get_unique_board_id_string(buf, sizeof(buf));
   return {buf};
 }
-void DefyWN::sendPacket(KeyScanner_communications_protocol::Packet &p) {
-
-}
 
 }  // namespace dygma
 }  // namespace device

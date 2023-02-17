@@ -39,6 +39,7 @@
 #include "kaleidoscope/driver/storage/Flash.h"
 #include "kaleidoscope/device/Base.h"
 #include "kaleidoscope/driver/bootloader/rp2040/UF2.h"
+#include "Communications.h"
 
 namespace kaleidoscope {
 namespace device::dygma {
@@ -78,6 +79,7 @@ class LedDriverWN : public kaleidoscope::driver::led::Base<LedDriverProps> {
 
   static constexpr uint8_t underglow_leds  = LedDriverProps::underglow_leds;
   static constexpr uint8_t key_matrix_leds = LedDriverProps::key_matrix_leds;
+
  private:
   inline static bool isLEDChangedNeuron;
   inline static uint8_t isLEDChangedLeft[LED_BANKS];
@@ -186,7 +188,6 @@ class DefyWN : public kaleidoscope::device::Base<PropsWN> {
 
   static std::string getChipID();
 
-  static void sendPacket(KeyScanner_communications_protocol::Packet &p);
 
   struct side {
     uint8_t getPowerRight();

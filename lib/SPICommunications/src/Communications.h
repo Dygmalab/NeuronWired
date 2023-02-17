@@ -4,28 +4,36 @@
 
 #include "KeyScanner_communications_protocol.h"
 #include "Callback.h"
+using namespace KeyScanner_communications_protocol;
 
-class Communications{
+class Communications {
  public:
   void init();
 
   void run();
 
-  bool sendPacket(const KeyScanner_communications_protocol::Packet &data);
+  bool sendPacket(Packet data);
 
-//  EventHandlerResult onSetup();
-//  EventHandlerResult beforeReportingState();
+  BindingCallbacks<Commands, Packet> callbacks{};
+  Callback<Devices> active{};
 
-  BindingCallbacks<KeyScanner_communications_protocol::Commands, KeyScanner_communications_protocol::Packet> callbacks_{};
+ private:
+  constexpr static uint32_t timeout = 200;
+  struct SideInfo {
+    SideInfo(Devices _devices)
+      : device(_devices) {}
+    Devices device;
+    bool online{false};
+    uint32_t lastCommunication = 2000;
+    bool port{0};
+  };
 
- protected:
-  std::vector<KeyScanner_communications_protocol::Packet> tx_packets_{};
-  std::vector<KeyScanner_communications_protocol::Packet> rx_packets_{};
+  SideInfo left{KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT};
+  SideInfo right{KeyScanner_communications_protocol::KEYSCANNER_DEFY_RIGHT};
+
+  void checkActive(SideInfo &side);
 };
-//}  // namespace plugin
-//}  // namespace kaleidoscope
 
 extern Communications Communications;
-
 
 #endif  //_COMMUNICATIONS_H_
