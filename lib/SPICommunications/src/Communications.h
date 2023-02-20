@@ -25,7 +25,7 @@ class Communications {
     Devices device;
     bool online{false};
     uint32_t lastCommunication = 2000;
-    bool port{0};
+    bool port{false};
   };
 
   SideInfo left{KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT};

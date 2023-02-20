@@ -32,7 +32,6 @@ class ColormapEffectDefy : public Plugin,
  public:
   ColormapEffectDefy(void) {
     Communications.active.addListener([this](Devices device) {
-      Serial.printf("Sync data %i\n", device);
       syncData(device);
     });
   }
