@@ -82,6 +82,7 @@ class LedDriverWN : public kaleidoscope::driver::led::Base<LedDriverProps> {
 
  private:
   inline static bool isLEDChangedNeuron;
+  inline static bool leds_enabled_ = true;
   inline static uint8_t isLEDChangedLeft[LED_BANKS];
   inline static uint8_t isLEDChangedRight[LED_BANKS];
   inline static cRGB neuronLED;

@@ -36,7 +36,6 @@
 #include "Kaleidoscope-MagicCombo.h"
 #include "Kaleidoscope-USB-Quirks.h"
 #include "Kaleidoscope-LayerFocus.h"
-#include "RaiseIdleLEDs.h"
 #include "RaiseFirmwareVersion.h"
 
 // Support for host power management (suspend & wakeup)
@@ -179,10 +178,9 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0, 255);
 KALEIDOSCOPE_INIT_PLUGINS(
   FirmwareVersion,
   Upgrade,
-//  Communications,
   USBQuirks,
   MagicCombo,
-  RaiseIdleLEDs,
+  IdleLEDs,
   EEPROMSettings,
   EEPROMKeymap,
   FocusSettingsCommand,

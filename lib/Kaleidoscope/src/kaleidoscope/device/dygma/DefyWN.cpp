@@ -108,6 +108,22 @@ uint8_t LedDriverWN::getBrightness() {
 }
 
 void LedDriverWN::syncLeds() {
+  bool is_enabled = ::LEDControl.isEnabled();
+
+  if (leds_enabled_ && !is_enabled) {
+    leds_enabled_ = is_enabled;
+    Packet p{};
+    p.header.command = KeyScanner_communications_protocol::SLEEP;
+    Communications.sendPacket(p);
+  }
+
+  if (!leds_enabled_ && is_enabled) {
+    leds_enabled_ = is_enabled;
+    Packet p{};
+    p.header.command = KeyScanner_communications_protocol::WAKE_UP;
+    Communications.sendPacket(p);
+  }
+
   if (isLEDChangedNeuron) {
     updateNeuronLED();
     isLEDChangedNeuron = false;

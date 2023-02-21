@@ -17,6 +17,8 @@ static_assert(sizeof(Devices) == sizeof(uint8_t));
 enum Commands : uint8_t {
   IS_DEAD = 0,
   IS_ALIVE,
+  SLEEP,
+  WAKE_UP,
   GET_VERSION,
   SET_ALIVE_INTERVAL,
   //Keys

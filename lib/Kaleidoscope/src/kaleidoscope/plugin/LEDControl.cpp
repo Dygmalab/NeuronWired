@@ -140,8 +140,9 @@ kaleidoscope::EventHandlerResult LEDControl::onSetup() {
 
 void LEDControl::disable() {
   set_all_leds_to(CRGB(0, 0, 0));
-  Runtime.device().syncLeds();
+  //TODO: Create custom idle leds and suspend;
   enabled_ = false;
+  Runtime.device().syncLeds();
 }
 
 void LEDControl::enable() {
