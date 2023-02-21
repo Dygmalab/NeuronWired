@@ -19,6 +19,14 @@ void Communications::init() {
       if (port1.device == KEYSCANNER_DEFY_LEFT) left.port = true;
     }
   });
+  callbacks.bind(HAS_KEYS, [this](Packet p) {
+    if (p.header.device == KEYSCANNER_DEFY_RIGHT) {
+      right.lastCommunication = millis();
+    }
+    if (p.header.device == KEYSCANNER_DEFY_LEFT) {
+      left.lastCommunication = millis();
+    }
+  });
 }
 
 void Communications::run() {
@@ -41,7 +49,7 @@ void Communications::run() {
 bool Communications::sendPacket(Packet packet) {
   //TODO: Check that it is online
   Devices device_to_send = packet.header.device;
-  packet.header.device = KeyScanner_communications_protocol::NEURON_DEFY_WIRED;
+  packet.header.device   = KeyScanner_communications_protocol::NEURON_DEFY_WIRED;
   if (device_to_send == KeyScanner_communications_protocol::UNKNOWN) {
     if (port0.device != UNKNOWN)
       queue_add_blocking(&port0.tx_messages_, &packet);
