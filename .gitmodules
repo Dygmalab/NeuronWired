@@ -1,0 +1,3 @@
+[submodule "lib/Communications"]
+	path = lib/Communications
+	url = git@github.com:Dygmalab/DefyCommunications.git
