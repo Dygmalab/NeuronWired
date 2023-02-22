@@ -4,7 +4,7 @@
 #include "cstdio"
 
 #ifdef KEYSCANNER
-#include "../LEDManagement.hpp"
+#include <LEDManagement.hpp>
 #endif
 
 class LedModeSerializable_Rainbow : public LedModeSerializable {
@@ -39,7 +39,7 @@ class LedModeSerializable_Rainbow : public LedModeSerializable {
 #ifdef KEYSCANNER
   void update() override {
     rainbowHue   = base_settings.step;
-    cRGB rainbow = LedCommon::hsvToRgb(rainbowHue, rainbowSaturation, base_settings.brightness);
+    RGBW rainbow = LEDManagement::HSVtoRGB(rainbowHue, rainbowSaturation, base_settings.brightness);
     rainbow.w    = 0;
     rainbowHue += 1;
     if (rainbowHue >= 255) {

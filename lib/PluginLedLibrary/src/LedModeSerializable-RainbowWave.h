@@ -1,7 +1,7 @@
 #pragma once
 
 #include "LedModeSerializable.h"
-#include <cstdio>
+#include "cstdio"
 
 class LedModeSerializable_RainbowWave : public LedModeSerializable {
  public:
@@ -61,7 +61,7 @@ class LedModeSerializable_RainbowWave : public LedModeSerializable {
         led_hue -= 255;
       }
 
-      cRGB rainbow = LedCommon::hsvToRgb(led_hue, rainbowSaturation, base_settings.brightness);
+      RGBW rainbow = LEDManagement::HSVtoRGB(led_hue, rainbowSaturation, base_settings.brightness);
       rainbow.w    = 0;
       LEDManagement::set_led_at(rainbow, i);
     }
