@@ -27,8 +27,8 @@ namespace plugin {
 
 
 EventHandlerResult IntegrationTest::onFocusEvent(const char *command) {
-  if (::Focus.handleHelp(command, PSTR("integration.test")))
-    return EventHandlerResult::OK;
+//  if (::Focus.handleHelp(command, PSTR("integration.test")))
+//    return EventHandlerResult::OK;
 
   if (strncmp_P(command, PSTR("integration."), 12) != 0)
     return EventHandlerResult::OK;
