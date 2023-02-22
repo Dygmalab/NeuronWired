@@ -59,8 +59,12 @@ class ColormapEffectDefy : public Plugin,
       packet.header.size    = Runtime.device().ledDriver().underglow_leds + 1;
       memcpy(&packet.data[1], &layerColors[baseUnderGlowIndex], packet.header.size - 1);
       Communications.sendPacket(packet);
-      ::LEDControl.set_mode(::LEDControl.get_mode_index());
     }
+    packet.header.command = SET_BRIGHTNESS;
+    packet.header.size    = 1;
+    packet.data[0]        = Runtime.device().ledDriver().getBrightness();
+    Communications.sendPacket(packet);
+    ::LEDControl.set_mode(::LEDControl.get_mode_index());
   }
 
 

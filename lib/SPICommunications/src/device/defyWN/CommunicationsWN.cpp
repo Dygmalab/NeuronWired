@@ -30,8 +30,7 @@ void Communications::init() {
 }
 
 void Communications::run() {
-  checkActive(left);
-  checkActive(right);
+
 
   if (!queue_is_empty(&port0.rx_messages_)) {
     Packet packet;
@@ -44,6 +43,9 @@ void Communications::run() {
     queue_remove_blocking(&port1.rx_messages_, &packet);
     callbacks.call(packet.header.command, packet);
   }
+
+  checkActive(left);
+  checkActive(right);
 }
 
 bool Communications::sendPacket(Packet packet) {
@@ -80,7 +82,13 @@ bool Communications::sendPacket(Packet packet) {
 void Communications::checkActive(Communications::SideInfo &side) {
   const bool now_active = millis() - side.lastCommunication <= timeout;
 
-  //If it was active and there and now it no longer active then notify the chanel
+  //If it was not active and now is active then notify the chanel that now is active
+  if (!side.online && now_active) {
+    side.online = now_active;
+    active(side.device);
+    return;
+  }
+
   if (side.online && !now_active) {
     side.online   = now_active;
     SPISlave &spi = side.port ? port1 : port0;
@@ -93,12 +101,7 @@ void Communications::checkActive(Communications::SideInfo &side) {
     while (!queue_is_empty(&spi.tx_messages_)) {
       queue_remove_blocking(&spi.tx_messages_, &packet);
     }
-  }
-
-  //If it was not active and now is active then notify the chanel that now is active
-  if (!side.online && now_active) {
-    side.online = now_active;
-    active(side.device);
+    return;
   }
 }
 

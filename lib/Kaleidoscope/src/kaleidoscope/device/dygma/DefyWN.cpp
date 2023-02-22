@@ -84,7 +84,21 @@ class Hands {
 
 void Hands::setup() {
   settings_base_ = ::EEPROMSettings.requestSlice(sizeof(Settings));
-  //TODO: Fix communication of keyScanner interval and led brightness and save in flash
+  bool edited    = false;
+  Settings settings;
+  Runtime.storage().get(settings_base_, settings);
+  if (settings.keyscan_interval == 0xffff) {
+    settings.keyscan_interval = settings_.keyscan_interval;
+    edited                    = true;
+  }
+
+  if (settings.led_brightness_correction == 0xff) {
+    settings.led_brightness_correction = settings_.led_brightness_correction;
+  }
+  if (edited) {
+    Runtime.storage().put(settings_base_, settings);
+  }
+  Runtime.storage().get(settings_base_, settings_);
 }
 
 void Hands::setKeyscanInterval(uint16_t interval) {
@@ -92,7 +106,13 @@ void Hands::setKeyscanInterval(uint16_t interval) {
 }
 
 void Hands::setLedBrightnessCorrection(uint8_t brightness) {
-  //TODO: set brightness in flash and send message each connection
+  settings_.led_brightness_correction = brightness;
+  Packet p{};
+  p.header.command = KeyScanner_communications_protocol::SET_BRIGHTNESS;
+  p.data[0]        = brightness;
+  Communications.sendPacket(p);
+  Runtime.storage().put(settings_base_, settings_);
+  Runtime.storage().commit();
 }
 
 
