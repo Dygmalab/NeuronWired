@@ -1,7 +1,6 @@
 #pragma once
 
 #include "LedModeSerializable.h"
-#include "LedCommon.h"
 #include <cstdio>
 
 class LedModeSerializable_RainbowWave : public LedModeSerializable {

@@ -15,7 +15,6 @@
  */
 
 #include "LEDEffect-Rainbow-Defy.h"
-#include "LedCommon.h"
 
 namespace kaleidoscope {
 namespace plugin {

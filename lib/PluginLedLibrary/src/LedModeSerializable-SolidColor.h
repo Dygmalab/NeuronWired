@@ -1,7 +1,6 @@
 #pragma once
 
 #include "LedModeSerializable.h"
-#include "LedCommon.h"
 #include "cstdio"
 
 #ifdef KEYSCANNER
