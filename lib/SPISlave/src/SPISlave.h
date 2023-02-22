@@ -24,7 +24,7 @@
 #include <Arduino.h>
 #include <hardware/dma.h>
 #include "hardware/spi.h"
-#include "KeyScanner_communications_protocol.h"
+#include "Communications_protocol.h"
 
 using namespace Communications_protocol;
 #define SIDE_nRESET_1 22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset

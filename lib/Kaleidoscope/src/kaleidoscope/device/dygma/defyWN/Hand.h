@@ -21,8 +21,7 @@
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <Arduino.h>
-#include "KeyScanner_communications_protocol.h"
-//#include "Communications.h"
+#include "Communications_protocol.h"
 
 struct cRGB {
   uint8_t r;

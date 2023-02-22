@@ -2,7 +2,7 @@
 #ifndef _LEDMODECOMMUNICATION_H_
 #define _LEDMODECOMMUNICATION_H_
 
-#include "KeyScanner_communications_protocol.h"
+#include "Communications_protocol.h"
 #include "Communications.h"
 
 class LedModeCommunication {
