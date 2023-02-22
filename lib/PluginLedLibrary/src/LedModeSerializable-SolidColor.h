@@ -32,7 +32,7 @@ class LedModeSerializable_SolidColor : public LedModeSerializable {
   }
 #ifdef NEURON_WIRED
   void update() override {
-    kaleidoscope::Runtime.device().setCrgbNeuron({r_, g_, b_, w_});
+    kaleidoscope::Runtime.device().ledDriver().setCrgbNeuron({r_, g_, b_, w_});
   }
 #endif
 
