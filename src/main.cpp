@@ -58,6 +58,7 @@
 #include "DefaultColormap.h"
 #include "kaleidoscope/device/dygma/defyWN/SettingsConfigurator.h"
 #include "SPISlave.h"
+#include "IntegrationTest.h"
 
 enum {
   QWERTY,
@@ -204,6 +205,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   EscapeOneShot,
   LayerFocus,
   EEPROMUpgrade,
+  IntegrationTest,
   HostPowerManagement);
 // clang-format on
 
