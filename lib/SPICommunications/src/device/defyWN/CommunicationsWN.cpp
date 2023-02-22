@@ -3,6 +3,21 @@
 #include "Communications.h"
 #include "SPISlave.h"
 
+constexpr static uint32_t timeout = 200;
+struct SideInfo {
+  SideInfo(Devices _devices)
+    : device(_devices) {}
+  Devices device;
+  bool online{false};
+  uint32_t lastCommunication{0};
+  bool port{false};
+};
+
+SideInfo left{KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT};
+SideInfo right{KeyScanner_communications_protocol::KEYSCANNER_DEFY_RIGHT};
+
+void checkActive(SideInfo &side);
+
 void Communications::init() {
   port0.init();
   port1.init();
@@ -85,7 +100,7 @@ bool Communications::sendPacket(Packet packet) {
   return true;
 }
 
-void Communications::checkActive(Communications::SideInfo &side) {
+void checkActive(SideInfo &side) {
   if (!side.online) return;
   const bool now_active = millis() - side.lastCommunication <= timeout;
 

@@ -15,22 +15,6 @@ class Communications {
   bool sendPacket(Packet data);
 
   BindingCallbacks<Commands, Packet> callbacks{};
-
- private:
-  constexpr static uint32_t timeout = 200;
-  struct SideInfo {
-    SideInfo(Devices _devices)
-      : device(_devices) {}
-    Devices device;
-    bool online{false};
-    uint32_t lastCommunication{0};
-    bool port{false};
-  };
-
-  SideInfo left{KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT};
-  SideInfo right{KeyScanner_communications_protocol::KEYSCANNER_DEFY_RIGHT};
-
-  void checkActive(SideInfo &side);
 };
 
 extern Communications Communications;
