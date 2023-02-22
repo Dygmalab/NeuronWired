@@ -13,8 +13,8 @@ struct SideInfo {
   bool port{false};
 };
 
-SideInfo left{KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT};
-SideInfo right{KeyScanner_communications_protocol::KEYSCANNER_DEFY_RIGHT};
+static SideInfo left{KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT};
+static SideInfo right{KeyScanner_communications_protocol::KEYSCANNER_DEFY_RIGHT};
 
 void checkActive(SideInfo &side);
 
