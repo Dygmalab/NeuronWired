@@ -15,7 +15,6 @@ class Communications {
   bool sendPacket(Packet data);
 
   BindingCallbacks<Commands, Packet> callbacks{};
-  Callback<Devices> active{};
 
  private:
   constexpr static uint32_t timeout = 200;
@@ -24,7 +23,7 @@ class Communications {
       : device(_devices) {}
     Devices device;
     bool online{false};
-    uint32_t lastCommunication = 2000;
+    uint32_t lastCommunication{0};
     bool port{false};
   };
 

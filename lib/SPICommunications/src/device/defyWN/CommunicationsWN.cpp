@@ -7,24 +7,30 @@ void Communications::init() {
   port0.init();
   port1.init();
 
-  callbacks.bind(IS_ALIVE, [this](Packet p) {
+  auto update_last_communication = [this](Packet p) {
     if (p.header.device == KEYSCANNER_DEFY_RIGHT) {
       right.lastCommunication = millis();
+    }
+    if (p.header.device == KEYSCANNER_DEFY_LEFT) {
+      left.lastCommunication = millis();
+    }
+  };
+
+  callbacks.bind(IS_ALIVE, update_last_communication);
+  callbacks.bind(HAS_KEYS, update_last_communication);
+
+  callbacks.bind(CONNECTED, [this](Packet p) {
+    if (p.header.device == KEYSCANNER_DEFY_RIGHT) {
+      right.lastCommunication = millis();
+      right.online            = true;
       if (port0.device == KEYSCANNER_DEFY_RIGHT) right.port = false;
       if (port1.device == KEYSCANNER_DEFY_RIGHT) right.port = true;
     }
     if (p.header.device == KEYSCANNER_DEFY_LEFT) {
       left.lastCommunication = millis();
+      left.online            = true;
       if (port0.device == KEYSCANNER_DEFY_LEFT) left.port = false;
       if (port1.device == KEYSCANNER_DEFY_LEFT) left.port = true;
-    }
-  });
-  callbacks.bind(HAS_KEYS, [this](Packet p) {
-    if (p.header.device == KEYSCANNER_DEFY_RIGHT) {
-      right.lastCommunication = millis();
-    }
-    if (p.header.device == KEYSCANNER_DEFY_LEFT) {
-      left.lastCommunication = millis();
     }
   });
 }
@@ -80,14 +86,8 @@ bool Communications::sendPacket(Packet packet) {
 }
 
 void Communications::checkActive(Communications::SideInfo &side) {
+  if (!side.online) return;
   const bool now_active = millis() - side.lastCommunication <= timeout;
-
-  //If it was not active and now is active then notify the chanel that now is active
-  if (!side.online && now_active) {
-    side.online = now_active;
-    active(side.device);
-    return;
-  }
 
   if (side.online && !now_active) {
     side.online   = now_active;

@@ -31,16 +31,21 @@ class ColormapEffectDefy : public Plugin,
                            public AccessTransientLEDMode {
  public:
   ColormapEffectDefy(void) {
-    Communications.active.addListener([this](Devices device) {
-      syncData(device);
-    });
+  }
+  EventHandlerResult onSetup() {
+    Communications.callbacks.bind(CONNECTED, ([this](Packet packet) { syncData(packet.header.device); }));
+    return EventHandlerResult::OK;
   }
 
   void syncData(Devices device) {
     Packet packet{};
+    packet.header.device  = device;
+    packet.header.command = SET_BRIGHTNESS;
+    packet.header.size    = 1;
+    packet.data[0]        = Runtime.device().ledDriver().getBrightness();
+    Communications.sendPacket(packet);
     packet.header.command = KeyScanner_communications_protocol::SET_PALETTE_COLORS;
     packet.header.size    = sizeof(cRGB) * 16;
-    packet.header.device  = device;
     cRGB palette[16];
     getColorPalette(palette);
     memcpy(packet.data, palette, packet.header.size);
@@ -60,10 +65,6 @@ class ColormapEffectDefy : public Plugin,
       memcpy(&packet.data[1], &layerColors[baseUnderGlowIndex], packet.header.size - 1);
       Communications.sendPacket(packet);
     }
-    packet.header.command = SET_BRIGHTNESS;
-    packet.header.size    = 1;
-    packet.data[0]        = Runtime.device().ledDriver().getBrightness();
-    Communications.sendPacket(packet);
     ::LEDControl.set_mode(::LEDControl.get_mode_index());
   }
 
