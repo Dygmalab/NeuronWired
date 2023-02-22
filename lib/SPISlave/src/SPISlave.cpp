@@ -124,7 +124,7 @@ void SPISlave::irq() {
   if (!queue_is_empty(&tx_messages_)) {
     queue_remove_blocking(&tx_messages_, &spiSettings.txMessage);
   } else {
-    spiSettings.txMessage.header.command = KeyScanner_communications_protocol::IS_ALIVE;
+    spiSettings.txMessage.header.command = Communications_protocol::IS_ALIVE;
   }
   spiSettings.txMessage.header.has_more_packets = !queue_is_empty(&tx_messages_);
   irq_set_enabled(spiSettings.irq, true);

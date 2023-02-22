@@ -58,8 +58,8 @@ namespace dygma {
 
 class Hands {
  public:
-  inline static defyWN::Hand leftHand{KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_LEFT};
-  inline static defyWN::Hand rightHand{KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT};
+  inline static defyWN::Hand leftHand{Communications_protocol::Devices::KEYSCANNER_DEFY_LEFT};
+  inline static defyWN::Hand rightHand{Communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT};
 
   static void setup();
 
@@ -108,7 +108,7 @@ void Hands::setKeyscanInterval(uint16_t interval) {
 void Hands::setLedBrightnessCorrection(uint8_t brightness) {
   settings_.led_brightness_correction = brightness;
   Packet p{};
-  p.header.command = KeyScanner_communications_protocol::SET_BRIGHTNESS;
+  p.header.command = Communications_protocol::SET_BRIGHTNESS;
   p.data[0]        = brightness;
   Communications.sendPacket(p);
   Runtime.storage().put(settings_base_, settings_);
@@ -133,14 +133,14 @@ void LedDriverWN::syncLeds() {
   if (leds_enabled_ && !is_enabled) {
     leds_enabled_ = is_enabled;
     Packet p{};
-    p.header.command = KeyScanner_communications_protocol::SLEEP;
+    p.header.command = Communications_protocol::SLEEP;
     Communications.sendPacket(p);
   }
 
   if (!leds_enabled_ && is_enabled) {
     leds_enabled_ = is_enabled;
     Packet p{};
-    p.header.command = KeyScanner_communications_protocol::WAKE_UP;
+    p.header.command = Communications_protocol::WAKE_UP;
     Communications.sendPacket(p);
   }
 

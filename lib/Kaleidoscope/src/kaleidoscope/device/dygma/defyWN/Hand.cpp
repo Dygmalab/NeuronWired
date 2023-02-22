@@ -24,7 +24,7 @@
 
 namespace kaleidoscope::device::dygma::defyWN {
 
-Hand::Hand(KeyScanner_communications_protocol::Devices device)
+Hand::Hand(Communications_protocol::Devices device)
   : this_device_(device) {
 
   auto keyScanFunction = [this](Packet packet) {

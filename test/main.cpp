@@ -62,17 +62,17 @@ void sendColorBlack() {
 
 void spiSidesAreOnline() {
   uint8_t keys[6];
-  if (port0.device == KeyScanner_communications_protocol::UNKNOWN) {
+  if (port0.device == Communications_protocol::UNKNOWN) {
     Serial.println("SPI0 is not online, maybe the cable is not connected?");
   }
-  if (port1.device == KeyScanner_communications_protocol::UNKNOWN) {
+  if (port1.device == Communications_protocol::UNKNOWN) {
     Serial.println("SPI1 is not online, maybe the cable is not connected?");
   }
 }
 
 void sendKeys() {
   Packet packet{};
-  packet.header.command = KeyScanner_communications_protocol::HAS_KEYS;
+  packet.header.command = Communications_protocol::HAS_KEYS;
   packet.header.size    = 5;
   packet.data[0]        = 2;
   packet.data[1]        = 0;
@@ -92,18 +92,18 @@ constexpr static uint8_t short_leds[33]{0x3F, 0x3F, 0x0F, 0x3F, 0x3F, 0x0F, 0x3F
 
 void getOpenLeds() {
   Packet packet{};
-  packet.header.command = KeyScanner_communications_protocol::GET_OPEN_LED;
+  packet.header.command = Communications_protocol::GET_OPEN_LED;
   packet.header.size    = 0;
   sendPacket(packet);
   finishCallbacks = 2;
   Communications.callbacks.bind(GET_OPEN_LED, [](Packet p) {
     finishCallbacks--;
     bool b = memcmp(open_leds, p.data, p.header.size);
-    if (p.header.device == KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT) {
+    if (p.header.device == Communications_protocol::KEYSCANNER_DEFY_LEFT) {
       Serial.println("TESTING OPEN LED LEFT SIDE");
       if (b != 0) Serial.println("There is a problem with an open led");
     }
-    if (p.header.device == KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT) {
+    if (p.header.device == Communications_protocol::KEYSCANNER_DEFY_LEFT) {
       Serial.println("TESTING OPEN LED RIGHT SIDE");
       if (b != 0) Serial.println("There is a problem with an open led");
     }
@@ -112,17 +112,17 @@ void getOpenLeds() {
 
 void getShortLeds() {
   Packet packet{};
-  packet.header.command = KeyScanner_communications_protocol::GET_SHORT_LED;
+  packet.header.command = Communications_protocol::GET_SHORT_LED;
   packet.header.size    = 0;
   sendPacket(packet);
   finishCallbacks++;
   Communications.callbacks.bind(GET_SHORT_LED, [](Packet p) {
     bool b = memcmp(short_leds, p.data, p.header.size);
-    if (p.header.device == KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT) {
+    if (p.header.device == Communications_protocol::KEYSCANNER_DEFY_LEFT) {
       Serial.println("TESTING SHORT LED LEFT SIDE");
       if (b != 0) Serial.println("There is a problem with an open led");
     }
-    if (p.header.device == KeyScanner_communications_protocol::KEYSCANNER_DEFY_LEFT) {
+    if (p.header.device == Communications_protocol::KEYSCANNER_DEFY_LEFT) {
       Serial.println("TESTING SHORT LED RIGHT SIDE");
       if (b != 0) Serial.println("There is a problem with an open led");
     }

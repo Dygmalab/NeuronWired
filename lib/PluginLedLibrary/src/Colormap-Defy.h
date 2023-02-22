@@ -44,15 +44,15 @@ class ColormapEffectDefy : public Plugin,
     packet.header.size    = 1;
     packet.data[0]        = Runtime.device().ledDriver().getBrightness();
     Communications.sendPacket(packet);
-    packet.header.command = KeyScanner_communications_protocol::SET_PALETTE_COLORS;
+    packet.header.command = Communications_protocol::SET_PALETTE_COLORS;
     packet.header.size    = sizeof(cRGB) * 16;
     cRGB palette[16];
     getColorPalette(palette);
     memcpy(packet.data, palette, packet.header.size);
     Communications.sendPacket(packet);
     uint8_t layerColors[Runtime.device().led_count];
-    uint8_t baseKeymapIndex    = device == KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? Runtime.device().ledDriver().key_matrix_leds : 0;
-    uint8_t baseUnderGlowIndex = device == KeyScanner_communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? (Runtime.device().ledDriver().key_matrix_leds) * 2 + Runtime.device().ledDriver().underglow_leds : Runtime.device().ledDriver().key_matrix_leds * 2;
+    uint8_t baseKeymapIndex    = device == Communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? Runtime.device().ledDriver().key_matrix_leds : 0;
+    uint8_t baseUnderGlowIndex = device == Communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT ? (Runtime.device().ledDriver().key_matrix_leds) * 2 + Runtime.device().ledDriver().underglow_leds : Runtime.device().ledDriver().key_matrix_leds * 2;
     for (int i = 0; i < getMaxLayers(); ++i) {
       getLayer(i, layerColors);
       packet.header.command = SET_LAYER_KEYMAP_COLORS;

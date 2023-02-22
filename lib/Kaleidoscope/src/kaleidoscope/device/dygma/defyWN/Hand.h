@@ -57,10 +57,11 @@ typedef union {
   uint8_t rows[5];
   uint64_t all;
 } key_data;
-using namespace KeyScanner_communications_protocol;
+using namespace Communications_protocol;
 class Hand {
  public:
-  explicit Hand(KeyScanner_communications_protocol::Devices device);;
+  explicit Hand(Communications_protocol::Devices device);
+  ;
 
   Devices this_device_;
   LEDData_t led_data{};

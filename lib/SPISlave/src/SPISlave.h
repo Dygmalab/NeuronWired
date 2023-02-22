@@ -26,7 +26,7 @@
 #include "hardware/spi.h"
 #include "KeyScanner_communications_protocol.h"
 
-using namespace KeyScanner_communications_protocol;
+using namespace Communications_protocol;
 #define SIDE_nRESET_1 22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
 #define SIDE_nRESET_2 10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
 
