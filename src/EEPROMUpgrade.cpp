@@ -89,7 +89,6 @@ EventHandlerResult EEPROMUpgrade::beforeEachCycle() {
   }
 
   if (Runtime.hasTimeExpired(start_time_, 500)) {
-    Serial.println("Needd update");
     EEPROM.update();
     Runtime.device().side.setPowerRight(true);
     Runtime.device().side.setPowerLeft(true);
