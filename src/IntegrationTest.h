@@ -26,12 +26,14 @@ class IntegrationTest : public Plugin {
  public:
   EventHandlerResult onFocusEvent(const char *command);
   EventHandlerResult beforeReportingState();
+
  private:
   enum State {
     INIT,
     WAIT,
     LED_MODE,
-    KEYS,
+    KEY_NEXT_LED,
+    RELEASE_KEY,
   };
   State state_{INIT};
   State next_state_{WAIT};

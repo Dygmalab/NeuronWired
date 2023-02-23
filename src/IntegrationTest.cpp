@@ -16,6 +16,7 @@
  */
 
 #include "IntegrationTest.h"
+#include "Communications.h"
 
 #include <Kaleidoscope-EEPROM-Settings.h>
 #include <Kaleidoscope-IdleLEDs.h>
@@ -27,8 +28,8 @@ namespace plugin {
 
 
 EventHandlerResult IntegrationTest::onFocusEvent(const char *command) {
-//  if (::Focus.handleHelp(command, PSTR("integration.test")))
-//    return EventHandlerResult::OK;
+  //  if (::Focus.handleHelp(command, PSTR("integration.test")))
+  //    return EventHandlerResult::OK;
 
   if (strncmp_P(command, PSTR("integration."), 12) != 0)
     return EventHandlerResult::OK;
@@ -53,15 +54,33 @@ EventHandlerResult IntegrationTest::beforeReportingState() {
   case LED_MODE: {
     if (led_mode_ == 7) {
       ::LEDControl.set_mode(start_led_mode);
-      activated_ = false;
+      state_ = KEY_NEXT_LED;
+      return EventHandlerResult::OK;
     }
     ::LEDControl.set_mode(led_mode_++);
     next_state_ = LED_MODE;
     state_      = WAIT;
     start_time_ = Runtime.millisAtCycleStart();
   } break;
-  case KEYS:
-    break;
+  case KEY_NEXT_LED: {
+    Packet p{};
+    p.header.command = Communications_protocol::HAS_KEYS;
+    p.header.device  = Communications_protocol::KEYSCANNER_DEFY_RIGHT;
+    p.data[1]        = 32;
+    Communications.sendPacket(p);
+    state_      = RELEASE_KEY;
+    start_time_ = Runtime.millisAtCycleStart();
+  } break;
+  case RELEASE_KEY: {
+    if (Runtime.hasTimeExpired(start_time_, 100)) {
+      Packet p{};
+      p.header.command = Communications_protocol::HAS_KEYS;
+      p.header.device  = Communications_protocol::KEYSCANNER_DEFY_RIGHT;
+      Communications.sendPacket(p);
+      activated_ = false;
+      return EventHandlerResult::OK;
+    }
+  } break;
   case WAIT:
     if (Runtime.hasTimeExpired(start_time_, 1000)) {
       state_ = next_state_;
