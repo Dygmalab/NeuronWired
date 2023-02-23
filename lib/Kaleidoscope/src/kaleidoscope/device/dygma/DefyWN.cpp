@@ -74,7 +74,7 @@ class Hands {
   struct Settings {
     Settings() {}
     uint16_t keyscan_interval         = 15;
-    uint8_t led_brightness_correction = 255;
+    uint8_t led_brightness_correction = 50;
   };
   inline static Settings settings_{};
   inline static uint16_t settings_base_;
