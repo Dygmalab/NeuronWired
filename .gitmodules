@@ -1,3 +1,6 @@
 [submodule "lib/Communications"]
 	path = lib/Communications
 	url = git@github.com:Dygmalab/DefyCommunications.git
+[submodule "lib/PluginUpgrade"]
+	path = lib/PluginUpgrade
+	url = git@github.com:Dygmalab/KaleidoscopePluginKeyScannerUpgrade.git
