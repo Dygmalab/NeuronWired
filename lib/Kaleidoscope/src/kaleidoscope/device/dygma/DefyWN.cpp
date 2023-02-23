@@ -152,15 +152,14 @@ void LedDriverWN::syncLeds() {
 void LedDriverWN::updateNeuronLED() {
   static constexpr struct {
     uint8_t r, g, b, w;
-  } pins                = {RGBW_LED_RED, RGBW_LED_GREEN, RGBW_LED_BLUE, RGBW_LED_WHITE};
-  auto constexpr gamma8 = kaleidoscope::driver::color::gamma_correction;
+  } pins = {RGBW_LED_RED, RGBW_LED_GREEN, RGBW_LED_BLUE, RGBW_LED_WHITE};
 
   // invert as these are common anode, and make sure we reach 65535 to be able
   // to turn fully off.
-  analogWrite(pins.r, (pgm_read_byte(&gamma8[neuronLED.r])) << 8);
-  analogWrite(pins.g, (pgm_read_byte(&gamma8[neuronLED.g])) << 8);
-  analogWrite(pins.b, (pgm_read_byte(&gamma8[neuronLED.b])) << 8);
-  analogWrite(pins.w, (pgm_read_byte(&gamma8[neuronLED.w])) << 8);
+  analogWrite(pins.r, (int)(neuronLED.r * (Hands::getLedBrightnessCorrection() / (float)255)) << 8);
+  analogWrite(pins.g, (int)(neuronLED.g * (Hands::getLedBrightnessCorrection() / (float)255)) << 8);
+  analogWrite(pins.b, (int)(neuronLED.b * (Hands::getLedBrightnessCorrection() / (float)255)) << 8);
+  analogWrite(pins.w, (int)(neuronLED.w * (Hands::getLedBrightnessCorrection() / (float)255)) << 8);
 }
 
 void LedDriverWN::setCrgbAt(uint8_t i, cRGB crgb) {
