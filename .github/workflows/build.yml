@@ -13,7 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository and submodules
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+        
     - name: Cache pip
       uses: actions/cache@v2
       with:
