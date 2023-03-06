@@ -25,11 +25,14 @@ namespace plugin {
 class EEPROMUpgrade: public Plugin {
  public:
   EventHandlerResult onFocusEvent(const char *command);
+  EventHandlerResult beforeEachCycle();
 
   static void reserveStorage();
   static void upgrade();
 
  private:
+  bool need_update_;
+  uint16_t start_time_{0};
   static uint16_t settings_base_;
   static uint8_t version_;
 };

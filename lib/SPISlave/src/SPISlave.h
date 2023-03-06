@@ -16,18 +16,17 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SPICOMUNICATIONS_H_
-#define SPICOMUNICATIONS_H_
+#ifndef _SPISLAVE_H
+#define _SPISLAVE_H
 
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
 #include <Arduino.h>
 #include <hardware/dma.h>
 #include "hardware/spi.h"
-#include "Side_communications_protocol.h"
+#include "Communications_protocol.h"
 
-namespace kaleidoscope::device::dygma::wired {
-using namespace Side_communications_protocol;
+using namespace Communications_protocol;
 #define SIDE_nRESET_1 22  //19   // SWe 20220719: nRESET signal OUT to keyboard side 1; HIGH = running, LOW = reset
 #define SIDE_nRESET_2 10  //12   // SWe 20220719: nRESET signal OUT to keyboard side 2; HIGH = running, LOW = reset
 
@@ -44,26 +43,18 @@ using namespace Side_communications_protocol;
 #define SPI_CLK_1     14
 #define SPI_CS_1      9
 
-class SpiPort {
+//TODO: Refactor SPI class to have a port parameter
+class SPISlave {
  public:
-  explicit SpiPort(bool side);
+  explicit SPISlave(bool side);
 
-  void initCommunications();
+  void init();
 
-  uint8_t writeTo(uint8_t *data, size_t length);
-
-  bool sendPacket(Side_communications_protocol::Packet *data);
-
-  uint8_t readFrom(uint8_t *data, size_t length);
-
-  void disable();
-
-  uint8_t crc_errors();
-  virtual ~SpiPort();
+  virtual ~SPISlave();
+  queue_t tx_messages_;
+  queue_t rx_messages_;
   void irq();
-  queue_t txMessages;
-  queue_t rxMessages;
-  Devices sideCommunications;
+  Devices device;
 
  private:
   void initInterrupt();
@@ -86,15 +77,12 @@ class SpiPort {
     Packet txMessage;
     Packet rxMessage;
   };
-
   Spi_settings spiSettings;
   bool portUSB;
-  uint32_t lasTimeCommunication = 2000;
 };
 
-extern SpiPort spi_0;
-extern SpiPort spi_1;
+extern SPISlave port0;
+extern SPISlave port1;
 
-}  // namespace kaleidoscope::device::dygma::wired
 #endif
 #endif  //NEURONWIRED_SRC_SPICOMUNICATIONS_H_

@@ -16,7 +16,7 @@
  */
 
 #include "EEPROMUpgrade.h"
-
+#include "EEPROM.h"
 #include <Kaleidoscope-EEPROM-Settings.h>
 #include <Kaleidoscope-IdleLEDs.h>
 #include <Kaleidoscope-LEDControl.h>
@@ -76,6 +76,25 @@ EventHandlerResult EEPROMUpgrade::onFocusEvent(const char *command) {
   upgrade();
 
   return EventHandlerResult::EVENT_CONSUMED;
+}
+EventHandlerResult EEPROMUpgrade::beforeEachCycle() {
+  if (!need_update_) {
+    need_update_ = EEPROM.getNeedUpdate();
+    if (need_update_) {
+      Runtime.device().side.setPowerRight(false);
+      Runtime.device().side.setPowerLeft(false);
+      start_time_ = Runtime.millisAtCycleStart();
+    }
+    return EventHandlerResult::OK;
+  }
+
+  if (Runtime.hasTimeExpired(start_time_, 500)) {
+    EEPROM.update();
+    Runtime.device().side.setPowerRight(true);
+    Runtime.device().side.setPowerLeft(true);
+    need_update_ = false;
+  }
+  return EventHandlerResult::OK;
 }
 
 }  // namespace plugin

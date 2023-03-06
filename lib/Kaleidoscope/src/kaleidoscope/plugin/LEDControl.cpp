@@ -39,7 +39,6 @@ LEDControl::LEDControl(void) {
 
 void LEDControl::next_mode(void) {
   mode_id++;
-
   if (mode_id >= num_led_modes_) {
     return set_mode(0);
   }
@@ -141,8 +140,9 @@ kaleidoscope::EventHandlerResult LEDControl::onSetup() {
 
 void LEDControl::disable() {
   set_all_leds_to(CRGB(0, 0, 0));
-  Runtime.device().syncLeds();
+  //TODO: Create custom idle leds and suspend;
   enabled_ = false;
+  Runtime.device().syncLeds();
 }
 
 void LEDControl::enable() {

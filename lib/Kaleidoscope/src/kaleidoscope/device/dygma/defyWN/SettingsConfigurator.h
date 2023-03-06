@@ -1,5 +1,5 @@
 /* -*- mode: c++ -*-
- * kaleidoscope::device::dygma::Raise -- Kaleidoscope device plugin for Dygma Raise
+ * kaleidoscope::device::dygma::Wired -- Kaleidoscope device plugin for Dygma Wired
  * Copyright (C) 2017-2019  Keyboard.io, Inc
  * Copyright (C) 2017-2019  Dygma Lab S.L.
  *
@@ -18,4 +18,25 @@
 
 #pragma once
 
-#include "kaleidoscope/device/dygma/Wired.h"
+#ifdef ARDUINO_RASPBERRY_PI_PICO
+
+#include "kaleidoscope/plugin.h"
+
+namespace kaleidoscope {
+namespace device {
+namespace dygma {
+namespace defyWN {
+
+class SettingsConfigurator : public kaleidoscope::Plugin {
+ public:
+  EventHandlerResult onFocusEvent(const char *command);
+};
+
+}
+}
+}
+}
+
+extern kaleidoscope::device::dygma::defyWN::SettingsConfigurator SettingsConfigurator;
+
+#endif

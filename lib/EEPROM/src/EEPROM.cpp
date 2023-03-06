@@ -37,7 +37,7 @@ extern "C" uint8_t _EEPROM_start;
 
 EEPROMClass::EEPROMClass(void)
   : _sector(&_EEPROM_start) {
-  _sector-=4096;
+  _sector -= 4096;
 }
 
 void EEPROMClass::begin(size_t size) {
@@ -115,20 +115,7 @@ bool EEPROMClass::commit() {
   if (!_data) {
     return false;
   }
-  //Shutdown keyboard side
-  gpio_put(22, false);
-  gpio_put(10, false);
-  erase();
-  for (int i = 0; i < 8192 / 256; ++i) {
-    noInterrupts();
-    rp2040.idleOtherCore();
-    flash_range_program((intptr_t)_sector - (intptr_t)XIP_BASE + i * 256, &_data[i * 256], 256);
-    rp2040.resumeOtherCore();
-    interrupts();
-  }
-  //Power up keyboard
-  gpio_put(22, true);
-  gpio_put(10, true);
+  needUpdate=true;
   return true;
 }
 
@@ -152,6 +139,23 @@ void EEPROMClass::erase() {
   flash_range_erase((intptr_t)_sector - (intptr_t)XIP_BASE + (8192 / 2), 8192 / 2);
   rp2040.resumeOtherCore();
   interrupts();
+}
+
+void EEPROMClass::update() {
+  //Shutdown keyboard side
+  erase();
+  for (int i = 0; i < 8192 / 256; ++i) {
+    noInterrupts();
+    rp2040.idleOtherCore();
+    flash_range_program((intptr_t)_sector - (intptr_t)XIP_BASE + i * 256, &_data[i * 256], 256);
+    rp2040.resumeOtherCore();
+    interrupts();
+  }
+  needUpdate = false;
+}
+
+bool EEPROMClass::getNeedUpdate() {
+  return needUpdate;
 }
 
 EEPROMClass EEPROM;

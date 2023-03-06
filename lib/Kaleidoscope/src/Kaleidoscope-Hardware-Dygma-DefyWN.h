@@ -1,6 +1,7 @@
 /* -*- mode: c++ -*-
- * kaleidoscope::plugin::wiredIdleLeds -- IdleLEDs with a workaround for the Raise
- * Copyright (C) 2019  Dygma Lab S.L.
+ * kaleidoscope::device::dygma::Raise -- Kaleidoscope device plugin for Dygma Raise
+ * Copyright (C) 2017-2019  Keyboard.io, Inc
+ * Copyright (C) 2017-2019  Dygma Lab S.L.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -15,21 +16,6 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef ARDUINO_RASPBERRY_PI_PICO
+#pragma once
 
-#include "RaiseIdleLEDs.h"
-#include <Kaleidoscope-IdleLEDs.h>
-
-namespace kaleidoscope {
-namespace plugin {
-
-EventHandlerResult RaiseIdleLEDs::onKeyswitchEvent(Key &mapped_key, KeyAddr key_addr, uint8_t key_state) {
-  return ::PersistentIdleLEDs.onKeyswitchEvent(mapped_key, key_addr, key_state);
-}
-
-}  // namespace plugin
-}  // namespace kaleidoscope
-
-kaleidoscope::plugin::RaiseIdleLEDs RaiseIdleLEDs;
-
-#endif
+#include "kaleidoscope/device/dygma/DefyWN.h"

@@ -1,7 +1,7 @@
 /* -*- mode: c++ -*-
  * kaleidoscope::device::dygma::Wired -- Kaleidoscope device plugin for Dygma Wired
  * Copyright (C) 2017-2019  Keyboard.io, Inc
- * Copyright (C) 2017-2019  Dygma Lab S.L.
+ * Copyright (C) 2017-2020  Dygma Lab S.L.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -16,27 +16,24 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
 #ifdef ARDUINO_RASPBERRY_PI_PICO
 
-#include "kaleidoscope/plugin.h"
+#include <Arduino.h>
+#include "Hand.h"
+#include "Communications.h"
 
-namespace kaleidoscope {
-namespace device {
-namespace dygma {
-namespace wired {
+namespace kaleidoscope::device::dygma::defyWN {
 
-class Focus : public kaleidoscope::Plugin {
- public:
-  EventHandlerResult onFocusEvent(const char *command);
-};
+Hand::Hand(Communications_protocol::Devices device)
+  : this_device_(device) {
 
+  auto keyScanFunction = [this](Packet packet) {
+    if (packet.header.device == this_device_) {
+      new_key_ = true;
+      memcpy(key_data_.rows, packet.data, sizeof(key_data));
+    }
+  };
+  Communications.callbacks.bind(HAS_KEYS, keyScanFunction);
 }
-}
-}
-}
-
-extern kaleidoscope::device::dygma::wired::Focus WiredFocus;
-
+}  // namespace kaleidoscope::device::dygma::defyWN
 #endif

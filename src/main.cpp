@@ -36,9 +36,7 @@
 #include "Kaleidoscope-MagicCombo.h"
 #include "Kaleidoscope-USB-Quirks.h"
 #include "Kaleidoscope-LayerFocus.h"
-#include "RaiseIdleLEDs.h"
 #include "RaiseFirmwareVersion.h"
-#include "kaleidoscope/device/dygma/wired/Focus.h"
 
 // Support for host power management (suspend & wakeup)
 #include "Kaleidoscope-HostPowerManagement.h"
@@ -53,12 +51,14 @@
 #include "EEPROMUpgrade.h"
 #include "Upgrade.h"
 
-
 #include "LEDEffect-Rainbow-Defy.h"
 #include "LEDEffect-SolidColor-Defy.h"
 #include "Colormap-Defy.h"
 #include "LED-Palette-Theme-Defy.h"
 #include "DefaultColormap.h"
+#include "kaleidoscope/device/dygma/defyWN/SettingsConfigurator.h"
+#include "SPISlave.h"
+#include "IntegrationTest.h"
 
 enum {
   QWERTY,
@@ -80,7 +80,7 @@ KEYMAPS(
     , Key_LeftControl, Key_LeftGui, Key_Backspace, Key_Delete
     , Key_LeftShift, Key_LeftAlt, Key_Enter, Key_Space
 
-    , LT(1,Space), LT(2,Space), LT(3,Space), LT(4,Space), Key_Minus, Key_Equals, Key_Backspace
+    , LT(1,Space), Key_8, Key_9, Key_0, Key_Minus, Key_Equals, Key_Backspace
     , Key_Y, Key_U, Key_I, Key_O, Key_P, Key_LeftBracket, Key_RightBracket
     , Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Quote, Key_RightShift
     , Key_N, Key_M, Key_Comma, Key_Period, Key_Slash, Key_RightShift
@@ -181,7 +181,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   Upgrade,
   USBQuirks,
   MagicCombo,
-  RaiseIdleLEDs,
+  IdleLEDs,
   EEPROMSettings,
   EEPROMKeymap,
   FocusSettingsCommand,
@@ -195,7 +195,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   ColormapEffectDefy,
   LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
   PersistentIdleLEDs,
-  WiredFocus,
+  SettingsConfigurator,
   Qukeys,
   DynamicSuperKeys,
   DynamicMacros,
@@ -205,6 +205,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   EscapeOneShot,
   LayerFocus,
   EEPROMUpgrade,
+  IntegrationTest,
   HostPowerManagement);
 // clang-format on
 
@@ -234,11 +235,12 @@ void setup() {
 void loop() {
   // Application code goes here...
   Kaleidoscope.loop();
+  Communications.run();
   protocolBreathe();
   watchdog_update();
 }
 
+
 void setup1() {
-  kaleidoscope::device::dygma::wired::spi_1.initCommunications();
-  kaleidoscope::device::dygma::wired::spi_0.initCommunications();
+  Communications.init();
 }

@@ -19,11 +19,11 @@
 #include "kaleidoscope/Runtime.h"
 #include "kaleidoscope/plugin/LEDMode.h"
 
-#define LED_TOGGLE   0b00000001  // Synthetic, internal
+#define LED_TOGGLE            0b00000001  // Synthetic, internal
 
-#define Key_LEDEffectNext Key(0, KEY_FLAGS | SYNTHETIC | IS_INTERNAL | LED_TOGGLE)
+#define Key_LEDEffectNext     Key(0, KEY_FLAGS | SYNTHETIC | IS_INTERNAL | LED_TOGGLE)
 #define Key_LEDEffectPrevious Key(1, KEY_FLAGS | SYNTHETIC | IS_INTERNAL | LED_TOGGLE)
-#define Key_LEDToggle Key(2, KEY_FLAGS | SYNTHETIC | IS_INTERNAL | LED_TOGGLE)
+#define Key_LEDToggle         Key(2, KEY_FLAGS | SYNTHETIC | IS_INTERNAL | LED_TOGGLE)
 
 namespace kaleidoscope {
 namespace plugin {
@@ -60,8 +60,7 @@ class LEDControl : public kaleidoscope::Plugin {
   }
   template<typename LEDMode__>
   static LEDMode__ *get_mode() {
-    return static_cast<LEDMode__*>(cur_led_mode_);
-
+    return static_cast<LEDMode__ *>(cur_led_mode_);
   }
 
   static void refreshAll() {
@@ -127,9 +126,9 @@ class FocusLEDCommand : public Plugin {
   EventHandlerResult onFocusEvent(const char *command);
 };
 
-}
+}  // namespace plugin
 
-}
+}  // namespace kaleidoscope
 
 extern kaleidoscope::plugin::LEDControl LEDControl;
 extern kaleidoscope::plugin::FocusLEDCommand FocusLEDCommand;

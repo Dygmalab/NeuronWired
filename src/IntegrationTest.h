@@ -1,5 +1,6 @@
-/* Kaleidoscope-LEDEffect-SolidColor - Solid color LED effects for Kaleidoscope.
- * Copyright (C) 2017  Keyboard.io, Inc.
+/* -*- mode: c++ -*-
+ * kaleidoscope::plugin::wiredEEPROM -- Raise EEPROM upgrade helper
+ * Copyright (C) 2020  Dygma Lab S.L.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -14,21 +15,35 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LEDEffect-SolidColor-Defy.h"
+#pragma once
+
+#include <Kaleidoscope.h>
 
 namespace kaleidoscope {
 namespace plugin {
 
-void LEDSolidColorDefy::TransientLEDMode::onActivate(void) {
-  parent_->led_mode.r_ = parent_->r_;
-  parent_->led_mode.g_ = parent_->g_;
-  parent_->led_mode.b_ = parent_->b_;
-  parent_->led_mode.w_ = parent_->w_;
-  Runtime.device().setLedMode(&(parent_->led_mode));
-}
+class IntegrationTest : public Plugin {
+ public:
+  EventHandlerResult onFocusEvent(const char *command);
+  EventHandlerResult beforeReportingState();
 
-void LEDSolidColorDefy::TransientLEDMode::update(void) {
-  parent_->led_mode.update();
-}
+ private:
+  enum State {
+    INIT,
+    WAIT,
+    LED_MODE,
+    KEY_NEXT_LED,
+    RELEASE_KEY,
+  };
+  State state_{INIT};
+  State next_state_{WAIT};
+  bool activated_{false};
+  uint8_t led_mode_{0};
+  uint8_t start_led_mode{0};
+  uint16_t start_time_{0};
+};
+
 }  // namespace plugin
 }  // namespace kaleidoscope
+
+extern kaleidoscope::plugin::IntegrationTest IntegrationTest;
