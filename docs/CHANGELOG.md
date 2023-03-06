@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.3.2...pre_release_1.4.0) (2023-03-06)
+
+
+### Features
+
+* integration testing and submodules ([#19](https://github.com/Dygmalab/NeuronWired/issues/19)) ([1467fca](https://github.com/Dygmalab/NeuronWired/commit/1467fcaaa302c6505f9e2a47ee248c90635b732b))
+
 ## [1.3.2](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.3.1...pre_release_1.3.2) (2023-02-14)
 
 
