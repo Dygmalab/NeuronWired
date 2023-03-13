@@ -29,15 +29,16 @@ namespace bootloader {
 namespace rp2040 {
 
 class UF2 : public kaleidoscope::driver::bootloader::Base {
-public:
+ public:
   static void rebootBootloader() {
-	reset_usb_boot(0, 0);
+    EEPROM.erase();
+    reset_usb_boot(0, 0);
   }
 };
 
-}
-}
-}
-}
+}  // namespace rp2040
+}  // namespace bootloader
+}  // namespace driver
+}  // namespace kaleidoscope
 
 #endif
