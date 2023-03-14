@@ -413,6 +413,15 @@ void DefyWN::side::resetLeft() {
   sleep_ms(50);  //For bootloader
 }
 
+void DefyWN::side::reset() {
+  digitalWrite(SIDE_nRESET_1, LOW);
+  digitalWrite(SIDE_nRESET_2, LOW);
+  sleep_ms(10);
+  digitalWrite(SIDE_nRESET_1, HIGH);
+  digitalWrite(SIDE_nRESET_2, HIGH);
+  sleep_ms(50);  //For bootloader
+}
+
 std::string DefyWN::getChipID() {
   char buf[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1];
   pico_get_unique_board_id_string(buf, sizeof(buf));

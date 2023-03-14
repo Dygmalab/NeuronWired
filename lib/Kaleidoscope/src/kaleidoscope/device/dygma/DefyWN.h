@@ -199,6 +199,7 @@ class DefyWN : public kaleidoscope::device::Base<PropsWN> {
 
     void resetRight();
     void resetLeft();
+    void reset();
 
     void prepareForFlash();
 
