@@ -4,7 +4,7 @@
 [submodule "lib/PluginUpgrade"]
 	path = lib/PluginUpgrade
 	url = git@github.com:Dygmalab/KaleidoscopePluginKeyScannerUpgrade.git
-	branch = upgrade_refactor2
+	branch = upgrade_refactor
 
 [submodule "lib/PluginLedLibrary"]
 	path = lib/PluginLedLibrary
