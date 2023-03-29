@@ -36,7 +36,24 @@ namespace defyWN {
 #endif
 
 EventHandlerResult SettingsConfigurator::onFocusEvent(const char *command) {
-  if (::Focus.handleHelp(command, PSTR("hardware.version\nhardware.side_power\nhardware.side_ver\nhardware.sled_ver\nhardware.sled_current\nhardware.layout\nhardware.joint\nhardware.keyscan\nhardware.crc_errors\nhardware.firmware\nhardware.chip_id")))
+  if (::Focus.handleHelp(command,
+                         PSTR("hardware.version\n"
+                              "hardware.side_power\n"
+                              "hardware.side_ver\n"
+                              "hardware.sled_ver\n"
+                              "hardware.sled_current\n"
+                              "hardware.layout\n"
+                              "hardware.joint\n"
+                              "hardware.keyscan\n"
+                              "hardware.crc_errors\n"
+                              "hardware.firmware\n"
+                              "hardware.chip_id\n"
+                              "hardware.settings.printConfig\n"
+                              "hardware.settings.underGlow\n"
+                              "hardware.settings.ledDriver\n"
+                              "hardware.settings.spiSpeed\n"
+                              "hardware.settings.cpuSpeed\n"
+                              "hardware.settings.ledDriverPullUp")))
     return EventHandlerResult::OK;
 
   if (strncmp_P(command, PSTR("hardware."), 9) != 0)
