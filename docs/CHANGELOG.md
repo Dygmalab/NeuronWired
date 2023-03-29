@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.4.0...pre_release_1.5.0) (2023-03-29)
+
+
+### Features
+
+* config settings and bootloader 3.0 ([#21](https://github.com/Dygmalab/NeuronWired/issues/21)) ([de8ad15](https://github.com/Dygmalab/NeuronWired/commit/de8ad155f4e6f3063b01a38dbbd35b7868b46eae))
+
 # [1.4.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.3.2...pre_release_1.4.0) (2023-03-06)
 
 
