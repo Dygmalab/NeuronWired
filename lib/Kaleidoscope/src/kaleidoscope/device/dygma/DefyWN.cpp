@@ -364,6 +364,7 @@ void KeyScannerWN::reset() {
 
 /********* Hardware plugin *********/
 void DefyWN::setup() {
+  DefyWN::side::reset_sides();
   Hands::setup();
   KeyScannerWN::setup();
   LedDriverWN::setup();
@@ -409,6 +410,15 @@ void DefyWN::side::resetRight() {
 void DefyWN::side::resetLeft() {
   digitalWrite(SIDE_nRESET_2, LOW);
   sleep_ms(10);
+  digitalWrite(SIDE_nRESET_2, HIGH);
+  sleep_ms(50);  //For bootloader
+}
+
+void DefyWN::side::reset_sides() {
+  digitalWrite(SIDE_nRESET_1, LOW);
+  digitalWrite(SIDE_nRESET_2, LOW);
+  sleep_ms(10);
+  digitalWrite(SIDE_nRESET_1, HIGH);
   digitalWrite(SIDE_nRESET_2, HIGH);
   sleep_ms(50);  //For bootloader
 }

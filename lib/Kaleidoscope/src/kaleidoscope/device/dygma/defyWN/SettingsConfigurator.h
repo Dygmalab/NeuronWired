@@ -30,12 +30,34 @@ namespace defyWN {
 class SettingsConfigurator : public kaleidoscope::Plugin {
  public:
   EventHandlerResult onFocusEvent(const char *command);
+  EventHandlerResult onSetup();
+
+ private:
+  struct KeyScannerSettings {
+    uint32_t crc;
+    uint32_t pull_up_config;
+    uint32_t cpu_speed;
+    uint32_t spi_speed_base;
+    uint32_t spi_speed_variation;
+    uint32_t pooling_rate_base;
+    uint32_t pooling_rate_variation;
+    uint8_t led_driver_enabled;
+    uint8_t underGlow_enabled;
+  };
+  KeyScannerSettings left_settings;
+  KeyScannerSettings right_settings;
+  struct config {
+    uint32_t validation;
+    uint32_t cpuSpeed;
+  } config_;
+  uint16_t cpu_base_;
 };
 
-}
-}
-}
-}
+
+}  // namespace defyWN
+}  // namespace dygma
+}  // namespace device
+}  // namespace kaleidoscope
 
 extern kaleidoscope::device::dygma::defyWN::SettingsConfigurator SettingsConfigurator;
 
