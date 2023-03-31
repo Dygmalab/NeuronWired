@@ -417,7 +417,7 @@ void DefyWN::side::resetLeft() {
 void DefyWN::side::reset_sides() {
   digitalWrite(SIDE_nRESET_1, LOW);
   digitalWrite(SIDE_nRESET_2, LOW);
-  sleep_ms(10);
+  sleep_ms(1000);
   digitalWrite(SIDE_nRESET_1, HIGH);
   digitalWrite(SIDE_nRESET_2, HIGH);
   sleep_ms(50);  //For bootloader
