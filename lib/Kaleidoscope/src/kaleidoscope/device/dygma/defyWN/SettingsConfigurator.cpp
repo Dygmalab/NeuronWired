@@ -76,14 +76,11 @@ EventHandlerResult SettingsConfigurator::onFocusEvent(const char *command) {
 
   if (strcmp_P(command + 9, PSTR("side_power")) == 0) {
     if (::Focus.isEOL()) {
-      ::Focus.send(Runtime.device().side.getPowerRight() && Runtime.device().side.getPowerRight());
+      ::Focus.send(Runtime.device().side.getPower());
       return EventHandlerResult::EVENT_CONSUMED;
     } else {
-      uint8_t power;
-      Runtime.serialPort().parseInt();
-      (power);
-      Runtime.device().side.setPowerRight(power);
-      Runtime.device().side.setPowerLeft(power);
+      uint8_t power = Runtime.serialPort().parseInt();
+      Runtime.device().side.setPower(power);
       return EventHandlerResult::EVENT_CONSUMED;
     }
   }

@@ -191,14 +191,10 @@ class DefyWN : public kaleidoscope::device::Base<PropsWN> {
 
 
   struct side {
-    uint8_t getPowerRight();
-    void setPowerRight(bool power);
+    uint8_t getPower();
 
-    uint8_t getPowerLeft();
-    void setPowerLeft(bool power);
+    void setPower(bool power);
 
-    void resetRight();
-    void resetLeft();
     static void reset_sides();
 
     void prepareForFlash();

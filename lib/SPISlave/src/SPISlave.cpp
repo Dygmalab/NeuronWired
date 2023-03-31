@@ -112,9 +112,7 @@ void SPISlave::irq() {
     if (Serial.available())
       Serial.printf("Lost Connections with hand %i\n", portUSB);
     disableSide();
-    gpio_put(spiSettings.reset, false);
     initInterrupt();
-    gpio_put(spiSettings.reset, true);
     return;
   }
 

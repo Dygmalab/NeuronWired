@@ -364,6 +364,8 @@ void KeyScannerWN::reset() {
 
 /********* Hardware plugin *********/
 void DefyWN::setup() {
+  gpio_init(SIDE_nRESET_1);
+  gpio_init(SIDE_nRESET_2);
   DefyWN::side::reset_sides();
   Hands::setup();
   KeyScannerWN::setup();
@@ -387,39 +389,34 @@ void DefyWN::side::prepareForFlash() {
   WIRE_.setClock(I2C_FLASH_CLOCK_KHZ * 1000);
 }
 
-uint8_t DefyWN::side::getPowerRight() {
-  return digitalRead(SIDE_nRESET_1);
+uint8_t DefyWN::side::getPower() {
+  return digitalRead(SIDE_nRESET_1) && digitalRead(SIDE_nRESET_2);
 }
-void DefyWN::side::setPowerRight(bool power) {
-  digitalWrite(SIDE_nRESET_1, power ? HIGH : LOW);
-}
-
-uint8_t DefyWN::side::getPowerLeft() {
-  return digitalRead(SIDE_nRESET_2);
-}
-void DefyWN::side::setPowerLeft(bool power) {
-  digitalWrite(SIDE_nRESET_2, power ? HIGH : LOW);
-}
-void DefyWN::side::resetRight() {
-  digitalWrite(SIDE_nRESET_1, LOW);
-  sleep_ms(10);
-  digitalWrite(SIDE_nRESET_1, HIGH);
-  sleep_ms(50);  //For bootloader
+void DefyWN::side::setPower(bool power) {
+  if (power) {
+    gpio_set_dir(SIDE_nRESET_2, GPIO_IN);
+    gpio_pull_up(SIDE_nRESET_2);
+    gpio_set_dir(SIDE_nRESET_1, GPIO_IN);
+    gpio_pull_up(SIDE_nRESET_1);
+  } else {
+    gpio_set_dir(SIDE_nRESET_2, GPIO_OUT);
+    gpio_put(SIDE_nRESET_2, false);
+    gpio_set_dir(SIDE_nRESET_1, GPIO_OUT);
+    gpio_put(SIDE_nRESET_1, false);
+  }
 }
 
-void DefyWN::side::resetLeft() {
-  digitalWrite(SIDE_nRESET_2, LOW);
-  sleep_ms(10);
-  digitalWrite(SIDE_nRESET_2, HIGH);
-  sleep_ms(50);  //For bootloader
-}
 
 void DefyWN::side::reset_sides() {
-  digitalWrite(SIDE_nRESET_1, LOW);
-  digitalWrite(SIDE_nRESET_2, LOW);
+  gpio_set_dir(SIDE_nRESET_1, GPIO_OUT);
+  gpio_set_dir(SIDE_nRESET_2, GPIO_OUT);
+  gpio_put(SIDE_nRESET_1, false);
+  gpio_put(SIDE_nRESET_2, false);
   sleep_ms(1000);
-  digitalWrite(SIDE_nRESET_1, HIGH);
-  digitalWrite(SIDE_nRESET_2, HIGH);
+  gpio_set_dir(SIDE_nRESET_2, GPIO_IN);
+  gpio_set_dir(SIDE_nRESET_1, GPIO_IN);
+  gpio_pull_up(SIDE_nRESET_1);
+  gpio_pull_up(SIDE_nRESET_2);
   sleep_ms(50);  //For bootloader
 }
 

@@ -81,8 +81,7 @@ EventHandlerResult EEPROMUpgrade::beforeEachCycle() {
   if (!need_update_) {
     need_update_ = EEPROM.getNeedUpdate();
     if (need_update_) {
-      Runtime.device().side.setPowerRight(false);
-      Runtime.device().side.setPowerLeft(false);
+      Runtime.device().side.setPower(false);
       start_time_ = Runtime.millisAtCycleStart();
     }
     return EventHandlerResult::OK;
@@ -90,8 +89,7 @@ EventHandlerResult EEPROMUpgrade::beforeEachCycle() {
 
   if (Runtime.hasTimeExpired(start_time_, 500)) {
     EEPROM.update();
-    Runtime.device().side.setPowerRight(true);
-    Runtime.device().side.setPowerLeft(true);
+    Runtime.device().side.setPower(true);
     need_update_ = false;
   }
   return EventHandlerResult::OK;
