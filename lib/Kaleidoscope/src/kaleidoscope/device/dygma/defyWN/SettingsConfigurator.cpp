@@ -121,8 +121,8 @@ EventHandlerResult SettingsConfigurator::onFocusEvent(const char *command) {
   case PRINT_CONFIG: {
     if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
     uint32_t side = Runtime.serialPort().parseInt();
-    if (side != 1 && side != 2 && side != 3) {
-      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side or 3 for neuron");
+    if (side != KEYSCANNER_DEFY_RIGHT && side != KEYSCANNER_DEFY_LEFT && side != WIRED_NEURON_DEFY) {
+      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side or 7 for neuron");
       return EventHandlerResult::EVENT_CONSUMED;
     }
     if (side == Communications_protocol::Devices::KEYSCANNER_DEFY_LEFT || side == Communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT) {
@@ -131,7 +131,7 @@ EventHandlerResult SettingsConfigurator::onFocusEvent(const char *command) {
       snprintf(string, sizeof(string), "This is the configuration\n crc: %lu\n pull_up_config: %lu\n cpu_speed: %lu\n spi_speed_base: %lu\n spi_speed_variation: %lu\n pooling_rate_base: %lu\n pooling_rate_variation: %lu\n underGlow_enabled: %i\n led_driver_enabled: %i\n", ks.crc, ks.pull_up_config, ks.cpu_speed, ks.spi_speed_base, ks.spi_speed_variation, ks.pooling_rate_base, ks.pooling_rate_variation, ks.underGlow_enabled, ks.led_driver_enabled);
       ::Focus.send(string);
     }
-    if (side == Communications_protocol::Devices::NEURON_DEFY_WIRED) {
+    if (side == Communications_protocol::Devices::WIRED_NEURON_DEFY) {
       ::Serial.printf("Neuron CPU is at: %lu\n", frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_SYS_CLKSRC_PRIMARY));
     }
     break;
@@ -209,8 +209,8 @@ EventHandlerResult SettingsConfigurator::onFocusEvent(const char *command) {
   case CPU_CLOCK: {
     if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
     uint32_t side = Runtime.serialPort().parseInt();
-    if (side != 1 && side != 2 && side != 3) {
-      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side or 3 for neuron");
+    if (side != KEYSCANNER_DEFY_RIGHT && side != KEYSCANNER_DEFY_LEFT && side != WIRED_NEURON_DEFY) {
+      ::Serial.println("need a side and this need to be either 1 for left side 2 for right side or 7 for neuron");
       return EventHandlerResult::EVENT_CONSUMED;
     }
     if (::Focus.isEOL()) return EventHandlerResult::EVENT_CONSUMED;
@@ -234,7 +234,7 @@ EventHandlerResult SettingsConfigurator::onFocusEvent(const char *command) {
       packet.header.device = Communications_protocol::Devices::KEYSCANNER_DEFY_RIGHT;
       Communications.sendPacket(packet);
     }
-    if (side == Communications_protocol::Devices::NEURON_DEFY_WIRED) {
+    if (side == Communications_protocol::Devices::WIRED_NEURON_DEFY) {
       ::Serial.println("Setting cpuSpeed in neuron");
       config_.validation = 0x4321;
       config_.cpuSpeed   = cpu_speed;
