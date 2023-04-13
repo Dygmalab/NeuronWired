@@ -412,12 +412,12 @@ void DefyWN::side::reset_sides() {
   gpio_set_dir(SIDE_nRESET_2, GPIO_OUT);
   gpio_put(SIDE_nRESET_1, false);
   gpio_put(SIDE_nRESET_2, false);
-  sleep_ms(500);
+  sleep_ms(10);
   gpio_set_dir(SIDE_nRESET_2, GPIO_IN);
   gpio_set_dir(SIDE_nRESET_1, GPIO_IN);
   gpio_pull_up(SIDE_nRESET_1);
   gpio_pull_up(SIDE_nRESET_2);
-  sleep_ms(50);  //For bootloader
+  sleep_ms(10);  //For bootloader
 }
 
 std::string DefyWN::getChipID() {
