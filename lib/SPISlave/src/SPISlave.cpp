@@ -120,7 +120,7 @@ void SPISlave::irq() {
   device                           = spiSettings.rxMessage.header.device;
   uint8_t rx_crc                   = spiSettings.rxMessage.header.crc;
   spiSettings.rxMessage.header.crc = 0;
-  if (crc8(spiSettings.rxMessage.buf, sizeof(Packet)) == rx_crc) {
+  if (crc8(spiSettings.rxMessage.buf, sizeof(Header) + spiSettings.rxMessage.header.size) == rx_crc) {
     queue_add_blocking(&rx_messages_, &spiSettings.rxMessage);
   }
 

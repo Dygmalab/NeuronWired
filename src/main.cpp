@@ -30,7 +30,6 @@
 #include "Kaleidoscope-EEPROM-Keymap.h"
 #include "Kaleidoscope-IdleLEDs.h"
 #include "Kaleidoscope-LED-Palette-Theme.h"
-#include "Kaleidoscope-LED-Stalker.h"
 #include "Kaleidoscope-DynamicSuperKeys.h"
 #include "Kaleidoscope-DynamicMacros.h"
 #include "Kaleidoscope-MagicCombo.h"
@@ -52,6 +51,7 @@
 #include "Upgrade.h"
 
 #include "LEDEffect-Rainbow-Defy.h"
+#include "LEDEffect-Stalker-Defy.h"
 #include "LEDEffect-SolidColor-Defy.h"
 #include "Colormap-Defy.h"
 #include "LED-Palette-Theme-Defy.h"
@@ -174,6 +174,8 @@ static kaleidoscope::plugin::LEDSolidColorDefy solidRedDefy(255, 0, 0, 0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidGreenDefy(0, 255, 0, 0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidBlueDefy(0, 0, 255, 0);
 static kaleidoscope::plugin::LEDSolidColorDefy solidWhiteDefy(0, 0, 0, 255);
+static kaleidoscope::plugin::LEDStalkerDefy stalkerDefy{};
+
 
 // clang-format off
 KALEIDOSCOPE_INIT_PLUGINS(
@@ -193,7 +195,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   LEDPaletteThemeDefy,
   JointPadding,
   ColormapEffectDefy,
-  LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
+  LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,stalkerDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
   PersistentIdleLEDs,
   SettingsConfigurator,
   Qukeys,
@@ -223,7 +225,6 @@ void setup() {
   EEPROMKeymap.setup(10);
   // Reserve space for the number of Colormap layers we will use
   ColormapEffectDefy.max_layers(10);
-  StalkerEffect.variant = STALKER(BlazingTrail);
 
   DynamicSuperKeys.setup(0, 1024);
   DynamicMacros.reserve_storage(2048);
