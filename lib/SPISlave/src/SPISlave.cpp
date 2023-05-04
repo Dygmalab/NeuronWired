@@ -90,8 +90,8 @@ SPISlave::SPISlave(bool side)
   gpio_put(spiSettings.reset, false);
   sleep_us(1);
   gpio_put(spiSettings.reset, true);
-  queue_init(&tx_messages_, sizeof(Packet), 40);
-  queue_init(&rx_messages_, sizeof(Packet), 40);
+  queue_init(&tx_messages_, sizeof(Packet), 80);
+  queue_init(&rx_messages_, sizeof(Packet), 80);
 }
 
 void SPISlave::init() {
@@ -132,7 +132,7 @@ void SPISlave::irq() {
   spiSettings.txMessage.header.device           = Communications_protocol::WIRED_NEURON_DEFY;
   spiSettings.txMessage.header.has_more_packets = !queue_is_empty(&tx_messages_);
   spiSettings.txMessage.header.crc              = 0;
-  spiSettings.txMessage.header.crc              = crc8(spiSettings.txMessage.buf, sizeof(Packet));
+  spiSettings.txMessage.header.crc              = crc8(spiSettings.txMessage.buf, sizeof(Header) + spiSettings.txMessage.header.size);
   irq_set_enabled(spiSettings.irq, true);
   startDMA();
 }

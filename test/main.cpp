@@ -21,7 +21,7 @@ void sendPacket(Packet &message) {
 
 void sendColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
   Packet message{};
-  message.header.command   = SET_MODE_LED;
+  message.header.command   = MODE_LED;
   solidRedDefy.led_mode.r_ = r;
   solidRedDefy.led_mode.g_ = g;
   solidRedDefy.led_mode.b_ = b;

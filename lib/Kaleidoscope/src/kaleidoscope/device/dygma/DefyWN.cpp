@@ -107,7 +107,7 @@ void Hands::setKeyscanInterval(uint16_t interval) {
 void Hands::setLedBrightnessCorrection(uint8_t brightness) {
   settings_.led_brightness_correction = brightness;
   Packet p{};
-  p.header.command = Communications_protocol::SET_BRIGHTNESS;
+  p.header.command = Communications_protocol::BRIGHTNESS;
   p.data[0]        = brightness;
   Communications.sendPacket(p);
   Runtime.storage().put(settings_base_, settings_);

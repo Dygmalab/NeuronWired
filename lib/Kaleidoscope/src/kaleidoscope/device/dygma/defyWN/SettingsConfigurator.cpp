@@ -156,7 +156,7 @@ EventHandlerResult SettingsConfigurator::onFocusEvent(const char *command) {
       return EventHandlerResult::EVENT_CONSUMED;
     }
     Communications_protocol::Packet packet{};
-    packet.header.command = Communications_protocol::SET_ALIVE_INTERVAL;
+    packet.header.command = Communications_protocol::ALIVE_INTERVAL;
     packet.header.size    = sizeof(uint32_t) * 2;
     memcpy(&packet.data[0], &base, sizeof(uint32_t));
     memcpy(&packet.data[sizeof(uint32_t)], &variation, sizeof(uint32_t));
