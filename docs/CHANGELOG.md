@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.5.0...pre_release_1.6.0) (2023-05-05)
+
+
+### Features
+
+* crc in comunications ([#23](https://github.com/Dygmalab/NeuronWired/issues/23)) ([83a0f13](https://github.com/Dygmalab/NeuronWired/commit/83a0f13163559083ee84f42dea4ca0090924b50c))
+
 # [1.5.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.4.0...pre_release_1.5.0) (2023-03-29)
 
 
