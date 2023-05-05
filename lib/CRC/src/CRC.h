@@ -4,4 +4,6 @@
 
 uint32_t crc32(const void *ptr, uint32_t len);
 
+uint8_t crc8(uint8_t const msg[], uint32_t len);
+
 #endif

@@ -22,6 +22,7 @@
 #include "SPISlave.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
+#include "CRC.h"
 
 
 SPISlave port0(0);
@@ -89,8 +90,8 @@ SPISlave::SPISlave(bool side)
   gpio_put(spiSettings.reset, false);
   sleep_us(1);
   gpio_put(spiSettings.reset, true);
-  queue_init(&tx_messages_, sizeof(Packet), 40);
-  queue_init(&rx_messages_, sizeof(Packet), 40);
+  queue_init(&tx_messages_, sizeof(Packet), 80);
+  queue_init(&rx_messages_, sizeof(Packet), 80);
 }
 
 void SPISlave::init() {
@@ -116,15 +117,22 @@ void SPISlave::irq() {
     return;
   }
 
-  device=spiSettings.rxMessage.header.device;
-  queue_add_blocking(&rx_messages_, &spiSettings.rxMessage);
+  device                           = spiSettings.rxMessage.header.device;
+  uint8_t rx_crc                   = spiSettings.rxMessage.header.crc;
+  spiSettings.rxMessage.header.crc = 0;
+  if (crc8(spiSettings.rxMessage.buf, sizeof(Header) + spiSettings.rxMessage.header.size) == rx_crc) {
+    queue_add_blocking(&rx_messages_, &spiSettings.rxMessage);
+  }
 
   if (!queue_is_empty(&tx_messages_)) {
     queue_remove_blocking(&tx_messages_, &spiSettings.txMessage);
   } else {
     spiSettings.txMessage.header.command = Communications_protocol::IS_ALIVE;
   }
+  spiSettings.txMessage.header.device           = Communications_protocol::WIRED_NEURON_DEFY;
   spiSettings.txMessage.header.has_more_packets = !queue_is_empty(&tx_messages_);
+  spiSettings.txMessage.header.crc              = 0;
+  spiSettings.txMessage.header.crc              = crc8(spiSettings.txMessage.buf, sizeof(Header) + spiSettings.txMessage.header.size);
   irq_set_enabled(spiSettings.irq, true);
   startDMA();
 }
@@ -134,7 +142,6 @@ void SPISlave::disableSide() {
   dma_channel_unclaim(spiSettings.dmaIndexTx);
   dma_channel_unclaim(spiSettings.dmaIndexRx);
 }
-
 
 
 #endif

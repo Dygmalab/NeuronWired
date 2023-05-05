@@ -17,6 +17,7 @@
 
 #include "EEPROMUpgrade.h"
 #include "EEPROM.h"
+#include "Communications.h"
 #include <Kaleidoscope-EEPROM-Settings.h>
 #include <Kaleidoscope-IdleLEDs.h>
 #include <Kaleidoscope-LEDControl.h>
@@ -81,7 +82,6 @@ EventHandlerResult EEPROMUpgrade::beforeEachCycle() {
   if (!need_update_) {
     need_update_ = EEPROM.getNeedUpdate();
     if (need_update_) {
-      Runtime.device().side.setPower(false);
       start_time_ = Runtime.millisAtCycleStart();
     }
     return EventHandlerResult::OK;
@@ -89,7 +89,6 @@ EventHandlerResult EEPROMUpgrade::beforeEachCycle() {
 
   if (Runtime.hasTimeExpired(start_time_, 500)) {
     EEPROM.update();
-    Runtime.device().side.setPower(true);
     need_update_ = false;
   }
   return EventHandlerResult::OK;
