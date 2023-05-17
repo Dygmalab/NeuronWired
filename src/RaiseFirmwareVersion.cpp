@@ -34,6 +34,10 @@
 #define FIRMWARE_SHA "6f2ca51"
 #endif
 
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION "v0.0.1"
+#endif
+
 namespace kaleidoscope {
 namespace plugin {
 
@@ -45,7 +49,7 @@ EventHandlerResult FirmwareVersion::onFocusEvent(const char *command) {
   if (strcmp_P(command, cmd) != 0)
     return EventHandlerResult::OK;
 
-  ::Focus.sendRaw(F(BAZECOR_VERSION " " KALEIDOSCOPE_SHA " " FIRMWARE_SHA));
+  ::Focus.sendRaw(F(FIRMWARE_VERSION));
 
   return EventHandlerResult::EVENT_CONSUMED;
 }
