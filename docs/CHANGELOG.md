@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.6.0...pre_release_1.7.0) (2023-05-17)
+
+
+### Features
+
+* correct return of version ([#24](https://github.com/Dygmalab/NeuronWired/issues/24)) ([07f2228](https://github.com/Dygmalab/NeuronWired/commit/07f22280a9f18113148e0d536d82826f9ecc32c3))
+
 # [1.6.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.5.0...pre_release_1.6.0) (2023-05-05)
 
 
