@@ -62,19 +62,24 @@ class Hands {
 
   static void setup();
 
-  static void setKeyscanInterval(uint16_t interval);
-  static uint16_t getKeyscanInterval() { return settings_.keyscan_interval; }
+  static void setKeyscanInterval(uint8_t interval);
+  static uint8_t getKeyscanInterval() { return settings_.keyscan_interval; }
 
-  static void setLedBrightnessCorrection(uint8_t brightness);
-  static uint8_t getLedBrightnessCorrection() {
-    return settings_.led_brightness_correction;
+  static void setLedBrightnessLedDriver(uint8_t brightness);
+  static uint8_t getLedBrightnessLedDriver() {
+    return settings_.led_brightness_ledDriver;
+  }
+  static void setLedBrightnessUG(uint8_t brightness);
+  static uint8_t getLedBrightnessUG() {
+    return settings_.led_brightness_ungerlow;
   }
 
  private:
   struct Settings {
     Settings() {}
-    uint16_t keyscan_interval         = 15;
-    uint8_t led_brightness_correction = 50;
+    uint8_t keyscan_interval         = 15;
+    uint8_t led_brightness_ledDriver = 255;
+    uint8_t led_brightness_ungerlow  = 255;
   };
   inline static Settings settings_{};
   inline static uint16_t settings_base_;
@@ -86,13 +91,16 @@ void Hands::setup() {
   bool edited    = false;
   Settings settings;
   Runtime.storage().get(settings_base_, settings);
-  if (settings.keyscan_interval == 0xffff) {
+  if (settings.keyscan_interval == 0xff) {
     settings.keyscan_interval = settings_.keyscan_interval;
     edited                    = true;
   }
 
-  if (settings.led_brightness_correction == 0xff) {
-    settings.led_brightness_correction = settings_.led_brightness_correction;
+  if (settings.led_brightness_ledDriver == 0xff) {
+    settings.led_brightness_ledDriver = settings_.led_brightness_ledDriver;
+  }
+  if (settings.led_brightness_ungerlow == 0xff) {
+    settings.led_brightness_ungerlow = settings_.led_brightness_ungerlow;
   }
   if (edited) {
     Runtime.storage().put(settings_base_, settings);
@@ -100,15 +108,37 @@ void Hands::setup() {
   Runtime.storage().get(settings_base_, settings_);
 }
 
-void Hands::setKeyscanInterval(uint16_t interval) {
-  //TODO: set keyScann in flash and send message
+void Hands::setKeyscanInterval(uint8_t interval) {
+  if (interval < 15) return;
+  settings_.keyscan_interval = interval;
+  Packet p{};
+  p.header.command = Communications_protocol::KEYSCAN_INTERVAL;
+  p.header.size    = 1;
+  p.data[0]        = interval;
+  Communications.sendPacket(p);
+  Runtime.storage().put(settings_base_, settings_);
+  Runtime.storage().commit();
 }
 
-void Hands::setLedBrightnessCorrection(uint8_t brightness) {
-  settings_.led_brightness_correction = brightness;
+void Hands::setLedBrightnessLedDriver(uint8_t brightness) {
+  settings_.led_brightness_ledDriver = brightness;
   Packet p{};
   p.header.command = Communications_protocol::BRIGHTNESS;
-  p.data[0]        = brightness;
+  p.header.size    = 2;
+  p.data[0]        = settings_.led_brightness_ledDriver;
+  p.data[1]        = settings_.led_brightness_ungerlow;
+  Communications.sendPacket(p);
+  Runtime.storage().put(settings_base_, settings_);
+  Runtime.storage().commit();
+}
+
+void Hands::setLedBrightnessUG(uint8_t brightnessUG) {
+  settings_.led_brightness_ungerlow = brightnessUG;
+  Packet p{};
+  p.header.command = Communications_protocol::BRIGHTNESS;
+  p.header.size    = 2;
+  p.data[0]        = settings_.led_brightness_ledDriver;
+  p.data[1]        = settings_.led_brightness_ungerlow;
   Communications.sendPacket(p);
   Runtime.storage().put(settings_base_, settings_);
   Runtime.storage().commit();
@@ -119,11 +149,18 @@ void Hands::setLedBrightnessCorrection(uint8_t brightness) {
 
 
 void LedDriverWN::setBrightness(uint8_t brightness) {
-  Hands::setLedBrightnessCorrection(brightness);
+  Hands::setLedBrightnessLedDriver(brightness);
+}
+void LedDriverWN::setBrightnessUG(uint8_t brightnessUG) {
+  Hands::setLedBrightnessUG(brightnessUG);
 }
 
 uint8_t LedDriverWN::getBrightness() {
-  return Hands::getLedBrightnessCorrection();
+  return Hands::getLedBrightnessLedDriver();
+}
+
+uint8_t LedDriverWN::getBrightnessUG() {
+  return Hands::getLedBrightnessUG();
 }
 
 void LedDriverWN::syncLeds() {
@@ -156,10 +193,10 @@ void LedDriverWN::updateNeuronLED() {
 
   // invert as these are common anode, and make sure we reach 65535 to be able
   // to turn fully off.
-  analogWrite(pins.r, (int)(neuronLED.r * (Hands::getLedBrightnessCorrection() / (float)255)) << 8);
-  analogWrite(pins.g, (int)(neuronLED.g * (Hands::getLedBrightnessCorrection() / (float)255)) << 8);
-  analogWrite(pins.b, (int)(neuronLED.b * (Hands::getLedBrightnessCorrection() / (float)255)) << 8);
-  analogWrite(pins.w, (int)(neuronLED.w * (Hands::getLedBrightnessCorrection() / (float)255)) << 8);
+  analogWrite(pins.r, (int)(neuronLED.r * (Hands::getLedBrightnessLedDriver() / (float)255)) << 8);
+  analogWrite(pins.g, (int)(neuronLED.g * (Hands::getLedBrightnessLedDriver() / (float)255)) << 8);
+  analogWrite(pins.b, (int)(neuronLED.b * (Hands::getLedBrightnessLedDriver() / (float)255)) << 8);
+  analogWrite(pins.w, (int)(neuronLED.w * (Hands::getLedBrightnessLedDriver() / (float)255)) << 8);
 }
 
 void LedDriverWN::setCrgbAt(uint8_t i, cRGB crgb) {
@@ -426,6 +463,12 @@ std::string DefyWN::getChipID() {
   return {buf};
 }
 
+uint8_t DefyWN::settings::keyscanInterval() {
+  return Hands::getKeyscanInterval();
+}
+void DefyWN::settings::keyscanInterval(uint8_t interval) {
+  Hands::setKeyscanInterval(interval);
+}
 }  // namespace dygma
 }  // namespace device
 }  // namespace kaleidoscope
