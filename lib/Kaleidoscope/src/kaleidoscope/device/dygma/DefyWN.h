@@ -19,6 +19,7 @@
 #pragma once
 
 #ifdef ARDUINO_RASPBERRY_PI_PICO
+#define WIRED_FIRMWARE_VERSION "0.0.4"
 
 #include <Arduino.h>
 #include <string>
@@ -73,7 +74,9 @@ class LedDriverWN : public kaleidoscope::driver::led::Base<LedDriverProps> {
   static void setCrgbNeuron(cRGB crgb);
   static cRGB getCrgbAt(uint8_t i);
   static void setBrightness(uint8_t brightness);
+  static void setBrightnessUG(uint8_t brightnessUG);
   static uint8_t getBrightness();
+  static uint8_t getBrightnessUG();
 
   static void updateNeuronLED();
 
@@ -205,8 +208,8 @@ class DefyWN : public kaleidoscope::device::Base<PropsWN> {
   } side;
 
   struct settings {
-    uint16_t keyscanInterval();
-    void keyscanInterval(uint16_t interval);
+    uint8_t keyscanInterval();
+    void keyscanInterval(uint8_t interval);
   } settings;
 };
 

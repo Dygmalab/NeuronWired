@@ -109,6 +109,12 @@ class LEDControl : public kaleidoscope::Plugin {
   static uint8_t getBrightness() {
     return Runtime.device().ledDriver().getBrightness();
   }
+  static void setBrightnessUG(uint8_t brightnessUG) {
+    Runtime.device().ledDriver().setBrightnessUG(brightnessUG);
+  }
+  static uint8_t getBrightnessUG() {
+    return Runtime.device().ledDriver().getBrightnessUG();
+  }
 
  private:
   static uint16_t syncTimer;

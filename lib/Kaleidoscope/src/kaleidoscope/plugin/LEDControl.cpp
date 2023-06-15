@@ -19,19 +19,19 @@
 #include "kaleidoscope_internal/LEDModeManager.h"
 #include "kaleidoscope/keyswitch_state.h"
 
-using namespace kaleidoscope::internal; // NOLINT(build/namespaces)
+using namespace kaleidoscope::internal;  // NOLINT(build/namespaces)
 
 namespace kaleidoscope {
 namespace plugin {
 
 static constexpr uint8_t uninitialized_mode_id = 255;
 
-uint8_t LEDControl::mode_id = uninitialized_mode_id;
-uint8_t LEDControl::num_led_modes_ = LEDModeManager::numLEDModes();
-LEDMode *LEDControl::cur_led_mode_ = nullptr;
-uint8_t LEDControl::syncDelay = 32;
-uint16_t LEDControl::syncTimer = 0;
-bool LEDControl::enabled_ = true;
+uint8_t LEDControl::mode_id            = uninitialized_mode_id;
+uint8_t LEDControl::num_led_modes_     = LEDModeManager::numLEDModes();
+LEDMode *LEDControl::cur_led_mode_     = nullptr;
+uint8_t LEDControl::syncDelay          = 32;
+uint16_t LEDControl::syncTimer         = 0;
+bool LEDControl::enabled_              = true;
 Key LEDControl::pending_next_prev_key_ = Key_NoKey;
 
 LEDControl::LEDControl(void) {
@@ -57,8 +57,7 @@ void LEDControl::prev_mode(void) {
   return set_mode(mode_id);
 }
 
-void
-LEDControl::set_mode(uint8_t mode_) {
+void LEDControl::set_mode(uint8_t mode_) {
   if (mode_ >= num_led_modes_)
     return;
 
@@ -205,6 +204,7 @@ EventHandlerResult FocusLEDCommand::onFocusEvent(const char *command) {
     AT,
     THEME,
     BRIGHTNESS,
+    BRIGHTNESSUG,
   } subCommand;
 
   if (!Runtime.has_leds)
@@ -214,6 +214,7 @@ EventHandlerResult FocusLEDCommand::onFocusEvent(const char *command) {
                                        "led.setAll\n"
                                        "led.mode\n"
                                        "led.brightness\n"
+                                       "led.brightnessUG\n"
                                        "led.theme")))
     return EventHandlerResult::OK;
 
@@ -229,6 +230,8 @@ EventHandlerResult FocusLEDCommand::onFocusEvent(const char *command) {
     subCommand = THEME;
   else if (strcmp_P(command + 4, PSTR("brightness")) == 0)
     subCommand = BRIGHTNESS;
+  else if (strcmp_P(command + 4, PSTR("brightnessUG")) == 0)
+    subCommand = BRIGHTNESSUG;
   else
     return EventHandlerResult::OK;
 
@@ -259,6 +262,17 @@ EventHandlerResult FocusLEDCommand::onFocusEvent(const char *command) {
 
       ::Focus.read(brightness);
       ::LEDControl.setBrightness(brightness);
+    }
+    break;
+  }
+  case BRIGHTNESSUG: {
+    if (::Focus.isEOL()) {
+      ::Focus.send(::LEDControl.getBrightnessUG());
+    } else {
+      uint8_t brightnessUG;
+
+      ::Focus.read(brightnessUG);
+      ::LEDControl.setBrightnessUG(brightnessUG);
     }
     break;
   }
@@ -315,8 +329,8 @@ EventHandlerResult FocusLEDCommand::onFocusEvent(const char *command) {
   return EventHandlerResult::EVENT_CONSUMED;
 }
 
-}
-}
+}  // namespace plugin
+}  // namespace kaleidoscope
 
 kaleidoscope::plugin::LEDControl LEDControl;
 kaleidoscope::plugin::FocusLEDCommand FocusLEDCommand;
