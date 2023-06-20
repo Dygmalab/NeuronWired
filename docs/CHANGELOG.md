@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.9.0...pre_release_1.9.1) (2023-06-20)
+
+
+### Bug Fixes
+
+* report correct version ([58c6b09](https://github.com/Dygmalab/NeuronWired/commit/58c6b0984e9981482daa8af459b2e373014d98e2))
+
 # [1.9.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.8.0...pre_release_1.9.0) (2023-06-20)
 
 
