@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.7.0...pre_release_1.8.0) (2023-06-15)
+
+
+### Features
+
+* underglow slider ([#25](https://github.com/Dygmalab/NeuronWired/issues/25)) ([4345b75](https://github.com/Dygmalab/NeuronWired/commit/4345b758bdd08e7c15c18ac6a812a35de98e875a))
+
 # [1.7.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.6.0...pre_release_1.7.0) (2023-05-17)
 
 
