@@ -17,25 +17,11 @@
 
 #include "Kaleidoscope.h"
 #include "Kaleidoscope-FocusSerial.h"
-#include "RaiseFirmwareVersion.h"
+#include "DefyFirmwareVersion.h"
 
-#ifndef BAZECOR_VERSION
-//#define BAZECOR_VERSION "<unknown>"
-#define BAZECOR_VERSION "v1.0.9beta"
-#endif
-
-#ifndef KALEIDOSCOPE_SHA
-//#define KALEIDOSCOPE_SHA "<unknown>"
-#define KALEIDOSCOPE_SHA "5ecc2faf"
-#endif
-
-#ifndef FIRMWARE_SHA
-//#define FIRMWARE_SHA "<unknown>"
-#define FIRMWARE_SHA "6f2ca51"
-#endif
 
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "v0.0.1"
+#define FIRMWARE_VERSION WIRED_FIRMWARE_VERSION
 #endif
 
 namespace kaleidoscope {

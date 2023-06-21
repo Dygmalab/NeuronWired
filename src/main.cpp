@@ -35,7 +35,7 @@
 #include "Kaleidoscope-MagicCombo.h"
 #include "Kaleidoscope-USB-Quirks.h"
 #include "Kaleidoscope-LayerFocus.h"
-#include "RaiseFirmwareVersion.h"
+#include "DefyFirmwareVersion.h"
 
 // Support for host power management (suspend & wakeup)
 #include "Kaleidoscope-HostPowerManagement.h"
