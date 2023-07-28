@@ -19,7 +19,7 @@
 #pragma once
 
 #ifdef ARDUINO_RASPBERRY_PI_PICO
-#define WIRED_FIRMWARE_VERSION "v0.1.0"
+#define WIRED_FIRMWARE_VERSION "v0.1.1"
 
 #include <Arduino.h>
 #include <string>
