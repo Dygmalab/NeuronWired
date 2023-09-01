@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.9.1...pre_release_1.9.2) (2023-09-01)
+
+
+### Bug Fixes
+
+* back to 10ms ([b2b5495](https://github.com/Dygmalab/NeuronWired/commit/b2b5495f110ce427df4256fd625e34855911eae2))
+
 ## [1.9.1](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.9.0...pre_release_1.9.1) (2023-06-20)
 
 
