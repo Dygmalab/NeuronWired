@@ -3,6 +3,9 @@ Kaleidoscope is a library that has all the plugins, code and tools necessary to 
 The library has been created to fulfill the necessities of https://shop.keyboard.io/ and his keyboards.
 
 The library has been used to develop the Raise and now the Defy with some modifications of the original due to the limitation of the wired communication.
+
+**_Warning_**
+We are currently using the version 1.1 of kaleidoscope so something might differ from the actual documentation.
 ## Plugins
 
 The most important part to understand about kaleidoscope is the use of **plugins** to capture and edit the keys pressed by the user.
@@ -13,7 +16,12 @@ https://kaleidoscope.readthedocs.io/en/latest/customization/plugin-authors-guide
 Here is all the list of plugins available in kaleidoscope, currently we are not using all of them.
 https://kaleidoscope.readthedocs.io/en/latest/customization/core-plugins.html
 
+
+### Focus plugin
+The focus plugin enables bidirectional communication for kaleidoscope through the [USB CDC](https://www.keil.com/pack/doc/mw/USB/html/_c_d_c.html).
+Check https://kaleidoscope.readthedocs.io/en/latest/plugins/Kaleidoscope-FocusSerial.html
 ### Current list of plugins being use
+main.cpp
 ```cpp
 KALEIDOSCOPE_INIT_PLUGINS(
 FirmwareVersion,
