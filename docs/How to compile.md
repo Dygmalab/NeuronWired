@@ -22,4 +22,3 @@ First, you need to install platformio to do so follow the instructions in the in
 
 3. And just build the program pressing the hammer
     ![img_2.png](imgs/Compile2.png)
-
