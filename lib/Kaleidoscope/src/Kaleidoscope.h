@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <Arduino.h>
-
 //end of add your includes here
 #ifdef __cplusplus
 extern "C" {

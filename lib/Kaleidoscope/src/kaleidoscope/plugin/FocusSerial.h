@@ -72,6 +72,9 @@ class FocusSerial : public kaleidoscope::Plugin {
   void read(uint8_t &u8) {
     u8 = Runtime.serialPort().parseInt();
   }
+  void read(char &c) {
+       c = Runtime.serialPort().read();
+   }
   void read(uint16_t &u16) {
     u16 = Runtime.serialPort().parseInt();
   }

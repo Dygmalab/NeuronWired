@@ -18,7 +18,7 @@
 
 #pragma once
 
-#ifdef ARDUINO_ARCH_RP2040
+#ifdef ARDUINO_ARCH_SAMD
 
 #include "kaleidoscope/driver/bootloader/Base.h"
 

@@ -44,7 +44,7 @@ class HostPowerManagement : public kaleidoscope::Plugin {
   static bool was_suspended_;
 #ifdef __AVR__
   static bool initial_suspend_;
-#elif defined ARDUINO_ARCH_RP2040
+#elif defined ARDUINO_ARCH_SAMD
   static uint16_t suspend_timer;
   static uint16_t saved_fnum;
   static uint8_t fnum_counter;
