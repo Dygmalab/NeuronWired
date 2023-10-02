@@ -9,6 +9,6 @@
 	path = lib/PluginLedLibrary
 	url = git@github.com:Dygmalab/KaleidoscopePuglinLedLibraryDefy.git
 
-[submodule "lib/PluginLedLibrary"]
-	path = lib/Kaleidoscope
+[submodule "lib/kaleidoscope"]
+	path = lib/kaleidoscope
 	url = git@github.com:Dygmalab/Kaleidoscope-Dygma.git
