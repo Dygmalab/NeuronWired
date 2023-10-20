@@ -1,3 +1,10 @@
+## [1.9.3](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.9.2...pre_release_1.9.3) (2023-10-20)
+
+
+### Bug Fixes
+
+* upgrade no decect keyscanners ([9b94ea1](https://github.com/Dygmalab/NeuronWired/commit/9b94ea17a6243ea7a7606f00967bd18c558fdb3c))
+
 ## [1.9.2](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.9.1...pre_release_1.9.2) (2023-09-01)
 
 
