@@ -78,6 +78,7 @@ class HID_ {
   HID_();
   int begin();
   int SendReport(uint8_t id, const void* data, int len);
+  bool SendLastReport();
   void AppendDescriptor(HIDSubDescriptor* node);
 
   uint8_t getLEDs() {

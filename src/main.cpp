@@ -239,6 +239,7 @@ void loop() {
   Communications.run();
   protocolBreathe();
   watchdog_update();
+  HID().SendLastReport();
 }
 
 
