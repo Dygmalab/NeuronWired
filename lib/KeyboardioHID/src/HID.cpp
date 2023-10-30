@@ -27,7 +27,7 @@ HID_ &HID() {
   static HID_ obj;
   return obj;
 }
-
+mutex_t reportMutex;
 void HID_::AppendDescriptor(HIDSubDescriptor *node) {
 //  descriptor.resize(descriptor.size() + node->length);
 //  for (int i = 0; i < node->length; ++i) {
@@ -80,9 +80,11 @@ int HID_::SendReport_(uint8_t id, const void *data, int len) {
             usb_hid.sendReport(id, (uint8_t *const)data, len);
           return 1;
         }
+        mutex_enter_blocking(&reportMutex);
         NextReport nextReport{id, static_cast<uint16_t>(len)};
         tu_fifo_write_n(&tx_ff_hid, &nextReport, (uint16_t)(sizeof(nextReport)));
         tu_fifo_write_n(&tx_ff_hid, data, (uint16_t)len);
+        mutex_exit(&reportMutex);
   }
 
   if (TinyUSBDevice.suspended())
@@ -95,6 +97,7 @@ int HID_::SendReport_(uint8_t id, const void *data, int len) {
 bool HID_::SendLastReport()
 {
   bool success = true;
+  mutex_enter_blocking(&reportMutex);
   if (tu_fifo_count(&tx_ff_hid) != 0)
   {
         struct
@@ -112,6 +115,7 @@ bool HID_::SendLastReport()
           tu_fifo_advance_read_pointer(&tx_ff_hid, (uint16_t)(sizeof(nextReportWithData.nextReport)) + nextReportWithData.nextReport.len);
         }
   }
+  mutex_exit(&reportMutex);
   return success;
 }
 
@@ -234,6 +238,7 @@ uint8_t const descriptor_tmp[] = {  //  NKRO Keyboard
 };
 
 int HID_::begin() {
+  mutex_init(&reportMutex);
   usb_hid.setPollInterval(1);
   usb_hid.setReportDescriptor(descriptor_tmp, sizeof(descriptor_tmp));
   usb_hid.setBootProtocol(0);
