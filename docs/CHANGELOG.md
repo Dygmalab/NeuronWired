@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.9.3...pre_release_1.10.0) (2023-11-23)
+
+
+### Features
+
+* superkeys ([#35](https://github.com/Dygmalab/NeuronWired/issues/35)) ([7876ba6](https://github.com/Dygmalab/NeuronWired/commit/7876ba6e4362c90905b9a390317c3f7cf589d2bb))
+
 ## [1.9.3](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.9.2...pre_release_1.9.3) (2023-10-20)
 
 
