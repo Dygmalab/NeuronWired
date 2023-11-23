@@ -27,7 +27,7 @@ HID_ &HID() {
   static HID_ obj;
   return obj;
 }
-
+mutex_t reportMutex;
 void HID_::AppendDescriptor(HIDSubDescriptor *node) {
 //  descriptor.resize(descriptor.size() + node->length);
 //  for (int i = 0; i < node->length; ++i) {
@@ -40,6 +40,17 @@ int HID_::SendReport(uint8_t id, const void *data, int len) {
   HIDReportObserver::observeReport(id, data, len, result);
   return result;
 }
+
+tu_fifo_t tx_ff_hid;
+
+uint8_t tx_ff_buf_hid[8000];
+
+struct NextReport
+{
+  uint8_t id;
+  uint16_t len;
+};
+
 
 int HID_::SendReport_(uint8_t id, const void *data, int len) {
   /* On SAMD, we need to send the whole report in one batch; sending the id, and
@@ -63,10 +74,49 @@ int HID_::SendReport_(uint8_t id, const void *data, int len) {
 	return ret2;
   return ret + ret2;
 #endif
-  while(!usb_hid.ready()){tight_loop_contents();}
-  bool b = usb_hid.sendReport(id, data, len);
-  return b;
+  if (TinyUSBDevice.mounted())
+  {
+        if(id==HID_REPORTID_MOUSE){
+            usb_hid.sendReport(id, (uint8_t *const)data, len);
+          return 1;
+        }
+        mutex_enter_blocking(&reportMutex);
+        NextReport nextReport{id, static_cast<uint16_t>(len)};
+        tu_fifo_write_n(&tx_ff_hid, &nextReport, (uint16_t)(sizeof(nextReport)));
+        tu_fifo_write_n(&tx_ff_hid, data, (uint16_t)len);
+        mutex_exit(&reportMutex);
+  }
 
+  if (TinyUSBDevice.suspended())
+  {
+        TinyUSBDevice.remoteWakeup();
+  }
+  return 1;
+}
+
+bool HID_::SendLastReport()
+{
+  bool success = true;
+  mutex_enter_blocking(&reportMutex);
+  if (tu_fifo_count(&tx_ff_hid) != 0)
+  {
+        struct
+        {
+          NextReport nextReport;
+          uint8_t dataReport[256];
+        } nextReportWithData;
+        tu_fifo_peek_n(&tx_ff_hid, &nextReportWithData.nextReport, (uint16_t)(sizeof(nextReportWithData.nextReport)));
+        tu_fifo_peek_n(&tx_ff_hid, &nextReportWithData, (uint16_t)(sizeof(nextReportWithData.nextReport)) + nextReportWithData.nextReport.len);
+
+          success = usb_hid.sendReport(nextReportWithData.nextReport.id, nextReportWithData.dataReport, nextReportWithData.nextReport.len);
+
+        if (success || TinyUSBDevice.suspended())
+        {
+          tu_fifo_advance_read_pointer(&tx_ff_hid, (uint16_t)(sizeof(nextReportWithData.nextReport)) + nextReportWithData.nextReport.len);
+        }
+  }
+  mutex_exit(&reportMutex);
+  return success;
 }
 
 HID_::HID_() : protocol(HID_REPORT_PROTOCOL), idle(0) {
@@ -188,9 +238,11 @@ uint8_t const descriptor_tmp[] = {  //  NKRO Keyboard
 };
 
 int HID_::begin() {
+  mutex_init(&reportMutex);
   usb_hid.setPollInterval(1);
   usb_hid.setReportDescriptor(descriptor_tmp, sizeof(descriptor_tmp));
   usb_hid.setBootProtocol(0);
   usb_hid.begin();
+  tu_fifo_config(&tx_ff_hid, tx_ff_buf_hid, TU_ARRAY_SIZE(tx_ff_buf_hid), 1, true);
   return 0;
 }

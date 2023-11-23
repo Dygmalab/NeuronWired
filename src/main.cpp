@@ -212,6 +212,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
 // clang-format on
 
 
+
 void setup() {
   TinyUSBDevice.setID(BOARD_VENDORID, BOARD_PRODUCTID);
   TinyUSBDevice.setManufacturerDescriptor(BOARD_MANUFACTURER);
@@ -230,7 +231,6 @@ void setup() {
   DynamicMacros.reserve_storage(2048);
   EEPROMUpgrade.reserveStorage();
   EEPROMUpgrade.upgrade();
-  watchdog_enable(2000, 1);
 }
 
 void loop() {
@@ -238,10 +238,13 @@ void loop() {
   Kaleidoscope.loop();
   Communications.run();
   protocolBreathe();
-  watchdog_update();
 }
 
 
 void setup1() {
   Communications.init();
+}
+
+void loop1(){
+  HID().SendLastReport();
 }
