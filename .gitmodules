@@ -1,14 +1,14 @@
 [submodule "lib/Communications"]
-	path = lib/Communications
+	path = lib/Communications/Communications
 	url = git@github.com:Dygmalab/DefyCommunications.git
 [submodule "lib/PluginUpgrade"]
-	path = lib/PluginUpgrade
+	path = lib/PluginUpgrade/PluginUpgrade
 	url = git@github.com:Dygmalab/KaleidoscopePluginKeyScannerUpgrade.git
 
 [submodule "lib/PluginLedLibrary"]
-	path = lib/PluginLedLibrary
+	path = lib/PluginLedLibrary/PluginLedLibrary
 	url = git@github.com:Dygmalab/KaleidoscopePuglinLedLibraryDefy.git
 
 [submodule "lib/kaleidoscope"]
-	path = lib/kaleidoscope
+	path = lib/kaleidoscope/kaleidoscope
 	url = git@github.com:Dygmalab/Kaleidoscope-Dygma.git
