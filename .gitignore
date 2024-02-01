@@ -5,3 +5,7 @@ cmake-build-*/
 .vscode/
 node_modules
 build/
+# Ignore Eclipse
+.settings
+.cproject
+.project
