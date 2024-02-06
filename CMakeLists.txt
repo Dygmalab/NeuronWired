@@ -28,10 +28,7 @@ if (NOT DEFINED VERSION)
 endif ()
 # Include build functions from Pico SDK
 include(pico_sdk_import.cmake)
-include(pico_extras_import.cmake)
-
-# Creates a pico-sdk subdirectory in our project for the libraries
-pico_sdk_init()
+#include(pico_extras_import.cmake)
 
 # Set name of project (as PROJECT_NAME) and C/C++ standards
 project(NeuronWired C CXX ASM)
@@ -39,6 +36,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(PICO_CXX_ENABLE_EXCEPTIONS 1)
 set(PICO_CXX_ENABLE_RTTI 1)
+
+# Creates a pico-sdk subdirectory in our project for the libraries
+pico_sdk_init()
 
 # Add subdirectories to the project
 add_subdirectory(lib)
@@ -76,12 +76,13 @@ pico_enable_stdio_usb(${NEURONWIRED} 0)
 target_link_libraries(${NEURONWIRED}
         pico_stdlib
         pico_multicore
+        pico_unique_id
         hardware_i2c
         hardware_exception
         hardware_dma
         hardware_flash
         hardware_pio
-        hardware_sleep
+        # hardware_sleep
         hardware_spi
         )
 
@@ -128,16 +129,14 @@ target_compile_definitions(${NEURONWIRED} PUBLIC
         -DUSB_PRODUCT="DEFY"
 
         -DF_CPU=133000000L
-
         -DEEPROM_EMULATION_SIZE=8192
-
         -DKALEIDOSCOPE_HARDWARE_H="Kaleidoscope-Hardware-Dygma-DefyWN.h"
         -DKALEIDOSCOPE_LED_CONTROL_H="kaleidoscope/plugin/LEDControl.h"
         )
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-    #Change this to 0 if you want to debug
-    pico_enable_stdio_usb(${NEURONWIRED} 1)
+    ##Change this to 0 if you want to debug
+    #pico_enable_stdio_usb(${NEURONWIRED} 1)
 
     math(EXPR FLASH_OFFSET_MAINPROGRAM "0")
 

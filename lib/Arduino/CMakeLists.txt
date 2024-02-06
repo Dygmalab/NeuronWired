@@ -80,7 +80,7 @@ target_include_directories(Arduino
 		 ${PICO_SDK_PATH}/src/rp2_common/pico_rand/include
 		# ${PICO_SDK_PATH}/src/rp2_common/pico_stdio/include
 		# ${PICO_SDK_PATH}/src/rp2_common/pico_stdio_uart/include
-		# ${PICO_SDK_PATH}/src/rp2_common/pico_unique_id/include
+		${PICO_SDK_PATH}/src/rp2_common/pico_unique_id/include
 		${PICO_SDK_PATH}/lib/cyw43-driver/src
 		${PICO_SDK_PATH}/lib/lwip/src/include
 		${PICO_SDK_PATH}/lib/btstack/src
@@ -91,11 +91,13 @@ target_sources(Arduino
         INTERFACE
         cores/rp2040/api/Print.cpp
         cores/rp2040/api/Stream.cpp
+        cores/rp2040/api/String.cpp
         cores/rp2040/_freertos.cpp
         cores/rp2040/CoreMutex.cpp
         cores/rp2040/delay.cpp
         cores/rp2040/main.cpp
         cores/rp2040/PIOProgram.cpp
+        cores/rp2040/RP2040USB.cpp
         cores/rp2040/wiring_analog.cpp
         cores/rp2040/wiring_digital.cpp
         cores/rp2040/wiring_private.cpp
@@ -104,7 +106,19 @@ target_sources(Arduino
         libraries/Adafruit_TinyUSB_Arduino/src/arduino/Adafruit_USBD_Device.cpp
         libraries/Adafruit_TinyUSB_Arduino/src/arduino/Adafruit_USBH_Host.cpp
         libraries/Adafruit_TinyUSB_Arduino/src/arduino/hid/Adafruit_USBD_HID.cpp
+        libraries/Adafruit_TinyUSB_Arduino/src/arduino/msc/Adafruit_USBD_MSC.cpp
         libraries/Adafruit_TinyUSB_Arduino/src/arduino/ports/rp2040/Adafruit_TinyUSB_rp2040.cpp
+        libraries/Adafruit_TinyUSB_Arduino/src/class/cdc/cdc_device.c
+        libraries/Adafruit_TinyUSB_Arduino/src/class/hid/hid_device.c
+        libraries/Adafruit_TinyUSB_Arduino/src/class/midi/midi_device.c
+        libraries/Adafruit_TinyUSB_Arduino/src/class/msc/msc_device.c
+        libraries/Adafruit_TinyUSB_Arduino/src/class/vendor/vendor_device.c
+        libraries/Adafruit_TinyUSB_Arduino/src/common/tusb_fifo.c
+        libraries/Adafruit_TinyUSB_Arduino/src/device/usbd.c
+        libraries/Adafruit_TinyUSB_Arduino/src/device/usbd_control.c
+        libraries/Adafruit_TinyUSB_Arduino/src/portable/raspberrypi/rp2040/dcd_rp2040.c
+        libraries/Adafruit_TinyUSB_Arduino/src/portable/raspberrypi/rp2040/rp2040_usb.c
+        libraries/Adafruit_TinyUSB_Arduino/src/tusb.c
         libraries/Wire/src/Wire.cpp
         )
 
