@@ -68,7 +68,7 @@ target_link_libraries(${NEURONWIRED}
 # Create map/bin/hex/uf2 files
 pico_add_extra_outputs(${NEURONWIRED})
 
-target_compile_options(${NEURONWIRED} PRIVATE -O0)
+# target_compile_options(${NEURONWIRED} PRIVATE -O0)
 
 target_compile_definitions(${NEURONWIRED} PUBLIC
         -DNEURONWIRED=1
