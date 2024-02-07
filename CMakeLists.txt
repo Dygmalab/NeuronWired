@@ -68,8 +68,6 @@ target_link_libraries(${NEURONWIRED}
 # Create map/bin/hex/uf2 files
 pico_add_extra_outputs(${NEURONWIRED})
 
-# target_compile_options(${NEURONWIRED} PRIVATE -O0)
-
 target_compile_definitions(${NEURONWIRED} PUBLIC
         -DNEURONWIRED=1
         -DFMW_VERSION=${VERSION}
@@ -93,6 +91,8 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
             DBG_PRINT_ENABLED
             DBG_PRINT_ERROR_ENABLED
             DBG_PRINT_TRACE_ENABLED)
+            
+    target_compile_options(${NEURONWIRED} PRIVATE -O0)
 
 else (CMAKE_BUILD_TYPE MATCHES Release)
     math(EXPR FLASH_OFFSET_MAINPROGRAM "0")
