@@ -69,33 +69,25 @@ target_link_libraries(${NEURONWIRED}
 pico_add_extra_outputs(${NEURONWIRED})
 
 target_compile_definitions(${NEURONWIRED} PUBLIC
-        -DNEURONWIRED=1
-        -DFMW_VERSION=${VERSION}
+        -DF_CPU=133000000L
+        -D__RP2040__
+        -DNEURON_WIRED
         -DBOARD_VENDORID=0x35EF
         -DBOARD_PRODUCTID=0x0010
         -DBOARD_MANUFACTURER="DYGMA"
         -DBOARD_PRODUCT="DEFY"
         -DUSB_PRODUCT="DEFY"
-
-        -DF_CPU=133000000L
+        
         -DEEPROM_EMULATION_SIZE=8192
         -DKALEIDOSCOPE_HARDWARE_H="Kaleidoscope-Hardware-Dygma-DefyWN.h"
         -DKALEIDOSCOPE_LED_CONTROL_H="kaleidoscope/plugin/LEDControl.h"
+        
+        ${sysenv.BUILD_FLAG_FIRMWARE_VERSION}
         )
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-
-    math(EXPR FLASH_OFFSET_MAINPROGRAM "0")
-
-    target_compile_definitions(${NEURONWIRED} PUBLIC
-            DBG_PRINT_ENABLED
-            DBG_PRINT_ERROR_ENABLED
-            DBG_PRINT_TRACE_ENABLED)
-            
+if (CMAKE_BUILD_TYPE MATCHES Debug)            
     target_compile_options(${NEURONWIRED} PRIVATE -O0)
-
 else (CMAKE_BUILD_TYPE MATCHES Release)
-    math(EXPR FLASH_OFFSET_MAINPROGRAM "0")
 endif ()
 
 configure_file(memmap_mainProgram.ld memmap_mainProgram.ld @ONLY)
