@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if (DEFINED ENV{FIRMWARE_VERSION})
+    set(WN_FIRMWARE_VERSION $ENV{FIRMWARE_VERSION})
+    message("Using FIRMWARE_VERSION from environment ('${WN_FIRMWARE_VERSION}')")
+endif ()
+
 # Include build functions from Pico SDK
 include(pico_sdk_import.cmake)
 #include(pico_extras_import.cmake)
@@ -81,11 +86,15 @@ target_compile_definitions(${NEURONWIRED} PUBLIC
         -DEEPROM_EMULATION_SIZE=8192
         -DKALEIDOSCOPE_HARDWARE_H="Kaleidoscope-Hardware-Dygma-DefyWN.h"
         -DKALEIDOSCOPE_LED_CONTROL_H="kaleidoscope/plugin/LEDControl.h"
-        
-        ${sysenv.BUILD_FLAG_FIRMWARE_VERSION}
         )
+		
+if (DEFINED WN_FIRMWARE_VERSION)
+target_compile_definitions(${NEURONWIRED} PUBLIC
+        -DFIRMWARE_VERSION=\"${WN_FIRMWARE_VERSION}\"
+		)
+endif ()
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)            
+if (CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_options(${NEURONWIRED} PRIVATE -O0)
 else (CMAKE_BUILD_TYPE MATCHES Release)
 endif ()
