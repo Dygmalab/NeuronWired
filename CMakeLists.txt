@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if (DEFINED ENV{FIRMWARE_VERSION})
+    set(WN_FIRMWARE_VERSION $ENV{FIRMWARE_VERSION})
+    message("Using FIRMWARE_VERSION from environment ('${WN_FIRMWARE_VERSION}')")
+endif ()
+
 # Include build functions from Pico SDK
 include(pico_sdk_import.cmake)
 #include(pico_extras_import.cmake)
@@ -69,33 +74,29 @@ target_link_libraries(${NEURONWIRED}
 pico_add_extra_outputs(${NEURONWIRED})
 
 target_compile_definitions(${NEURONWIRED} PUBLIC
-        -DNEURONWIRED=1
-        -DFMW_VERSION=${VERSION}
+        -DF_CPU=133000000L
+        -D__RP2040__
+        -DNEURON_WIRED
         -DBOARD_VENDORID=0x35EF
         -DBOARD_PRODUCTID=0x0010
         -DBOARD_MANUFACTURER="DYGMA"
         -DBOARD_PRODUCT="DEFY"
         -DUSB_PRODUCT="DEFY"
-
-        -DF_CPU=133000000L
+        
         -DEEPROM_EMULATION_SIZE=8192
         -DKALEIDOSCOPE_HARDWARE_H="Kaleidoscope-Hardware-Dygma-DefyWN.h"
         -DKALEIDOSCOPE_LED_CONTROL_H="kaleidoscope/plugin/LEDControl.h"
         )
+		
+if (DEFINED WN_FIRMWARE_VERSION)
+target_compile_definitions(${NEURONWIRED} PUBLIC
+        -DFIRMWARE_VERSION=\"${WN_FIRMWARE_VERSION}\"
+		)
+endif ()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
-
-    math(EXPR FLASH_OFFSET_MAINPROGRAM "0")
-
-    target_compile_definitions(${NEURONWIRED} PUBLIC
-            DBG_PRINT_ENABLED
-            DBG_PRINT_ERROR_ENABLED
-            DBG_PRINT_TRACE_ENABLED)
-            
     target_compile_options(${NEURONWIRED} PRIVATE -O0)
-
 else (CMAKE_BUILD_TYPE MATCHES Release)
-    math(EXPR FLASH_OFFSET_MAINPROGRAM "0")
 endif ()
 
 configure_file(memmap_mainProgram.ld memmap_mainProgram.ld @ONLY)
