@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.10.0...pre_release_1.10.1) (2024-02-19)
+
+
+### Bug Fixes
+
+* Adding FIRMWARE_VERSION to the CMAKE build ([6653e65](https://github.com/Dygmalab/NeuronWired/commit/6653e659f2bbcb783cbec851a8e6075651597686))
+
 # [1.10.0](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.9.3...pre_release_1.10.0) (2023-11-23)
 
 
