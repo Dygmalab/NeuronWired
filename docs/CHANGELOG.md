@@ -1,3 +1,10 @@
+## [1.10.2](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.10.1...pre_release_1.10.2) (2024-03-05)
+
+
+### Bug Fixes
+
+* max qukey value is 254 to avoid memory erase error ([5ade920](https://github.com/Dygmalab/NeuronWired/commit/5ade920fd79cd1e4978899c58aa6cac007e8b421))
+
 ## [1.10.1](https://github.com/Dygmalab/NeuronWired/compare/pre_release_1.10.0...pre_release_1.10.1) (2024-02-19)
 
 
