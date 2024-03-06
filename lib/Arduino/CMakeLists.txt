@@ -1,16 +1,5 @@
 add_library(Arduino INTERFACE)
 
-target_compile_definitions(Arduino INTERFACE
-        -DARDUINO_RASPBERRY_PI_PICO
-        -DARDUINO_ARCH_RP2040
-        -DARDUINO=10804
-        -DCFG_DEBUG=0
-        -DLFS_NO_ASSERT
-        -DUSE_LFXO
-        -DUSBCON
-        -DUSE_TINYUSB
-        )
-
 target_include_directories(Arduino
         INTERFACE
 		cores/rp2040

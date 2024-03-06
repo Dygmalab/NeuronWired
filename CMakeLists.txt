@@ -83,6 +83,15 @@ target_compile_definitions(${NEURONWIRED} PUBLIC
         -DBOARD_PRODUCT="DEFY"
         -DUSB_PRODUCT="DEFY"
         
+		-DARDUINO_RASPBERRY_PI_PICO
+        -DARDUINO_ARCH_RP2040
+        -DARDUINO=10804
+        -DCFG_DEBUG=0
+        -DLFS_NO_ASSERT
+        -DUSE_LFXO
+        -DUSBCON
+        -DUSE_TINYUSB
+		
         -DEEPROM_EMULATION_SIZE=8192
         -DKALEIDOSCOPE_HARDWARE_H="Kaleidoscope-Hardware-Dygma-DefyWN.h"
         -DKALEIDOSCOPE_LED_CONTROL_H="kaleidoscope/plugin/LEDControl.h"
