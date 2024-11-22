@@ -7,9 +7,9 @@ target_include_directories(kaleidoscope
 
 target_sources(kaleidoscope
         INTERFACE
-        kaleidoscope/src/kaleidoscope/device/dygma/defyWN/Hand.cpp
-        kaleidoscope/src/kaleidoscope/device/dygma/defyWN/SettingsConfigurator.cpp
-        kaleidoscope/src/kaleidoscope/device/dygma/DefyWN.cpp
+        kaleidoscope/src/kaleidoscope/device/dygma/defyWN/universalModules/Hand.cpp
+        kaleidoscope/src/kaleidoscope/device/dygma/defyWN/universalModules/SettingsConfigurator.cpp
+        kaleidoscope/src/kaleidoscope/device/dygma/defyWN/DefyWN.cpp
         kaleidoscope/src/kaleidoscope/key_events.cpp
         kaleidoscope/src/kaleidoscope/layers.cpp
         kaleidoscope/src/kaleidoscope/plugin/DynamicMacros.cpp

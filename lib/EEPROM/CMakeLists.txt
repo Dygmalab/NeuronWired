@@ -8,7 +8,3 @@ target_sources(EEPROM
         INTERFACE
         ./src/EEPROM.cpp
         )
-
-target_link_libraries(EEPROM
-        INTERFACE
-        )
