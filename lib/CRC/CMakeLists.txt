@@ -6,7 +6,7 @@ target_include_directories(CRC
 
 target_sources(CRC
         INTERFACE
-        ./src/CRC.cpp
+        ./src/CRC_wrapper.cpp
         )
 
 target_link_libraries(CRC
