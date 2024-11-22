@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-#include "types.h"
+#include "dl_types.h"
 #include "dl_assert.h"
 
 #include "memory/heap.h"

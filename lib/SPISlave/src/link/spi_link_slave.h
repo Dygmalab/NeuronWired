@@ -30,9 +30,9 @@
 extern "C" {
 #endif
 
-#include "middleware/middleware.h"
-#include "middleware/halsep/hal_mcu_gpio.h"
-#include "middleware/halsep/hal_mcu_spi.h"
+#include "dl_middleware.h"
+#include "hal_mcu_gpio.h"
+#include "hal_mcu_spi.h"
 
 typedef enum
 {

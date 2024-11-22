@@ -28,8 +28,8 @@
 extern "C" {
 #endif
 
-#include "middleware/middleware.h"
-#include "hal\hal_config.h"
+#include "dl_middleware.h"
+#include "hal_config.h"
 #include HAL_MCU_LL_DMA_LINK
 
 // DMA transfer direction

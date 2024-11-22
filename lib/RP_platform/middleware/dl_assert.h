@@ -26,7 +26,7 @@
 #ifndef __DL_ASSERT_H_
 #define __DL_ASSERT_H_
 
-#include "types.h"
+#include "dl_types.h"
 
 #ifndef DEBUG
 #define STOP_IF_ERR( err, msg )

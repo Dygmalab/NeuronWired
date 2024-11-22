@@ -27,7 +27,7 @@
 #define __MUTEX_H_
 
 #include "dl_middleware.h"
-#include "halsep/hal_mcu_mutex.h"
+#include "hal_mcu_mutex.h"
 
 typedef hal_mcu_mutex_t mutex_t;
 

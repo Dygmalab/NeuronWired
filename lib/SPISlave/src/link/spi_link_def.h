@@ -26,7 +26,7 @@
 #ifndef __SPI_LINK_DEF_H_
 #define __SPI_LINK_DEF_H_
 
-#include "middleware/middleware.h"
+#include "dl_middleware.h"
 
 /* SPI link layer message types */
 typedef uint8_t spil_mess_type_t;
