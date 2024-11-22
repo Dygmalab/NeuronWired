@@ -24,9 +24,9 @@
 #ifndef __HAL_MCU_GPIO_LL_H
 #define __HAL_MCU_GPIO_LL_H
 
-#include "middleware/middleware.h"
+#include "dl_middleware.h"
 
-#include "middleware\halsep\hal_mcu_gpio.h"
+#include "hal_mcu_gpio.h"
 
 
 extern result_t hal_ll_mcu_gpio_init( hal_mcu_gpio_t ** pp_gpio, const hal_mcu_gpio_conf_t * p_conf );

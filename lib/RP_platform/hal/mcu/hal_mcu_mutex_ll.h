@@ -24,10 +24,10 @@
 #ifndef __HAL_MCU_MUTEX_LL_H_
 #define __HAL_MCU_MUTEX_LL_H_
 
-#include "middleware/middleware.h"
+#include "dl_middleware.h"
 
-#include "middleware\halsep\hal_mcu_mutex.h"
-//#include "hal\mcu\hal_mcu_ll.h"
+#include "hal_mcu_mutex.h"
+
 
 extern void hal_ll_mcu_mutex_init( hal_mcu_mutex_t ** pp_mutex );
 extern void hal_ll_mcu_mutex_destroy( hal_mcu_mutex_t * p_mutex );

@@ -24,7 +24,7 @@
 #include "pico/stdio.h"
 #include "hardware/gpio.h"
 
-#include "hal\mcu\hal_mcu_gpio_ll.h"
+#include "hal_mcu_gpio_ll.h"
 
 
 #if HAL_CFG_MCU_SERIES == HAL_MCU_SERIES_RP20

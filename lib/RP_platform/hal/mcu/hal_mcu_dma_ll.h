@@ -24,8 +24,8 @@
 #ifndef _HAL_MCU_DMA_LL_H
 #define _HAL_MCU_DMA_LL_H
 
-#include "middleware/middleware.h"
-#include "middleware\halsep\hal_mcu_dma.h"
+#include "dl_middleware.h"
+#include "hal_mcu_dma.h"
 
 // Initialize the DMA subsystem
 extern result_t hal_ll_mcu_dma_channel_init( hal_mcu_dma_channel_t ** pp_channel ,  const hal_mcu_dma_channel_config_t *p_config);

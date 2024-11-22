@@ -24,9 +24,9 @@
 #ifndef __HAL_MCU_SPI_LL_H_
 #define __HAL_MCU_SPI_LL_H_
 
-#include "middleware/middleware.h"
+#include "dl_middleware.h"
 
-#include "middleware\halsep\hal_mcu_spi.h"
+#include "hal_mcu_spi.h"
 
 
 extern result_t hal_ll_mcu_spi_init( hal_mcu_spi_t ** pp_spi, const hal_mcu_spi_conf_t * p_conf );

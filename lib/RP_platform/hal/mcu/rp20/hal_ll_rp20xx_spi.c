@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "hal\mcu\hal_mcu_dma_ll.h"
-#include "hal\mcu\hal_mcu_spi_ll.h"
+#include "hal_mcu_dma_ll.h"
+#include "hal_mcu_spi_ll.h"
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 
@@ -62,15 +62,6 @@ typedef struct
     hal_mcu_spi_bit_order_t bit_order;
     spi_order_t pico_order;
 } bit_order_def_t;
-
-typedef struct
-{
-
-
-    /* Event handlers */
-    void * p_instance;
-    hal_mcu_spi_master_transfer_done_handler_t transfer_done_handler;
-} master_t;
 
 typedef struct
 {
@@ -644,11 +635,6 @@ result_t hal_ll_mcu_spi_init( hal_mcu_spi_t ** pp_spi, const hal_mcu_spi_conf_t 
 _EXIT:
     return result;
 
-}
-
-bool_t hal_ll_mcu_spi_is_master( hal_mcu_spi_t * p_spi )
-{
-    return ( p_spi->role == HAL_MCU_SPI_ROLE_MASTER ) ? true : false;
 }
 
 bool_t hal_ll_mcu_spi_is_slave( hal_mcu_spi_t * p_spi )
