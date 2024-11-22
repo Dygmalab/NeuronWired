@@ -12,4 +12,5 @@ target_sources(SPISlave
 
 target_link_libraries(SPISlave
         INTERFACE
+        FIFO_BUFFER
         )
