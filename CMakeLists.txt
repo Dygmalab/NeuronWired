@@ -29,6 +29,18 @@ pico_sdk_init()
 # Add subdirectories to the project
 add_subdirectory(lib)
 
+# Include directories for HAL and middleware libraries
+include_directories(src)
+include_directories(configuration/middleware_config)
+include_directories(lib/RP_platform/hal)
+include_directories(lib/RP_platform/hal/mcu)
+include_directories(lib/RP_platform/hal/mcu/rp20)
+
+# Middleware libraries.
+include_directories(lib/RP_platform)
+include_directories(lib/RP_platform/middleware)
+include_directories(lib/RP_platform/middleware/halsep)
+
 # Tell CMake where to find the executable source file
 set(NEURONWIRED NeuronWired)
 
@@ -39,7 +51,29 @@ add_executable(${NEURONWIRED}
         src/IntegrationTest.cpp
         src/LED-CapsLockLight.cpp
         src/main.cpp
-        )
+        src/config_app.h
+
+        lib/SPISlave/src/link/spi_link_def.h
+        lib/SPISlave/src/link/spi_link_slave.h
+        lib/SPISlave/src/link/spi_link_slave.c
+
+        lib/RP_platform/middleware/memory/heap.c
+        lib/RP_platform/middleware/utils/dl_crc32.c
+        lib/RP_platform/middleware/halsep/hal_mcu_spi.c
+        lib/RP_platform/middleware/halsep/hal_mcu_dma.h
+        lib/RP_platform/middleware/halsep/hal_mcu_dma.c
+
+        # Low level hal includes
+        lib/RP_platform/hal/mcu/rp20/hal_ll_rp20xx_gpio.c
+        lib/RP_platform/hal/mcu/rp20/hal_ll_rp20xx_mutex.c
+        lib/RP_platform/hal/mcu/rp20/hal_ll_rp20xx_spi.c
+        lib/RP_platform/hal/mcu/hal_mcu_spi_ll.h
+        lib/RP_platform/hal/mcu/hal_mcu_dma_ll.h
+        lib/RP_platform/hal/mcu/rp20/hal_ll_rp20xx_dma.c
+
+        lib/RP_platform/middleware/dl_types.h
+        lib/RP_platform/middleware/halsep/hal_mcu_mutex.c
+)
 
 pico_set_program_name(${NEURONWIRED} "NeuronWired")
 pico_set_program_version(${NEURONWIRED} "0.1")
@@ -73,6 +107,7 @@ target_link_libraries(${NEURONWIRED}
         PluginLedLibrary
         PluginUpgrade
         SPISlave
+        FIFO_BUFFER
         )
 # Create map/bin/hex/uf2 files
 pico_add_extra_outputs(${NEURONWIRED})
@@ -80,25 +115,28 @@ pico_add_extra_outputs(${NEURONWIRED})
 target_compile_definitions(${NEURONWIRED} PUBLIC
         -DF_CPU=133000000L
         -D__RP2040__
-        -DNEURON_WIRED
+        -DUSE_TINYUSB
         -DBOARD_VENDORID=0x35EF
         -DBOARD_PRODUCTID=0x0010
         -DBOARD_MANUFACTURER="DYGMA"
         -DBOARD_PRODUCT="DEFY"
+        -DUSBCON
+        -DKALEIDOSCOPE_HARDWARE_H="Kaleidoscope-Hardware-Dygma-DefyWN.h"
+        -DKALEIDOSCOPE_LED_CONTROL_H="kaleidoscope/plugin/LEDControl.h"
+        -DEEPROM_EMULATION_SIZE=8192
+        -DHAL_CFG_MCU=HAL_MCU_RP2040
+        -DMCU_ALIGNMENT_SIZE=4
+        -DNEURON_WIRED
         -DUSB_PRODUCT="DEFY"
-        
+
 		-DARDUINO_RASPBERRY_PI_PICO
         -DARDUINO_ARCH_RP2040
         -DARDUINO=10804
         -DCFG_DEBUG=0
         -DLFS_NO_ASSERT
         -DUSE_LFXO
-        -DUSBCON
-        -DUSE_TINYUSB
-		
-        -DEEPROM_EMULATION_SIZE=8192
-        -DKALEIDOSCOPE_HARDWARE_H="Kaleidoscope-Hardware-Dygma-DefyWN.h"
-        -DKALEIDOSCOPE_LED_CONTROL_H="kaleidoscope/plugin/LEDControl.h"
+
+
         )
 		
 if (DEFINED WN_FIRMWARE_VERSION)
