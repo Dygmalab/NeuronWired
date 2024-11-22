@@ -28,8 +28,5 @@
 
     #define HEAP_SIZE                   16384
 
-/**************************** RFGateway ****************************/
-
-    #define RFGW_MSG_BUFFER_LENGTH      128
 
 #endif /* __CONFIG_APP_H */
