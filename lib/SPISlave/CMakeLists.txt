@@ -6,7 +6,8 @@ target_include_directories(SPISlave
 
 target_sources(SPISlave
         INTERFACE
-        ./src/SPISlave.cpp
+        ./src/Spi_slave.cpp
+        ./src/SpiPort.cpp
         )
 
 target_link_libraries(SPISlave
