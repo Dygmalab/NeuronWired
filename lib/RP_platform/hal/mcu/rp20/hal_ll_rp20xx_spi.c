@@ -147,12 +147,10 @@ static const bit_order_def_t p_bit_order_def_array[] =
 
 /* Prototypes */
 static result_t _dma_init( hal_mcu_spi_t * p_spi );
-static result_t _master_init( hal_mcu_spi_t * _spi, const hal_mcu_spi_conf_t * _conf );
-static result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf); 
-static void _master_dma_event_handler( hal_mcu_spi_t * p_spi );
+static result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf);
 static void _slave_dma_event_handler( hal_mcu_spi_t * p_spi );
 result_t _slave_transfer(hal_mcu_spi_t * p_spi,  const hal_mcu_spi_transfer_conf_t * p_transfer_conf);
-static result_t _prepare_slave_for_reception (hal_mcu_spi_t* p_spi, const hal_mcu_spi_transfer_conf_t * p_transfer_conf);
+
 
 static result_t _spi_init( hal_mcu_spi_t * p_spi, const hal_mcu_spi_conf_t * p_conf )
 {
@@ -172,6 +170,8 @@ static result_t _spi_init( hal_mcu_spi_t * p_spi, const hal_mcu_spi_conf_t * p_c
     p_spi->p_data_in = NULL;
     p_spi->data_out_len = 0;
     p_spi->data_in_len = 0;
+
+    p_spi->data_in_progress_len = 0;
 
     p_spi->dummy_in = 0x00;
     p_spi->dummy_out = DUMMY_OUT_VALUE;
@@ -228,6 +228,16 @@ static result_t _spi_line_configure( hal_mcu_spi_t * p_spi, const hal_mcu_spi_li
 /*                     DMA                     */
 /***********************************************/
 
+static INLINE void _slave_buffers_set_done_handler( hal_mcu_spi_t * p_spi )
+{
+    if ( p_spi->slave.buffers_set_done_handler == NULL )
+    {
+            return;
+    }
+
+    p_spi->slave.buffers_set_done_handler( p_spi->slave.p_instance );
+}
+
 static void _dma_event_handler_t( void * p_instance, hal_mcu_dma_event_t event )
 {
     hal_mcu_spi_t * p_spi = ( hal_mcu_spi_t *)p_instance;
@@ -238,6 +248,7 @@ static void _dma_event_handler_t( void * p_instance, hal_mcu_dma_event_t event )
     {
         case HAL_MCU_SPI_ROLE_SLAVE:
         {
+            p_spi->busy = false;
             _slave_dma_event_handler( p_spi );
         }
         break;
@@ -283,6 +294,63 @@ _EXIT:
     return result;
 }
 
+static result_t _configure_dma( hal_mcu_spi_t* p_spi , const hal_mcu_spi_transfer_conf_t *p_conf)
+{
+    result_t result = RESULT_ERR;
+
+    hal_mcu_dma_transfer_config_t dma_transfer_config_rx;
+    hal_mcu_dma_transfer_config_t dma_transfer_config_tx;
+
+    /* Get the number of bytes to be transfered in this step */
+    p_spi->data_in_progress_len = ( p_spi->data_in_len > p_spi->data_out_len ) ? p_spi->data_in_len : p_spi->data_out_len;
+
+    /* If the data in and data out are the same length, we can transfer them in one go */
+    if (p_spi->data_in_len == p_spi->data_out_len)
+    {
+        p_spi->data_in_progress_len = p_spi->data_in_len;
+    }
+
+    /* Set the RX DMA transfer configuration */
+    dma_transfer_config_rx.buffer_size = p_spi->data_in_progress_len;
+    dma_transfer_config_rx.read_address = (void*)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
+    dma_transfer_config_rx.read_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
+
+    if( p_spi->data_in_len != 0 )
+    {
+            dma_transfer_config_rx.write_address = p_spi->p_data_in;
+            dma_transfer_config_rx.write_increment_mode = HAL_MCU_DMA_INC_MODE_ENABLED;
+    }
+    else
+    {
+            dma_transfer_config_rx.write_address = &p_spi->dummy_in;
+            dma_transfer_config_rx.write_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
+    }
+
+    /* Set the TX DMA transfer configuration */
+    dma_transfer_config_tx.buffer_size = p_spi->data_in_progress_len;
+    dma_transfer_config_tx.write_address = (void *)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
+    dma_transfer_config_tx.write_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
+
+    if( p_spi->data_out_len != 0 )
+    {
+            dma_transfer_config_tx.read_address = p_spi->p_data_out;
+            dma_transfer_config_tx.read_increment_mode = HAL_MCU_DMA_INC_MODE_ENABLED;
+    }
+    else
+    {
+            p_spi->dummy_out = DUMMY_OUT_VALUE;
+            dma_transfer_config_tx.read_address = &p_spi->dummy_out;
+            dma_transfer_config_tx.read_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
+    }
+
+    /* Prepare both DMA channels simultaneously */
+    p_spi->busy = true;
+
+    result = hal_mcu_dma_prepare_channels_simultaneously( p_spi->p_dma_tx, &dma_transfer_config_tx, p_spi->p_dma_rx , &dma_transfer_config_rx );
+    ASSERT_DYGMA( result == RESULT_OK, "hal_mcu_dma_start_channels_simultaneously failed" );
+    return result;
+}
+
 /***********************************************/
 /*              Slave processing              */
 /***********************************************/
@@ -299,8 +367,13 @@ static void _cs_cb(hal_mcu_spi_t *p_spi , uint32_t events)
     }
     else if (events & GPIO_IRQ_EDGE_RISE) 
     {
-        // The CS pin is set high by the master, the SPI transfer is ending.
-        // we need to finish the DMA transfer.
+        // The master sets the CS pin high, the SPI transfer is ending.
+        // We need to finish the DMA transfer.
+
+        hal_mcu_dma_abort(p_spi->p_dma_tx);
+        hal_mcu_dma_abort(p_spi->p_dma_rx);
+        p_spi->busy = false;
+        _slave_dma_event_handler(p_spi); // Process remaining data.
     }
     
 }
@@ -323,7 +396,7 @@ void _cs_cb_1 (uint gpio, uint32_t events)
     _cs_cb(p_spi1, events);
 }
 
-result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf) 
+result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf)
 {
 
     #warning "TODO: Check DMA overflow."
@@ -366,69 +439,9 @@ _EXIT:
     return result;
 }
 
-// void _slave_transfer_finish( hal_mcu_spi_t * p_spi )
-// {
-//     /* The DMA transfer has finished */
-//     p_spi->busy = false;
-
-//     /* Update the transfer data only if there was valid data size in progress */
-//     if( p_spi->data_in_len != 0 )
-//     {
-//         ASSERT_DYGMA( p_spi->data_in_len >= p_spi->data_in_progress_len, "Critial: the SPI data_in_len check failed" );
-
-//         p_spi->p_data_in += p_spi->data_in_progress_len;
-//         p_spi->data_in_len -= p_spi->data_in_progress_len;
-//     }
-
-//     if( p_spi->data_out_len != 0 )
-//     {
-//         ASSERT_DYGMA( p_spi->data_out_len >= p_spi->data_in_progress_len, "Critial: the SPI data_out_len check failed" );
-
-//         p_spi->p_data_out += p_spi->data_in_progress_len;
-//         p_spi->data_out_len -= p_spi->data_in_progress_len;
-//     }
-
-//     /* Clear the last data in progress */
-//     p_spi->data_in_progress_len = 0;
-// }
-
-// result_t _prepare_slave_for_reception (hal_mcu_spi_t* p_spi, const hal_mcu_spi_transfer_conf_t * p_transfer_conf)
-// {
-//     result_t result = RESULT_ERR;
-
-//     ASSERT_DYGMA( p_spi->role = HAL_MCU_SPI_ROLE_MASTER, "Only SPI master may initialize the SPI transfer." );
-
-//     if( p_spi->busy == true )
-//     {
-//         return RESULT_BUSY;
-//     }
-
-//     /* Prepare the transfer event handlers */
-//     p_spi->slave.p_instance = p_transfer_conf->slave_handlers.p_instance;
-//     p_spi->slave.transfer_done_handler = p_transfer_conf->slave_handlers.transfer_done_handler;
-
-//     /* Prepare the transfer data */
-//     p_spi->p_data_out = p_transfer_conf->p_data_out;
-//     p_spi->p_data_in = p_transfer_conf->p_data_in;
-//     p_spi->data_out_len = p_transfer_conf->data_out_len;
-//     p_spi->data_in_len = p_transfer_conf->data_in_len;
-
-//     p_spi->data_in_progress_len = 0;
-
-//     /* Start the DMA transfer */
-//     result = _slave_transfer( p_spi );
-//     EXIT_IF_ERR( result, "_master_transfer failed" );
-
-// _EXIT:
-//     return RESULT_OK;
-// }
-
 result_t _slave_transfer(hal_mcu_spi_t* p_spi,  const hal_mcu_spi_transfer_conf_t * p_transfer_conf)
 {
     result_t result = RESULT_ERR;
-
-    hal_mcu_dma_transfer_config_t dma_transfer_config_rx;
-    hal_mcu_dma_transfer_config_t dma_transfer_config_tx;
 
     ASSERT_DYGMA( p_spi->role = HAL_MCU_SPI_ROLE_SLAVE, "Only SPI slave may initialize the SPI transfer." );
 
@@ -436,69 +449,18 @@ result_t _slave_transfer(hal_mcu_spi_t* p_spi,  const hal_mcu_spi_transfer_conf_
     {
         return RESULT_BUSY;
     }
-
-    // /* Get the number of bytes to be transfered in this step */
-    // if( p_spi->data_in_len != 0 && p_spi->data_out_len != 0 )
-    // {
-    //     /* The both transfer lines contain data to be transferred. The transfer will be done in two steps.
-    //      * For the first step, we pick the smaller data size. */
-    //     p_spi->data_in_progress_len = ( p_spi->data_in_len < p_spi->data_out_len ) ? p_spi->data_in_len : p_spi->data_out_len;
-    // }
-    // else
-    // {
-    //     /* At least one of the lines has been finished already, picking the remaining line. */
-    //     p_spi->data_in_progress_len = ( p_spi->data_in_len > p_spi->data_out_len ) ? p_spi->data_in_len : p_spi->data_out_len;
-    // }
-
-    // if( p_spi->data_in_progress_len == 0 )
-    // {
-    //     /* No data to be processed - the transfer is finished */
-    //     return RESULT_ERR;
-    // }
-
     /* Prepare the transfer event handlers */
     p_spi->slave.p_instance = p_transfer_conf->slave_handlers.p_instance;
     p_spi->slave.buffers_set_done_handler = p_transfer_conf->slave_handlers.buffers_set_done_handler;
     p_spi->slave.transfer_done_handler = p_transfer_conf->slave_handlers.transfer_done_handler;
 
-    /* Set the RX DMA transfer configuration */
-    dma_transfer_config_rx.buffer_size = p_spi->data_in_len;
-    dma_transfer_config_rx.read_address = (void*)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
-    dma_transfer_config_rx.read_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
+    /* Prepare the buffers*/
+    p_spi->p_data_out = p_transfer_conf->p_data_out;
+    p_spi->p_data_in = p_transfer_conf->p_data_in;
+    p_spi->data_in_len = p_transfer_conf->data_in_len;
+    p_spi->data_out_len = p_transfer_conf->data_out_len;
 
-    if( p_spi->data_in_len != 0 )
-    {
-        dma_transfer_config_rx.write_address = p_spi->p_data_in;
-        dma_transfer_config_rx.write_increment_mode = HAL_MCU_DMA_INC_MODE_ENABLED;
-    }
-    else
-    {
-        dma_transfer_config_rx.write_address = &p_spi->dummy_in;
-        dma_transfer_config_rx.write_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
-    }
-
-    /* Set the TX DMA transfer configuration */
-    dma_transfer_config_tx.buffer_size = p_spi->data_out_len;
-    dma_transfer_config_tx.write_address = (void *)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
-    dma_transfer_config_tx.write_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
-
-    if( p_spi->data_out_len != 0 )
-    {
-        dma_transfer_config_tx.read_address = p_spi->p_data_out;
-        dma_transfer_config_tx.read_increment_mode = HAL_MCU_DMA_INC_MODE_ENABLED;
-    }
-    else
-    {
-        p_spi->dummy_out = DUMMY_OUT_VALUE;
-        dma_transfer_config_tx.read_address = &p_spi->dummy_out;
-        dma_transfer_config_tx.read_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
-    }
-
-    /* Start both DMA channels simultaneously */
-    p_spi->busy = true;
-
-    result = hal_mcu_dma_prepare_channels_simultaneously( p_spi->p_dma_tx, &dma_transfer_config_tx, p_spi->p_dma_rx , &dma_transfer_config_rx );
-    ASSERT_DYGMA( result == RESULT_OK, "hal_mcu_dma_start_channels_simultaneously failed" );
+    result = _configure_dma( p_spi , p_transfer_conf);
 
     if( result != RESULT_OK )
     {
@@ -506,100 +468,44 @@ result_t _slave_transfer(hal_mcu_spi_t* p_spi,  const hal_mcu_spi_transfer_conf_
         return RESULT_ERR;
     }
 
+    _slave_buffers_set_done_handler( p_spi );
+
     return result;
 }
 
-// result_t _slave_transfer(hal_mcu_spi_t * p_spi)
-// {
-//     result_t result = RESULT_ERR;
-
-//     hal_mcu_dma_transfer_config_t dma_transfer_config_rx;
-//     hal_mcu_dma_transfer_config_t dma_transfer_config_tx;
-
-//     /* Get the number of bytes to be transfered in this step */
-//     if( p_spi->data_in_len != 0 && p_spi->data_out_len != 0 )
-//     {
-//         /* The both transfer lines contain data to be transferred. The transfer will be done in two steps.
-//          * For the first step, we pick the smaller data size. */
-//         p_spi->data_in_progress_len = ( p_spi->data_in_len < p_spi->data_out_len ) ? p_spi->data_in_len : p_spi->data_out_len;
-//     }
-//     else
-//     {
-//         /* At least one of the lines has been finished already, picking the remaining line. */
-//         p_spi->data_in_progress_len = ( p_spi->data_in_len > p_spi->data_out_len ) ? p_spi->data_in_len : p_spi->data_out_len;
-//     }
-
-//     if( p_spi->data_in_progress_len == 0 )
-//     {
-//         /* No data to be processed - the transfer is finished */
-//         return RESULT_ERR;
-//     }
-
-//     /* Set the RX DMA transfer configuration */
-//     dma_transfer_config_rx.buffer_size = p_spi->data_in_progress_len;
-//     dma_transfer_config_rx.read_address = (void*)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
-//     dma_transfer_config_rx.read_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
-
-//     if( p_spi->data_in_len != 0 )
-//     {
-//         dma_transfer_config_rx.write_address = p_spi->p_data_in;
-//         dma_transfer_config_rx.write_increment_mode = HAL_MCU_DMA_INC_MODE_ENABLED;
-//     }
-//     else
-//     {
-//         dma_transfer_config_rx.write_address = &p_spi->dummy_in;
-//         dma_transfer_config_rx.write_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
-//     }
-
-//     /* Set the TX DMA transfer configuration */
-//     dma_transfer_config_tx.buffer_size = p_spi->data_in_progress_len;
-//     dma_transfer_config_tx.write_address = (void *)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
-//     dma_transfer_config_tx.write_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
-
-//     if( p_spi->data_out_len != 0 )
-//     {
-//         dma_transfer_config_tx.read_address = p_spi->p_data_out;
-//         dma_transfer_config_tx.read_increment_mode = HAL_MCU_DMA_INC_MODE_ENABLED;
-//     }
-//     else
-//     {
-//         p_spi->dummy_out = DUMMY_OUT_VALUE;
-//         dma_transfer_config_tx.read_address = &p_spi->dummy_out;
-//         dma_transfer_config_tx.read_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
-//     }
-
-//     /* Start both DMA channels simultaneously */
-//     p_spi->busy = true;
-
-//     result = hal_mcu_dma_start_channels_simultaneously( p_spi->p_dma_tx, &dma_transfer_config_tx, p_spi->p_dma_rx , &dma_transfer_config_rx );
-//     ASSERT_DYGMA( result == RESULT_OK, "hal_mcu_dma_start_channels_simultaneously failed" );
-//     if( result != RESULT_OK )
-//     {
-//         p_spi->busy = false;
-//         return RESULT_ERR;
-//     }
-
-//     return RESULT_OK;
-// }
-
-
-void _slave_transfer_done_handler(hal_mcu_spi_t * p_spi)
+void _slave_transfer_done_handler(hal_mcu_spi_t * p_spi , hal_mcu_spi_transfer_result_t * _transfer_result)
 {
     if ( p_spi->slave.transfer_done_handler == NULL )
     {
         return;
     }
-    hal_mcu_spi_transfer_result_t transfer_result = { .data_in_len = p_spi->data_in_progress_len, .data_out_len = p_spi->data_in_progress_len };
-    p_spi->slave.transfer_done_handler( p_spi->slave.p_instance, &transfer_result );
+
+    p_spi->slave.transfer_done_handler( p_spi->slave.p_instance, _transfer_result );
 }
 
-void _slave_dma_event_handler(hal_mcu_spi_t *p_spi) 
+static void _slave_dma_event_handler(hal_mcu_spi_t *p_spi)
 {
-
     /* Check the transfer is finished */
     if (p_spi->busy == false) 
     {
-        _slave_transfer_done_handler(p_spi);
+        hal_mcu_spi_transfer_result_t transfer_result;
+
+        if (p_spi->data_in_len > 0) {
+          p_spi->p_data_in += p_spi->data_in_progress_len;
+          p_spi->data_in_len -= p_spi->data_in_progress_len;
+        }
+
+        if (p_spi->data_out_len > 0) {
+          p_spi->p_data_out += p_spi->data_in_progress_len;
+          p_spi->data_out_len -= p_spi->data_in_progress_len;
+        }
+
+        transfer_result.data_in_len = p_spi->data_in_len;
+        transfer_result.data_out_len = p_spi->data_out_len;
+
+        _slave_transfer_done_handler(p_spi, &transfer_result);
+
+        p_spi->data_in_progress_len = 0;
     }
 }
 
