@@ -162,6 +162,7 @@ result_t hal_mcu_dma_event_handler_disable( const hal_mcu_dma_channel_t * p_chan
 
 uint32_t hal_mcu_dma_get_transfer_count( hal_mcu_dma_channel_t *p_channel );
 
+result_t hal_mcu_dma_abort( hal_mcu_dma_channel_t * p_channel );
 
 #ifdef __cplusplus
 }
