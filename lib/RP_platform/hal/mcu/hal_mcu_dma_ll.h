@@ -54,8 +54,6 @@ extern result_t hal_ll_mcu_dma_event_handler_enable( const hal_mcu_dma_channel_t
 
 extern uint32_t hal_ll_mcu_dma_get_transfer_count(hal_mcu_dma_channel_t *p_channel);
 
-extern result_t hal_ll_mcu_dma_abort( hal_mcu_dma_channel_t * p_channel );
-
 
 //extern result_t hal_ll_mcu_dma_restart_channel(hal_mcu_dma_channel_t *p_channel,   hal_mcu_dma_transfer_config_t  *config);
 

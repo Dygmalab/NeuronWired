@@ -485,14 +485,3 @@ uint32_t hal_ll_mcu_dma_get_transfer_count(hal_mcu_dma_channel_t *p_channel)
 {
     return (dma_channel_hw_addr(p_channel->channel_id))->transfer_count;
 }
-
-result_t hal_ll_mcu_dma_abort( hal_mcu_dma_channel_t * p_channel )
-{
-    if ( p_channel == NULL )
-    {
-        ASSERT_DYGMA( false, "DMA not initialized" );
-        return RESULT_ERR;
-    }
-    dma_channel_abort( p_channel->channel_id );
-    return RESULT_OK;
-}

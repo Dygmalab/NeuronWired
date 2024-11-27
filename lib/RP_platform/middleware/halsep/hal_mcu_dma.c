@@ -131,14 +131,3 @@ uint32_t hal_mcu_dma_get_transfer_count( hal_mcu_dma_channel_t *p_channel )
 
     return result;
 }
-
-result_t hal_mcu_dma_abort( hal_mcu_dma_channel_t * p_channel )
-{
-    result_t result = RESULT_ERR;
-
-    result =  hal_ll_mcu_dma_abort( p_channel );
-    EXIT_IF_ERR( result, "hal_ll_mcu_dma_abort failed" );
-
-    _EXIT:
-    return result;
-}
