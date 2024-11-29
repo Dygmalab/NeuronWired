@@ -123,7 +123,7 @@ void Spi_slave::init(void)
   config.spi.pin_cs   = (hal_mcu_gpio_pin_t)cs_pin;
 
   config.spi.line.freq      = SPI_SPEED;
-  config.spi.line.cpha      = HAL_MCU_SPI_CPHA_LEAD;        /* Clock phase */
+  config.spi.line.cpha      = HAL_MCU_SPI_CPHA_TRAIL;        /* Clock phase */
   config.spi.line.cpol      = HAL_MCU_SPI_CPOL_ACTIVE_HIGH; /* Clock polarity */
   config.spi.line.bit_order = HAL_MCU_SPI_BIT_ORDER_MSB_FIRST;
 

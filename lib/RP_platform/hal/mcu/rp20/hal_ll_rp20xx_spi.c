@@ -65,6 +65,15 @@ typedef struct
 
 typedef struct
 {
+    hal_mcu_spi_t * p_spi;
+    hal_mcu_dma_channel_t * p_dma;
+} spi_dma_t;
+
+typedef struct
+{
+    /* Chip Select */
+    hal_mcu_gpio_pin_t pin_cs;
+
     /* Event handlers */
     void * p_instance;
     hal_mcu_spi_slave_buffers_set_done_handler_t buffers_set_done_handler;
@@ -81,8 +90,8 @@ struct hal_mcu_spi
     bool_t busy;
 
     /* DMA */
-    hal_mcu_dma_channel_t * p_dma_rx;
-    hal_mcu_dma_channel_t * p_dma_tx;
+    spi_dma_t dma_rx;
+    spi_dma_t dma_tx;
 
     /* Transfer */
     uint8_t * p_data_out;
@@ -92,9 +101,6 @@ struct hal_mcu_spi
 
     uint8_t dummy_in;
     uint8_t dummy_out;
-
-    /* Transfer */
-    size_t data_in_progress_len;
 
     /* Lock */
     hal_mcu_spi_lock_t lock;
@@ -119,6 +125,7 @@ static const periph_def_t p_periph_def_array[] =
             .dma_request_type_rx = HAL_MCU_DMA_REQUEST_TYPE_SPI1_RX, .dma_request_type_tx = HAL_MCU_DMA_REQUEST_TYPE_SPI1_TX, },
 };
 #define get_periph_def( p_periph_def, id ) _get_def( p_periph_def, p_periph_def_array, periph_def_t, def, id )
+#define get_slave_cs_periph_def( p_periph_def, pin_cs_id ) _get_def( p_periph_def, p_periph_def_array, periph_def_t, pp_periph[0]->slave.pin_cs, pin_cs_id )
 
 /* SPI Clock Phase definitions */
 static const cpha_def_t p_cpha_def_array[] =
@@ -148,8 +155,7 @@ static const bit_order_def_t p_bit_order_def_array[] =
 /* Prototypes */
 static result_t _dma_init( hal_mcu_spi_t * p_spi );
 static result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf);
-static void _slave_dma_event_handler( hal_mcu_spi_t * p_spi );
-result_t _slave_transfer(hal_mcu_spi_t * p_spi,  const hal_mcu_spi_transfer_conf_t * p_transfer_conf);
+static result_t _slave_transfer(hal_mcu_spi_t * p_spi,  const hal_mcu_spi_transfer_conf_t * p_transfer_conf);
 
 
 static result_t _spi_init( hal_mcu_spi_t * p_spi, const hal_mcu_spi_conf_t * p_conf )
@@ -170,8 +176,6 @@ static result_t _spi_init( hal_mcu_spi_t * p_spi, const hal_mcu_spi_conf_t * p_c
     p_spi->p_data_in = NULL;
     p_spi->data_out_len = 0;
     p_spi->data_in_len = 0;
-
-    p_spi->data_in_progress_len = 0;
 
     p_spi->dummy_in = 0x00;
     p_spi->dummy_out = DUMMY_OUT_VALUE;
@@ -198,6 +202,16 @@ static result_t _spi_init( hal_mcu_spi_t * p_spi, const hal_mcu_spi_conf_t * p_c
 
 _EXIT:
     return result;
+}
+
+static INLINE void _spi_dma_enable( hal_mcu_spi_t * p_spi )
+{
+    hw_set_bits( &spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dmacr, SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS );
+}
+
+static INLINE void _spi_dma_disable( hal_mcu_spi_t * p_spi )
+{
+    hw_clear_bits( &spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dmacr, SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS );
 }
 
 static result_t _spi_line_configure( hal_mcu_spi_t * p_spi, const hal_mcu_spi_line_conf_t * p_line_conf )
@@ -228,38 +242,25 @@ static result_t _spi_line_configure( hal_mcu_spi_t * p_spi, const hal_mcu_spi_li
 /*                     DMA                     */
 /***********************************************/
 
-static INLINE void _slave_buffers_set_done_handler( hal_mcu_spi_t * p_spi )
-{
-    if ( p_spi->slave.buffers_set_done_handler == NULL )
-    {
-            return;
-    }
-
-    p_spi->slave.buffers_set_done_handler( p_spi->slave.p_instance );
-}
-
-static void _dma_event_handler_t( void * p_instance, hal_mcu_dma_event_t event )
-{
-    hal_mcu_spi_t * p_spi = ( hal_mcu_spi_t *)p_instance;
-
-    ASSERT_DYGMA( event == HAL_MCU_DMA_EVENT_TRANSFER_COMPLETE, "Unexpected DMA event detected" );
-
-    switch( p_spi->role )
-    {
-        case HAL_MCU_SPI_ROLE_SLAVE:
-        {
-            p_spi->busy = false;
-            _slave_dma_event_handler( p_spi );
-        }
-        break;
-
-        default:
-        {
-            ASSERT_DYGMA( false, "Invalid SPI role detected." );
-        }
-        break;
-    }
-}
+//static void _dma_event_handler_t( void * p_instance, hal_mcu_dma_event_t event )
+//{
+//    spi_dma_t * p_spi_dma = ( spi_dma_t *)p_instance;
+//    hal_mcu_spi_t * p_spi = p_spi_dma->p_spi;
+//
+//    /*
+//     * We currently do nothing when the DMA event comes. The crucial point for is is the chip_deselect event.
+//     * The template for possible future DMA event handling is prepared here.
+//     */
+//
+//    if( p_spi_dma == &p_spi->dma_rx )
+//    {
+//        // _dma_rx_finished_process( p_spi );
+//    }
+//    else if( p_spi_dma == &p_spi->dma_tx )
+//    {
+//        // _dma_tx_finished_process( p_spi );
+//    }
+//}
 
 static result_t _dma_init( hal_mcu_spi_t * p_spi )
 {
@@ -267,28 +268,32 @@ static result_t _dma_init( hal_mcu_spi_t * p_spi )
     hal_mcu_dma_channel_config_t config;
 
     /* Prepare the Rx DMA */
+    p_spi->dma_rx.p_spi = p_spi;
+
     config.packet_size = HAL_MCU_DMA_PACKET_SIZE_8;
     config.direction = HAL_MCU_DMA_DIRECTION_PERIPHERAL_TO_MEMORY;
     config.request_type = p_spi->p_periph_def->dma_request_type_rx;
-    config.p_instance = p_spi;
-    config.event_handler = _dma_event_handler_t;
+    config.p_instance = &p_spi->dma_rx;
+    config.event_handler = NULL;        //_dma_event_handler_t;
 
-    result = hal_mcu_dma_init( &p_spi->p_dma_rx, &config );
+    result = hal_mcu_dma_init( &p_spi->dma_rx.p_dma, &config );
     EXIT_IF_ERR( result, "RX hal_mcu_dma_init failed" );
 
     /* Prepare the Tx DMA */
+    p_spi->dma_tx.p_spi = p_spi;
+
     config.packet_size = HAL_MCU_DMA_PACKET_SIZE_8;
     config.direction = HAL_MCU_DMA_DIRECTION_MEMORY_TO_PERIPHERAL;
     config.request_type = p_spi->p_periph_def->dma_request_type_tx;
-    config.p_instance = p_spi;
-    config.event_handler = _dma_event_handler_t;
+    config.p_instance = &p_spi->dma_tx;
+    config.event_handler = NULL;        //_dma_event_handler_t;
 
-    result = hal_mcu_dma_init( &p_spi->p_dma_tx, &config );
+    result = hal_mcu_dma_init( &p_spi->dma_tx.p_dma, &config );
     EXIT_IF_ERR( result, "TX hal_mcu_dma_init failed" );
 
     /* enable the interrupt handlers initially */
-    hal_mcu_dma_event_handler_enable( p_spi->p_dma_rx );
-    hal_mcu_dma_event_handler_enable( p_spi->p_dma_tx );
+    hal_mcu_dma_event_handler_enable( p_spi->dma_rx.p_dma );
+    hal_mcu_dma_event_handler_enable( p_spi->dma_tx.p_dma );
 
 _EXIT:
     return result;
@@ -301,17 +306,8 @@ static result_t _configure_dma( hal_mcu_spi_t* p_spi , const hal_mcu_spi_transfe
     hal_mcu_dma_transfer_config_t dma_transfer_config_rx;
     hal_mcu_dma_transfer_config_t dma_transfer_config_tx;
 
-    /* Get the number of bytes to be transfered in this step */
-    p_spi->data_in_progress_len = ( p_spi->data_in_len > p_spi->data_out_len ) ? p_spi->data_in_len : p_spi->data_out_len;
-
-    /* If the data in and data out are the same length, we can transfer them in one go */
-    if (p_spi->data_in_len == p_spi->data_out_len)
-    {
-        p_spi->data_in_progress_len = p_spi->data_in_len;
-    }
-
     /* Set the RX DMA transfer configuration */
-    dma_transfer_config_rx.buffer_size = p_spi->data_in_progress_len;
+    dma_transfer_config_rx.buffer_size = p_spi->data_in_len;
     dma_transfer_config_rx.read_address = (void*)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
     dma_transfer_config_rx.read_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
 
@@ -327,7 +323,7 @@ static result_t _configure_dma( hal_mcu_spi_t* p_spi , const hal_mcu_spi_transfe
     }
 
     /* Set the TX DMA transfer configuration */
-    dma_transfer_config_tx.buffer_size = p_spi->data_in_progress_len;
+    dma_transfer_config_tx.buffer_size = p_spi->data_out_len;
     dma_transfer_config_tx.write_address = (void *)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
     dma_transfer_config_tx.write_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
 
@@ -346,8 +342,14 @@ static result_t _configure_dma( hal_mcu_spi_t* p_spi , const hal_mcu_spi_transfe
     /* Prepare both DMA channels simultaneously */
     p_spi->busy = true;
 
-    result = hal_mcu_dma_prepare_channels_simultaneously( p_spi->p_dma_tx, &dma_transfer_config_tx, p_spi->p_dma_rx , &dma_transfer_config_rx );
+    result = hal_mcu_dma_prepare_channels_simultaneously( p_spi->dma_tx.p_dma, &dma_transfer_config_tx, p_spi->dma_rx.p_dma , &dma_transfer_config_rx );
     ASSERT_DYGMA( result == RESULT_OK, "hal_mcu_dma_start_channels_simultaneously failed" );
+
+    /* Enable the SPI DMA channel */
+    _spi_dma_enable( p_spi );
+
+    result = hal_mcu_dma_trigger_channels_simultaneously( p_spi->dma_tx.p_dma, p_spi->dma_rx.p_dma );
+    ASSERT_DYGMA( result == RESULT_OK, "hal_mcu_dma_trigger_channels_simultaneously failed" );
     return result;
 }
 
@@ -355,48 +357,108 @@ static result_t _configure_dma( hal_mcu_spi_t* p_spi , const hal_mcu_spi_transfe
 /*              Slave processing              */
 /***********************************************/
 
+static INLINE hal_mcu_spi_t * _slave_cs_instance_get( uint gpio )
+{
+    const periph_def_t * p_periph_def;
+    hal_mcu_spi_t * p_spi = NULL;
+
+    /* Get the peripheral definition */
+    get_slave_cs_periph_def( p_periph_def, gpio );
+    ASSERT_DYGMA( p_periph_def != NULL, "SPI Slave - Invalid Chip Select gpio detected" );
+
+    /* Get the SPI instance from the peripheral definition */
+    p_spi = *p_periph_def->pp_periph;
+
+    return p_spi;
+}
+
+static INLINE void _slave_buffers_set_done_handler( hal_mcu_spi_t * p_spi )
+{
+    if ( p_spi->slave.buffers_set_done_handler == NULL )
+    {
+            return;
+    }
+
+    p_spi->slave.buffers_set_done_handler( p_spi->slave.p_instance );
+}
+
+static INLINE void _slave_transfer_done_handler(hal_mcu_spi_t * p_spi , hal_mcu_spi_transfer_result_t * _transfer_result)
+{
+    if ( p_spi->slave.transfer_done_handler == NULL )
+    {
+        return;
+    }
+
+    p_spi->slave.transfer_done_handler( p_spi->slave.p_instance, _transfer_result );
+}
+
+static INLINE void _slave_transfer_result_get( hal_mcu_spi_t * p_spi, hal_mcu_spi_transfer_result_t * p_transfer_result )
+{
+    /* Get the final count of data that has been transferred during the transfer session */
+    p_transfer_result->data_in_len = hal_ll_mcu_dma_get_transfer_count( p_spi->dma_rx.p_dma );
+    p_transfer_result->data_out_len = hal_ll_mcu_dma_get_transfer_count( p_spi->dma_tx.p_dma );
+
+    /* NOTE: The DMA Tx number is lowered when the data is transferred to the SPI Tx buffer. However, it might not be sent out to the SPI
+     *       master yet. Hence the data_out_len is never going to be 100% sure.
+     *
+     *       We can only check the TFE (Transmit FIFO Empty) flag of the SSPSR register to approve all data has been sent. However, if the
+     *       flag is not asserted, we cannot determine how much data is still waiting in the Tx FIFO buffer. */
+}
+
 /* This callback will be triggered every time the CS pin is set low by the master. */
-static void _cs_cb(hal_mcu_spi_t *p_spi , uint32_t events) 
-{    
-    if (events & GPIO_IRQ_EDGE_FALL) 
-    {
-        // The CS pin is set low by the master, the SPI transfer is starting.
-        // we need to start the DMA transfer.
-        //TODO this piece of code should be done with the PIO. 
-        hal_mcu_dma_trigger_channels_simultaneously( p_spi->p_dma_tx, p_spi->p_dma_rx );
-    }
-    else if (events & GPIO_IRQ_EDGE_RISE) 
-    {
-        // The master sets the CS pin high, the SPI transfer is ending.
-        // We need to finish the DMA transfer.
-
-        hal_mcu_dma_abort(p_spi->p_dma_tx);
-        hal_mcu_dma_abort(p_spi->p_dma_rx);
-        p_spi->busy = false;
-        _slave_dma_event_handler(p_spi); // Process remaining data.
-    }
-    
-}
-
-void _cs_cb_0 (uint gpio, uint32_t events) 
+static INLINE void _slave_cs_selected_process( hal_mcu_spi_t *p_spi )
 {
-    if (p_spi0 == NULL)
-    {
-        ASSERT_DYGMA( false, "SPI0 is not initialized" );
-    }
-    _cs_cb(p_spi0, events);
+    /* Nothing to do now */
 }
 
-void _cs_cb_1 (uint gpio, uint32_t events) 
+static INLINE void _slave_cs_deselected_process( hal_mcu_spi_t *p_spi )
 {
-    if (p_spi1 == NULL)
+    hal_mcu_spi_transfer_result_t transfer_result;
+
+    // The master sets the CS pin high, the SPI transfer is ending.
+    // We need to finish the DMA transfer.
+
+    /* Check if the transfer was running first */
+    if( p_spi->busy == false )
     {
-        ASSERT_DYGMA( false, "SPI1 is not initialized" );
+        return;
     }
-    _cs_cb(p_spi1, events);
+
+    /* Disable the SPI DMA channel */
+    _spi_dma_disable( p_spi );
+
+    /* Get the Transfer result */
+    _slave_transfer_result_get( p_spi, &transfer_result );
+
+    /* Stop (and clear) the DMA channels */
+    hal_mcu_dma_stop( p_spi->dma_tx.p_dma );
+    hal_mcu_dma_stop( p_spi->dma_rx.p_dma );
+
+    /* The transfer is done */
+    p_spi->busy = false;
+
+    /* Let the superior layers know that the transfer is finished */
+    _slave_transfer_done_handler( p_spi, &transfer_result );
+
+    volatile spi_hw_t * p_spi_hw = spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst );
 }
 
-result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf)
+static void _slave_cs_irq_handler( uint gpio, uint32_t event_mask )
+{
+    /* Get the SPI instance from the peripheral definition */
+    hal_mcu_spi_t * p_spi = _slave_cs_instance_get( gpio );
+
+    if ( event_mask & GPIO_IRQ_EDGE_FALL )
+    {
+        _slave_cs_selected_process( p_spi );
+    }
+    else if ( event_mask & GPIO_IRQ_EDGE_RISE )
+    {
+        _slave_cs_deselected_process( p_spi );
+    }
+}
+
+static result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf)
 {
 
     #warning "TODO: Check DMA overflow."
@@ -407,10 +469,15 @@ result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf)
     /* Initialize the Pico SPI peripheral */
     spi_init( p_spi->p_periph_def->p_pico_spi_inst, p_conf->line.freq );
 
-    /*Set the SPI to slave mode.*/ 
+    /*Set the SPI to slave mode.*/
     spi_set_slave( p_spi->p_periph_def->p_pico_spi_inst, true );
 
+    /* Disable the SPI DMA by default */
+    _spi_dma_disable( p_spi );
+
     /* Set the SPI PINs */
+    p_spi->slave.pin_cs = p_conf->slave.pin_cs;
+
     gpio_set_function( p_conf->slave.pin_sck, GPIO_FUNC_SPI );
     gpio_set_function( p_conf->slave.pin_miso, GPIO_FUNC_SPI );
     gpio_set_function( p_conf->slave.pin_mosi, GPIO_FUNC_SPI );
@@ -418,18 +485,8 @@ result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf)
     
     gpio_pull_up(p_conf->slave.pin_cs);
 
-    if (p_spi->p_periph_def->def == HAL_MCU_SPI_PERIPH_DEF_SPI0)
-    {
-        gpio_set_irq_enabled_with_callback(p_conf->slave.pin_cs, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE , true, &_cs_cb_0);
-    }
-    else if (p_spi->p_periph_def->def == HAL_MCU_SPI_PERIPH_DEF_SPI1)
-    {
-        gpio_set_irq_enabled_with_callback(p_conf->slave.pin_cs, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE , true, &_cs_cb_1);
-    }
-    else
-    {
-        ASSERT_DYGMA( false, "Invalid SPI peripheral definition" );
-    }
+    /* Enable the CS gpio interrupt */
+    gpio_set_irq_enabled_with_callback(p_conf->slave.pin_cs, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE , true, _slave_cs_irq_handler );
     
     /* Configure the SPI line */
     result = _spi_line_configure( p_spi, &p_conf->line );
@@ -439,7 +496,7 @@ _EXIT:
     return result;
 }
 
-result_t _slave_transfer(hal_mcu_spi_t* p_spi,  const hal_mcu_spi_transfer_conf_t * p_transfer_conf)
+static result_t _slave_transfer(hal_mcu_spi_t* p_spi,  const hal_mcu_spi_transfer_conf_t * p_transfer_conf)
 {
     result_t result = RESULT_ERR;
 
@@ -471,42 +528,6 @@ result_t _slave_transfer(hal_mcu_spi_t* p_spi,  const hal_mcu_spi_transfer_conf_
     _slave_buffers_set_done_handler( p_spi );
 
     return result;
-}
-
-void _slave_transfer_done_handler(hal_mcu_spi_t * p_spi , hal_mcu_spi_transfer_result_t * _transfer_result)
-{
-    if ( p_spi->slave.transfer_done_handler == NULL )
-    {
-        return;
-    }
-
-    p_spi->slave.transfer_done_handler( p_spi->slave.p_instance, _transfer_result );
-}
-
-static void _slave_dma_event_handler(hal_mcu_spi_t *p_spi)
-{
-    /* Check the transfer is finished */
-    if (p_spi->busy == false) 
-    {
-        hal_mcu_spi_transfer_result_t transfer_result;
-
-        if (p_spi->data_in_len > 0) {
-          p_spi->p_data_in += p_spi->data_in_progress_len;
-          p_spi->data_in_len -= p_spi->data_in_progress_len;
-        }
-
-        if (p_spi->data_out_len > 0) {
-          p_spi->p_data_out += p_spi->data_in_progress_len;
-          p_spi->data_out_len -= p_spi->data_in_progress_len;
-        }
-
-        transfer_result.data_in_len = p_spi->data_in_len;
-        transfer_result.data_out_len = p_spi->data_out_len;
-
-        _slave_transfer_done_handler(p_spi, &transfer_result);
-
-        p_spi->data_in_progress_len = 0;
-    }
 }
 
 /***********************************************/

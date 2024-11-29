@@ -117,10 +117,13 @@ struct hal_mcu_dma_channel {
     //sdk DMA channel config
     dma_channel_config sdk_dma_config;
 
-    // DMA callback function.
-    hal_mcu_dma_event_handler_t event_handler;
+    // Transfer information
+    // Number of elements (bytes) to transfer.
+    uint32_t transfer_buffer_size;
 
+    // DMA callback function.
     void * p_instance;
+    hal_mcu_dma_event_handler_t event_handler;
 };
 
 typedef struct {
@@ -241,6 +244,9 @@ static result_t _init_channel( hal_mcu_dma_channel_t * p_channel, const hal_mcu_
     ASSERT_DYGMA( p_channel->p_dreq != NULL, "Invalid DREQ type" );
     channel_config_set_dreq( &p_channel->sdk_dma_config, p_channel->p_dreq->rp20xx_dreq );
 
+    // Initialize the transfer buffer size to 0
+    p_channel->transfer_buffer_size = 0;
+
     // DMA callback function.
     p_channel->event_handler = p_config->event_handler;
     p_channel->p_instance = p_config->p_instance;
@@ -337,6 +343,9 @@ static result_t _channel_transfer_prepare( hal_mcu_dma_channel_t * p_channel, co
 {
     result_t result = RESULT_ERR;
 
+    // Save the size of transfer buffer for later use
+    p_channel->transfer_buffer_size = p_transfer_config->buffer_size;
+
     result = _channel_transfer_increment_set( p_channel, p_transfer_config );
     EXIT_IF_ERR( result, "_channel_transfer_increment_set failed" );
 
@@ -348,7 +357,6 @@ static result_t _channel_transfer_prepare( hal_mcu_dma_channel_t * p_channel, co
             p_transfer_config->buffer_size,                 // Number of elements (bytes)
             false
     );
-
 
 _EXIT:
     return result;
@@ -465,6 +473,7 @@ result_t hal_ll_mcu_dma_stop( hal_mcu_dma_channel_t * p_channel )
         ASSERT_DYGMA( false, "DMA not initialized" );
         return RESULT_ERR;
     }
+
     dma_channel_abort( p_channel->channel_id );
     return RESULT_OK;
 }
@@ -483,5 +492,7 @@ result_t hal_ll_mcu_dma_event_handler_enable( const hal_mcu_dma_channel_t * p_ch
 
 uint32_t hal_ll_mcu_dma_get_transfer_count(hal_mcu_dma_channel_t *p_channel)
 {
-    return (dma_channel_hw_addr(p_channel->channel_id))->transfer_count;
+    dma_channel_hw_t * p_dma_channel_hw = dma_channel_hw_addr(p_channel->channel_id);
+
+    return p_channel->transfer_buffer_size - p_dma_channel_hw->transfer_count;
 }
