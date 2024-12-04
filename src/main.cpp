@@ -55,7 +55,6 @@
 #include "LEDEffect-SolidColor-Defy.h"
 #include "Colormap-Defy.h"
 #include "LED-Palette-Theme-Defy.h"
-#include "DefaultColormap.h"
 #include "kaleidoscope/device/dygma/defyWN/universalModules/SettingsConfigurator.h"
 #include "Spi_slave.h"
 #include "IntegrationTest.h"
