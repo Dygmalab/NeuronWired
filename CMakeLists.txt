@@ -29,6 +29,9 @@ pico_sdk_init()
 # Add subdirectories to the project
 add_subdirectory(lib)
 
+include_directories(lib/NeuronLedLibrary)
+include_directories(lib/NeuronLedLibrary/LedModeSerializable/src)
+
 # Include directories for HAL and middleware libraries
 include_directories(src)
 include_directories(configuration/middleware_config)
@@ -52,6 +55,13 @@ add_executable(${NEURONWIRED}
         src/LED-CapsLockLight.cpp
         src/main.cpp
         src/config_app.h
+
+        # Colormap includes
+        lib/NeuronLedLibrary/Colormap-Defy.cpp
+        lib/NeuronLedLibrary/LED-Palette-Theme-Defy.cpp
+        lib/NeuronLedLibrary/LedModeSerializable/src/LedModeSerializable-Layer.h
+        lib/NeuronLedLibrary/LedModeSerializable/src/LedModeSerializable-SolidColor.h
+        lib/NeuronLedLibrary/LedModeSerializable/src/LedModeSerializable-Rainbow.h
 
         lib/SPISlave/src/link/spi_link_def.h
         lib/SPISlave/src/link/spi_link_slave.h
@@ -104,7 +114,7 @@ target_link_libraries(${NEURONWIRED}
         EEPROM
         kaleidoscope
         KeyboardioHID
-        PluginLedLibrary
+        NeuronLedLibrary
         PluginUpgrade
         SPISlave
         FIFO_BUFFER
