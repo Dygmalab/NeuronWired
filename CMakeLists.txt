@@ -29,15 +29,15 @@ pico_sdk_init()
 # Add subdirectories to the project
 add_subdirectory(lib)
 
-include_directories(lib/NeuronLedLibrary)
-include_directories(lib/NeuronLedLibrary/LedModeSerializable/src)
-
 # Include directories for HAL and middleware libraries
 include_directories(src)
 include_directories(configuration/middleware_config)
 
 # Libraries
 include_directories(lib/KeyboardioHID/src)
+include_directories(lib/NeuronLedLibrary/)
+include_directories(lib/NeuronLedLibrary/LedModeSerializable/)
+include_directories(lib/NeuronLedLibrary/LedModeSerializable/src/)
 include_directories(lib/RP_platform)
 include_directories(lib/RP_platform/hal)
 include_directories(lib/RP_platform/hal/mcu)
@@ -67,10 +67,12 @@ add_executable(${NEURONWIRED}
         
         # Colormap includes
         lib/NeuronLedLibrary/Colormap-Defy.cpp
+        lib/NeuronLedLibrary/LEDEffect-BatteryStatus.cpp
+        lib/NeuronLedLibrary/LEDEffect-Bluetooth-Pairing-Defy.cpp
+        lib/NeuronLedLibrary/LEDEffect-Rainbow-Defy.cpp
+        lib/NeuronLedLibrary/LEDEffect-SolidColor-Defy.cpp
+        lib/NeuronLedLibrary/LEDEffect-Stalker-Defy.cpp
         lib/NeuronLedLibrary/LED-Palette-Theme-Defy.cpp
-        lib/NeuronLedLibrary/LedModeSerializable/src/LedModeSerializable-Layer.h
-        lib/NeuronLedLibrary/LedModeSerializable/src/LedModeSerializable-SolidColor.h
-        lib/NeuronLedLibrary/LedModeSerializable/src/LedModeSerializable-Rainbow.h
 
         lib/SPISlave/src/link/spi_link_def.h
         lib/SPISlave/src/link/spi_link_slave.h
@@ -122,7 +124,6 @@ target_link_libraries(${NEURONWIRED}
         CRC
         EEPROM
         kaleidoscope
-        NeuronLedLibrary
         PluginUpgrade
         SPISlave
         FIFO_BUFFER
