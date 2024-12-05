@@ -35,12 +35,13 @@ include_directories(lib/NeuronLedLibrary/LedModeSerializable/src)
 # Include directories for HAL and middleware libraries
 include_directories(src)
 include_directories(configuration/middleware_config)
+
+# Libraries
+include_directories(lib/KeyboardioHID/src)
+include_directories(lib/RP_platform)
 include_directories(lib/RP_platform/hal)
 include_directories(lib/RP_platform/hal/mcu)
 include_directories(lib/RP_platform/hal/mcu/rp20)
-
-# Middleware libraries.
-include_directories(lib/RP_platform)
 include_directories(lib/RP_platform/middleware)
 include_directories(lib/RP_platform/middleware/halsep)
 
@@ -51,11 +52,19 @@ add_executable(${NEURONWIRED}
         src/DefyFirmwareVersion.cpp
         src/EEPROMPadding.cpp
         src/EEPROMUpgrade.cpp
+        src/hid_report_descriptor.cpp
         src/IntegrationTest.cpp
         src/LED-CapsLockLight.cpp
         src/main.cpp
         src/config_app.h
 
+        lib/KeyboardioHID/src/MultiReport/ConsumerControl.cpp
+        lib/KeyboardioHID/src/MultiReport/Keyboard.cpp
+        lib/KeyboardioHID/src/MultiReport/Mouse.cpp
+        lib/KeyboardioHID/src/MultiReport/SystemControl.cpp
+        lib/KeyboardioHID/src/hidDefy.cpp
+        lib/KeyboardioHID/src/HIDReportObserver.cpp
+        
         # Colormap includes
         lib/NeuronLedLibrary/Colormap-Defy.cpp
         lib/NeuronLedLibrary/LED-Palette-Theme-Defy.cpp
@@ -113,7 +122,6 @@ target_link_libraries(${NEURONWIRED}
         CRC
         EEPROM
         kaleidoscope
-        KeyboardioHID
         NeuronLedLibrary
         PluginUpgrade
         SPISlave
