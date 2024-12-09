@@ -65,8 +65,6 @@
 #ifndef __SPI_SLAVE_H__
 #define __SPI_SLAVE_H__
 
-
-#include <queue>
 #include <Communications_protocol.h>
 #include "Fifo_buffer.h"
 #include "link/spi_link_slave.h"
