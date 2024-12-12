@@ -36,7 +36,7 @@
 //#define ASSERT_DYGMA( cond, msg ) if ( !( cond ) ) for ( ; ; );
 #define ASSERT_DYGMA( cond, msg ) if ( !( cond ) )                                \
                                   {                                               \
-                                      debug_error( __FILE__, __LINE__, msg );     \
+                                      /*debug_error( __FILE__, __LINE__, msg );*/     \
                                       for ( ; ; );                                \
                                   }
 #endif
