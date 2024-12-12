@@ -175,6 +175,8 @@ endif ()
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_options(${NEURONWIRED} PRIVATE -O0)
+    target_compile_definitions(${NEURONWIRED} PUBLIC
+        DEBUG)
 else (CMAKE_BUILD_TYPE MATCHES Release)
     target_compile_options(${NEURONWIRED} PRIVATE -O3)
 endif ()
