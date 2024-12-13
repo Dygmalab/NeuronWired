@@ -240,7 +240,6 @@ void Spi_slave::data_out_process(void) {
   /* This is for the possible hazard handling. The receive end callback might theoretically come before the end of the function */
   spils_data_out_sending = true;
   result                 = spils_data_send(p_spils, spi_packet.buf, sizeof(spi_packet.buf));
-  ASSERT_DYGMA(result == RESULT_OK, "Failure: spils_data_send failed");
   EXIT_IF_NOK(result);
 
 _EXIT:

@@ -24,6 +24,7 @@
 #include "hal_mcu_dma_ll.h"
 #include "hal_mcu_spi_ll.h"
 #include "hardware/gpio.h"
+#include "hardware/resets.h"
 #include "hardware/spi.h"
 
 //#if HAL_CFG_MCU_SERIES == HAL_MCU_SERIES_RP20
@@ -39,6 +40,7 @@ typedef struct
 
     /* Pico SDK SPI */
     spi_inst_t * p_pico_spi_inst;
+    uint32_t pico_reset_bits;
 
     hal_mcu_dma_request_type_t dma_request_type_rx;
     hal_mcu_dma_request_type_t dma_request_type_tx;
@@ -84,6 +86,7 @@ typedef struct
 
     /* Flags */
     bool_t dummy_in_used;
+    bool_t resend_request;
 } slave_t;
 
 struct hal_mcu_spi
@@ -124,10 +127,10 @@ static hal_mcu_spi_t * p_spi1 = NULL;
 /* SPI peripheral definitions */
 static const periph_def_t p_periph_def_array[] =
 {
-    { .def = HAL_MCU_SPI_PERIPH_DEF_SPI0, .pp_periph = &p_spi0, .p_pico_spi_inst = spi0,
+    { .def = HAL_MCU_SPI_PERIPH_DEF_SPI0, .pp_periph = &p_spi0, .p_pico_spi_inst = spi0, .pico_reset_bits = RESETS_RESET_SPI0_BITS,
             .dma_request_type_rx = HAL_MCU_DMA_REQUEST_TYPE_SPI0_RX, .dma_request_type_tx = HAL_MCU_DMA_REQUEST_TYPE_SPI0_TX, },
 
-    { .def = HAL_MCU_SPI_PERIPH_DEF_SPI1, .pp_periph = &p_spi1, .p_pico_spi_inst = spi1,
+    { .def = HAL_MCU_SPI_PERIPH_DEF_SPI1, .pp_periph = &p_spi1, .p_pico_spi_inst = spi1, .pico_reset_bits = RESETS_RESET_SPI1_BITS,
             .dma_request_type_rx = HAL_MCU_DMA_REQUEST_TYPE_SPI1_RX, .dma_request_type_tx = HAL_MCU_DMA_REQUEST_TYPE_SPI1_TX, },
 };
 #define get_periph_def( p_periph_def, id ) _get_def( p_periph_def, p_periph_def_array, periph_def_t, def, id )
@@ -162,6 +165,8 @@ static const bit_order_def_t p_bit_order_def_array[] =
 static result_t _dma_init( hal_mcu_spi_t * p_spi );
 static result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf);
 static result_t _slave_transfer( hal_mcu_spi_t* p_spi );
+static INLINE result_t _slave_spi_enable( hal_mcu_spi_t * p_spi );
+static INLINE void _slave_spi_disable( hal_mcu_spi_t * p_spi );
 
 static result_t _spi_init( hal_mcu_spi_t * p_spi, const hal_mcu_spi_conf_t * p_conf )
 {
@@ -298,6 +303,26 @@ _EXIT:
 /*              Slave processing              */
 /***********************************************/
 
+static INLINE void _slave_spi_reset( hal_mcu_spi_t * p_spi )
+{
+    reset_block( p_spi->p_periph_def->pico_reset_bits );
+    unreset_block( p_spi->p_periph_def->pico_reset_bits );
+}
+
+static INLINE bool_t _slave_spi_is_running( hal_mcu_spi_t * p_spi )
+{
+    return ( ~resets_hw->reset_done & p_spi->p_periph_def->pico_reset_bits ) ? false : true;
+}
+
+static INLINE bool_t _slave_spi_running_wait_blocking( hal_mcu_spi_t * p_spi )
+{
+
+    while ( _slave_spi_is_running == false )
+    {
+        tight_loop_contents();
+    }
+}
+
 static INLINE void _slave_spi_dma_enable( hal_mcu_spi_t * p_spi )
 {
     hw_set_bits( &spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dmacr, SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS );
@@ -312,30 +337,48 @@ static INLINE result_t _slave_spi_enable( hal_mcu_spi_t * p_spi )
 {
     result_t result = RESULT_ERR;
 
-    /* Initialize the Pico SPI peripheral */
-    spi_init( p_spi->p_periph_def->p_pico_spi_inst, p_spi->slave.line.freq );
-
-    /*Set the SPI to slave mode.*/
-    spi_set_slave( p_spi->p_periph_def->p_pico_spi_inst, true );
-
-    /* Disable the SPI DMA by default */
-    _slave_spi_dma_disable( p_spi );
+    if( _slave_spi_is_running( p_spi ) == false )
+    {
+        return RESULT_BUSY;
+    }
 
     /* Configure the SPI line */
     result = _spi_line_configure( p_spi, &p_spi->slave.line );
     EXIT_IF_ERR( result, "_spi_line_configure failed" );
 
+    /* Set the SPI to slave mode. */
+    spi_set_slave( p_spi->p_periph_def->p_pico_spi_inst, true );
+
+    /* Enable the DMA */
+    _slave_spi_dma_enable( p_spi );
+
+    /* Check the current state of the CS pin*/
+#warning "This is still not perfect. There is still possibility of enabling the SPI Slave when the Master already started transmission."
+    if( gpio_get( p_spi->slave.pin_cs ) == false )
+    {
+        /* Do not start the SPI if the Chip select is active */
+        _slave_spi_disable( p_spi );
+
+        return RESULT_BUSY;
+    }
+
+    /* Finally enable the SPI */
+    hw_set_bits( &((spi_hw_t *)p_spi->p_periph_def->p_pico_spi_inst)->cr1, SPI_SSPCR1_SSE_BITS );
+
 _EXIT:
     return result;
 }
 
-static void _slave_spi_disable( hal_mcu_spi_t * p_spi )
+static INLINE void _slave_spi_disable( hal_mcu_spi_t * p_spi )
 {
-    /* Disable the SPI DMA */
+    /* Disable the SPI */
+    hw_clear_bits(&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->cr1, SPI_SSPCR1_SSE_BITS);
+
+    /* Disable the DMA */
     _slave_spi_dma_disable( p_spi );
 
     /* We completely de-initialize the SPI to wipe out all data which might be still sitting in the SPI internal buffers */
-    spi_deinit( p_spi->p_periph_def->p_pico_spi_inst );
+    _slave_spi_reset ( p_spi );
 }
 
 static INLINE hal_mcu_spi_t * _slave_cs_instance_get( uint gpio )
@@ -415,6 +458,7 @@ static INLINE bool_t _slave_transfer_result_get( hal_mcu_spi_t * p_spi, hal_mcu_
 static INLINE void _slave_cs_selected_process( hal_mcu_spi_t *p_spi )
 {
     /* Nothing to do now */
+    ASSERT_DYGMA( false, "Unexpected SPI Slave Chip select behavior." )
 }
 
 static INLINE void _slave_cs_deselected_process( hal_mcu_spi_t *p_spi )
@@ -447,8 +491,11 @@ static INLINE void _slave_cs_deselected_process( hal_mcu_spi_t *p_spi )
     p_spi->busy = false;
 
     /* Check whether there was a valid transfer actually. */
-    if( transfer_is_valid == false )
+    if( transfer_is_valid == false || p_spi->slave.resend_request == true )
     {
+        /* Release the resend request flag */
+        p_spi->slave.resend_request = false;
+
         /* Transfer is invalid, no data was processed - restart the transfer here and wait for the next Chip select */
         result = _slave_transfer( p_spi );
         ASSERT_DYGMA( result == RESULT_OK, "Unexpected failure of the SPI slave transfer start" );
@@ -493,12 +540,21 @@ static result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_co
     
     gpio_pull_up(p_conf->slave.pin_cs);
 
-    /* Enable the CS gpio interrupt */
-    gpio_set_irq_enabled_with_callback(p_conf->slave.pin_cs, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE , true, _slave_cs_irq_handler );
+    /* Enable the CS gpio interrupt. We are interested only in the rising edge which is signalling the transfer has been finished */
+    gpio_set_irq_enabled_with_callback(p_conf->slave.pin_cs, GPIO_IRQ_EDGE_RISE , true, _slave_cs_irq_handler );
+
+    /* Disable the slave DMA handlers because they are not used in Slave mode */
+    hal_mcu_dma_event_handler_disable( p_spi->dma_rx.p_dma );
+    hal_mcu_dma_event_handler_disable( p_spi->dma_tx.p_dma );
     
     /* Flags */
     p_spi->slave.dummy_in_used = false;
+    p_spi->slave.resend_request = false;
 
+    /* Perform initial SPI reset to set it into default state */
+    _slave_spi_reset ( p_spi );
+
+    /* Test */
 
     return RESULT_OK;
 }
@@ -511,11 +567,6 @@ static result_t _slave_transfer( hal_mcu_spi_t* p_spi )
 
     hal_mcu_dma_transfer_config_t dma_transfer_config_rx;
     hal_mcu_dma_transfer_config_t dma_transfer_config_tx;
-
-    /* Enable the SPI */
-    result = _slave_spi_enable( p_spi );
-    ASSERT_DYGMA( result == RESULT_OK, "_slave_spi_enable failed" );
-    EXIT_IF_ERR( result, "_slave_spi_enable failed" );
 
     /* Set the RX DMA transfer configuration */
     dma_transfer_config_rx.read_address = (void*)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
@@ -567,15 +618,33 @@ static result_t _slave_transfer( hal_mcu_spi_t* p_spi )
     ASSERT_DYGMA( result == RESULT_OK, "hal_mcu_dma_start_channels_simultaneously failed" );
     EXIT_IF_NOK( result );
 
-    /* Enable the SPI DMA channel */
-    _slave_spi_dma_enable( p_spi );
+    /* Enable the SPI */
+    result = _slave_spi_enable( p_spi );
+    EXIT_IF_ERR( result, "_slave_spi_enable failed" );
+    EXIT_IF_NOK( result );
 
 _EXIT:
 
     if( result != RESULT_OK )
     {
-        _slave_spi_disable( p_spi );
-        p_spi->busy = false;
+        /* Stop (and clear) the DMA channels */
+        hal_mcu_dma_stop( p_spi->dma_tx.p_dma );
+        hal_mcu_dma_stop( p_spi->dma_rx.p_dma );
+
+        if( result == RESULT_BUSY )
+        {
+            /*
+             * Set the resend request flag to set the transfer again on the next Chip de-select event.
+             */
+            p_spi->slave.resend_request = true;
+
+            /* Set OK result because the transfer is prepared and will start later */
+            result = RESULT_OK;
+        }
+        else
+        {
+            p_spi->busy = false;
+        }
     }
 
     return result;
