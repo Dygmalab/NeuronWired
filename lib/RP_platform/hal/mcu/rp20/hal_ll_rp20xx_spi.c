@@ -111,6 +111,9 @@ struct hal_mcu_spi
     uint8_t dummy_in;
     uint8_t dummy_out;
 
+    /* SDK */
+    spi_hw_t * p_spi_hw;
+
     /* Lock */
     hal_mcu_spi_lock_t lock;
 
@@ -189,6 +192,9 @@ static result_t _spi_init( hal_mcu_spi_t * p_spi, const hal_mcu_spi_conf_t * p_c
 
     p_spi->dummy_in = 0x00;
     p_spi->dummy_out = DUMMY_OUT_VALUE;
+
+    /* SDK */
+    p_spi->p_spi_hw = spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst );
 
     /* Lock */
     p_spi->lock = 0;
@@ -325,12 +331,12 @@ static INLINE bool_t _slave_spi_running_wait_blocking( hal_mcu_spi_t * p_spi )
 
 static INLINE void _slave_spi_dma_enable( hal_mcu_spi_t * p_spi )
 {
-    hw_set_bits( &spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dmacr, SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS );
+    hw_set_bits( &p_spi->p_spi_hw->dmacr, SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS );
 }
 
 static INLINE void _slave_spi_dma_disable( hal_mcu_spi_t * p_spi )
 {
-    hw_clear_bits( &spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dmacr, SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS );
+    hw_clear_bits( &p_spi->p_spi_hw->dmacr, SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS );
 }
 
 static INLINE result_t _slave_spi_enable( hal_mcu_spi_t * p_spi )
@@ -363,7 +369,7 @@ static INLINE result_t _slave_spi_enable( hal_mcu_spi_t * p_spi )
     }
 
     /* Finally enable the SPI */
-    hw_set_bits( &((spi_hw_t *)p_spi->p_periph_def->p_pico_spi_inst)->cr1, SPI_SSPCR1_SSE_BITS );
+    hw_set_bits( &p_spi->p_spi_hw->cr1, SPI_SSPCR1_SSE_BITS );
 
 _EXIT:
     return result;
@@ -372,7 +378,7 @@ _EXIT:
 static INLINE void _slave_spi_disable( hal_mcu_spi_t * p_spi )
 {
     /* Disable the SPI */
-    hw_clear_bits(&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->cr1, SPI_SSPCR1_SSE_BITS);
+    hw_clear_bits( &p_spi->p_spi_hw->cr1, SPI_SSPCR1_SSE_BITS );
 
     /* Disable the DMA */
     _slave_spi_dma_disable( p_spi );
@@ -569,7 +575,7 @@ static result_t _slave_transfer( hal_mcu_spi_t* p_spi )
     hal_mcu_dma_transfer_config_t dma_transfer_config_tx;
 
     /* Set the RX DMA transfer configuration */
-    dma_transfer_config_rx.read_address = (void*)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
+    dma_transfer_config_rx.read_address = (void*)&p_spi->p_spi_hw->dr;
     dma_transfer_config_rx.read_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
 
     if( p_spi->data_in_len != 0 )
@@ -596,7 +602,7 @@ static result_t _slave_transfer( hal_mcu_spi_t* p_spi )
 
     /* Set the TX DMA transfer configuration */
     dma_transfer_config_tx.buffer_size = p_spi->data_out_len;
-    dma_transfer_config_tx.write_address = (void *)&spi_get_hw( p_spi->p_periph_def->p_pico_spi_inst )->dr;
+    dma_transfer_config_tx.write_address = (void *)&p_spi->p_spi_hw->dr;
     dma_transfer_config_tx.write_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
 
     if( p_spi->data_out_len != 0 )
