@@ -26,10 +26,15 @@
 #include "hardware/gpio.h"
 #include "hardware/resets.h"
 #include "hardware/spi.h"
+#include "hardware/sync.h"
+
 
 //#if HAL_CFG_MCU_SERIES == HAL_MCU_SERIES_RP20
 
 #define DUMMY_OUT_VALUE     0xFF;
+
+/* SDK Macros */
+#define SDK_SPI_TX_IS_FULL( p_spi )    ( (p_spi->p_spi_hw->sr & SPI_SSPSR_TNF_BITS) == 0 )     /* Transmit FIFO Not Full */
 
 /* Peripheral definitions */
 typedef struct
@@ -75,6 +80,7 @@ typedef struct
 {
     /* Chip Select */
     hal_mcu_gpio_pin_t pin_cs;
+    uint32_t pin_cs_mask;
 
     /* SPI Line configuration */
     hal_mcu_spi_line_conf_t line;
@@ -168,7 +174,7 @@ static const bit_order_def_t p_bit_order_def_array[] =
 static result_t _dma_init( hal_mcu_spi_t * p_spi );
 static result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_conf);
 static result_t _slave_transfer( hal_mcu_spi_t* p_spi );
-static INLINE result_t _slave_spi_enable( hal_mcu_spi_t * p_spi );
+static INLINE result_t _slave_transfer_enable( hal_mcu_spi_t * p_spi );
 static INLINE void _slave_spi_disable( hal_mcu_spi_t * p_spi );
 
 static result_t _spi_init( hal_mcu_spi_t * p_spi, const hal_mcu_spi_conf_t * p_conf )
@@ -342,36 +348,33 @@ static INLINE void _slave_spi_dma_disable( hal_mcu_spi_t * p_spi )
 static INLINE result_t _slave_spi_enable( hal_mcu_spi_t * p_spi )
 {
     result_t result = RESULT_ERR;
+    uint32_t int_status;
 
-    if( _slave_spi_is_running( p_spi ) == false )
+    /*
+     * This is sensitive part which can result in broken message. It is crucial that the SPI enable code block is processed as fast as possible.
+     * Hence we disable all interrupts here.
+     */
+    int_status = save_and_disable_interrupts();
+
+    if( ( sio_hw->gpio_in & p_spi->slave.pin_cs_mask ) != 0 )
     {
-        return RESULT_BUSY;
+
+        /* The chip select is inactive - enable the SPI */
+        hw_set_bits( &p_spi->p_spi_hw->cr1, SPI_SSPCR1_SSE_BITS );
+
+
+        result = RESULT_OK;
+    }
+    else
+    {
+        result = RESULT_BUSY;
     }
 
-    /* Configure the SPI line */
-    result = _spi_line_configure( p_spi, &p_spi->slave.line );
-    EXIT_IF_ERR( result, "_spi_line_configure failed" );
+    /*
+     * Restore the previously saved interrupts
+     */
+    restore_interrupts( int_status );
 
-    /* Set the SPI to slave mode. */
-    spi_set_slave( p_spi->p_periph_def->p_pico_spi_inst, true );
-
-    /* Enable the DMA */
-    _slave_spi_dma_enable( p_spi );
-
-    /* Check the current state of the CS pin*/
-#warning "This is still not perfect. There is still possibility of enabling the SPI Slave when the Master already started transmission."
-    if( gpio_get( p_spi->slave.pin_cs ) == false )
-    {
-        /* Do not start the SPI if the Chip select is active */
-        _slave_spi_disable( p_spi );
-
-        return RESULT_BUSY;
-    }
-
-    /* Finally enable the SPI */
-    hw_set_bits( &p_spi->p_spi_hw->cr1, SPI_SSPCR1_SSE_BITS );
-
-_EXIT:
     return result;
 }
 
@@ -524,7 +527,8 @@ static void _slave_cs_irq_handler( uint gpio, uint32_t event_mask )
     {
         _slave_cs_selected_process( p_spi );
     }
-    else if ( event_mask & GPIO_IRQ_EDGE_RISE )
+
+    if ( event_mask & GPIO_IRQ_EDGE_RISE )
     {
         _slave_cs_deselected_process( p_spi );
     }
@@ -538,6 +542,7 @@ static result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_co
 
     /* Set the SPI PINs */
     p_spi->slave.pin_cs = p_conf->slave.pin_cs;
+    p_spi->slave.pin_cs_mask = ( 1ul << p_spi->slave.pin_cs );
 
     gpio_set_function( p_conf->slave.pin_sck, GPIO_FUNC_SPI );
     gpio_set_function( p_conf->slave.pin_miso, GPIO_FUNC_SPI );
@@ -563,6 +568,39 @@ static result_t _slave_init(hal_mcu_spi_t *p_spi, const hal_mcu_spi_conf_t *p_co
     /* Test */
 
     return RESULT_OK;
+}
+
+static INLINE result_t _slave_transfer_enable( hal_mcu_spi_t * p_spi )
+{
+    result_t result = RESULT_ERR;
+
+    if( _slave_spi_is_running( p_spi ) == false )
+    {
+        return RESULT_BUSY;
+    }
+
+    /* Configure the SPI line */
+    result = _spi_line_configure( p_spi, &p_spi->slave.line );
+    EXIT_IF_ERR( result, "_spi_line_configure failed" );
+
+    /* Set the SPI to slave mode. */
+    spi_set_slave( p_spi->p_periph_def->p_pico_spi_inst, true );
+
+    /* Enable the DMA */
+    _slave_spi_dma_enable( p_spi );
+
+
+    /* Enable the SPI peripheral */
+    result = _slave_spi_enable( p_spi );
+
+    if( result != RESULT_OK )
+    {
+        /* Disable the SPI peripheral which will reset it to its initial state. */
+        _slave_spi_disable( p_spi );
+    }
+
+_EXIT:
+    return result;
 }
 
 static result_t _slave_transfer( hal_mcu_spi_t* p_spi )
@@ -617,6 +655,16 @@ static result_t _slave_transfer( hal_mcu_spi_t* p_spi )
             dma_transfer_config_tx.read_increment_mode = HAL_MCU_DMA_INC_MODE_DISABLED;
     }
 
+    /* Pre-fill the SPI Tx fifo */
+    while( dma_transfer_config_tx.buffer_size > 0 && SDK_SPI_TX_IS_FULL( p_spi ) == false )
+    {
+        /* Prepare the first byte in the output buffer */
+        p_spi->p_spi_hw->dr = (uint32_t)*( (uint8_t *)dma_transfer_config_tx.read_address );
+
+        dma_transfer_config_tx.read_address++;
+        dma_transfer_config_tx.buffer_size--;
+    }
+
     /* Prepare both DMA channels simultaneously */
     p_spi->busy = true;
 
@@ -625,8 +673,8 @@ static result_t _slave_transfer( hal_mcu_spi_t* p_spi )
     EXIT_IF_NOK( result );
 
     /* Enable the SPI */
-    result = _slave_spi_enable( p_spi );
-    EXIT_IF_ERR( result, "_slave_spi_enable failed" );
+    result = _slave_transfer_enable( p_spi );
+    EXIT_IF_ERR( result, "_slave_transfer_enable failed" );
     EXIT_IF_NOK( result );
 
 _EXIT:
