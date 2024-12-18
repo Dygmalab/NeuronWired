@@ -36,6 +36,7 @@
 #include "Kaleidoscope-USB-Quirks.h"
 #include "Kaleidoscope-LayerFocus.h"
 #include "DefyFirmwareVersion.h"
+#include "Watchdog_timer.h"
 
 // Support for host power management (suspend & wakeup)
 #include "Kaleidoscope-HostPowerManagement.h"
@@ -58,6 +59,8 @@
 #include "kaleidoscope/device/dygma/defyWN/universalModules/SettingsConfigurator.h"
 #include "Spi_slave.h"
 #include "IntegrationTest.h"
+
+Watchdog_timer watchdog_timer;
 
 enum {
   QWERTY,
