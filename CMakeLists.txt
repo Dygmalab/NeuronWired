@@ -94,6 +94,7 @@ add_executable(${NEURONWIRED}
 
         lib/RP_platform/middleware/dl_types.h
         lib/RP_platform/middleware/halsep/hal_mcu_mutex.c
+        src/Watchdog_timer.h
 )
 
 pico_set_program_name(${NEURONWIRED} "NeuronWired")
