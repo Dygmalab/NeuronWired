@@ -36,6 +36,7 @@
 #include "Kaleidoscope-USB-Quirks.h"
 #include "Kaleidoscope-LayerFocus.h"
 #include "DefyFirmwareVersion.h"
+#include "Watchdog_timer.h"
 
 // Support for host power management (suspend & wakeup)
 #include "Kaleidoscope-HostPowerManagement.h"
@@ -55,10 +56,11 @@
 #include "LEDEffect-SolidColor-Defy.h"
 #include "Colormap-Defy.h"
 #include "LED-Palette-Theme-Defy.h"
-#include "DefaultColormap.h"
-#include "kaleidoscope/device/dygma/defyWN/SettingsConfigurator.h"
-#include "SPISlave.h"
+#include "kaleidoscope/device/dygma/defyWN/universalModules/SettingsConfigurator.h"
+#include "Spi_slave.h"
 #include "IntegrationTest.h"
+
+Watchdog_timer watchdog_timer;
 
 enum {
   QWERTY,
@@ -212,14 +214,17 @@ KALEIDOSCOPE_INIT_PLUGINS(
 // clang-format on
 
 
-
 void setup() {
+
+  multicore_reset_core1();
+
   TinyUSBDevice.setID(BOARD_VENDORID, BOARD_PRODUCTID);
   TinyUSBDevice.setManufacturerDescriptor(BOARD_MANUFACTURER);
   TinyUSBDevice.setProductDescriptor(BOARD_PRODUCT);
 
   Serial.begin(115200);
   HID().begin();
+
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
   // Reserve space in the keyboard's EEPROM for the keymaps
@@ -231,20 +236,16 @@ void setup() {
   DynamicMacros.reserve_storage(2048);
   EEPROMUpgrade.reserveStorage();
   EEPROMUpgrade.upgrade();
+
+  Communications.init();
 }
 
 void loop() {
   // Application code goes here...
+
+  HID().SendLastReport();
+
   Kaleidoscope.loop();
   Communications.run();
   protocolBreathe();
-}
-
-
-void setup1() {
-  Communications.init();
-}
-
-void loop1(){
-  HID().SendLastReport();
 }

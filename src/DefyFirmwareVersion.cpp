@@ -19,9 +19,9 @@
 #include "Kaleidoscope-FocusSerial.h"
 #include "DefyFirmwareVersion.h"
 
-
-#ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION WIRED_FIRMWARE_VERSION
+#ifndef DEFY_FW_VERSION
+#error "Firmware package version is not specified."
+    #define DEFY_FW_VERSION "N/A"
 #endif
 
 namespace kaleidoscope {
@@ -35,7 +35,7 @@ EventHandlerResult FirmwareVersion::onFocusEvent(const char *command) {
   if (strcmp_P(command, cmd) != 0)
     return EventHandlerResult::OK;
 
-  ::Focus.sendRaw(F(FIRMWARE_VERSION));
+  ::Focus.sendRaw(F(DEFY_FW_VERSION));
 
   return EventHandlerResult::EVENT_CONSUMED;
 }
