@@ -225,6 +225,9 @@ void setup() {
   Serial.begin(115200);
   HID().begin();
 
+  // Initialize the communications before Kaleidoscope to make sure the correct order of the incoming message processing
+  Communications.init();
+
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
   // Reserve space in the keyboard's EEPROM for the keymaps
@@ -237,7 +240,6 @@ void setup() {
   EEPROMUpgrade.reserveStorage();
   EEPROMUpgrade.upgrade();
 
-  Communications.init();
 }
 
 void loop() {
