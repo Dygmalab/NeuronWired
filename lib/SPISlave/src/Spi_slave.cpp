@@ -200,21 +200,6 @@ void Spi_slave::data_in_process(void)
     data_in_len -= sizeof(Communications_protocol::Packet);
   }
 
-  /* Check if there are packets in the output fifo */
-  if (spi_tx_fifo.is_empty() == false) 
-  {
-    /* Finish here, the output packets will be sent in the data_out_process */
-    return;
-  }
-
-  memset(&spi_packet_out, 0x00, sizeof(spi_packet_out));
-
-  /* Prepare the IS_ALIVE packet */
-  spi_packet_out.header.device  = Communications_protocol::NEURON_DEFY;
-  spi_packet_out.header.command = Communications_protocol::IS_ALIVE;
-
-  spi_tx_fifo.put(&spi_packet_out);
-
 _EXIT:
   return;
 }

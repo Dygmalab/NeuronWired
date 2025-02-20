@@ -223,7 +223,9 @@ void setup() {
   TinyUSBDevice.setProductDescriptor(BOARD_PRODUCT);
 
   Serial.begin(115200);
-  HID().begin();
+
+  // Initialize the communications before Kaleidoscope to make sure the correct order of the incoming message processing
+  Communications.init();
 
   // First start the serial communications to avoid restarting unnecesarily
   Kaleidoscope.setup();
@@ -237,7 +239,8 @@ void setup() {
   EEPROMUpgrade.reserveStorage();
   EEPROMUpgrade.upgrade();
 
-  Communications.init();
+  // Keep the HID begin after the Kaleidoscope setup.
+  HID().begin();
 }
 
 void loop() {
