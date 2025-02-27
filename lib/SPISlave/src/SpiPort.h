@@ -70,6 +70,8 @@ class SpiPort
 //        void deInit(void);
         void run(void);
 
+        bool is_connected();
+
         bool readPacket(Packet &packet);
 
         bool sendPacket(Packet &packet);
