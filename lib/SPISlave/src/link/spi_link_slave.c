@@ -23,6 +23,8 @@
  * SOFTWARE.
  */
 
+#include "Arduino.h"
+
 #include "middleware/utils/mutex.h"
 #include "spi_link_def.h"
 #include "spi_link_slave.h"
@@ -37,6 +39,13 @@ typedef enum
     SPILS_STATE_DATA_SEND_START,
     SPILS_STATE_DATA_SENDING,
 } spils_state_t;
+
+typedef enum
+{
+    SPILS_CON_STATE_UNKNOWN = 1,
+    SPILS_CON_STATE_DISCONNECTED,
+    SPILS_CON_STATE_CONNECTED,
+} spils_con_state_t;
 
 typedef struct
 {
@@ -53,6 +62,7 @@ typedef struct
 struct spils
 {
     spils_state_t state;
+    spils_con_state_t con_state;
 
     /* HAL */
     hal_mcu_spi_t * p_spi;
@@ -76,10 +86,16 @@ struct spils
     mutex_t * p_mutex_out;
 
     /* Flags */
+    bool_t connection_detected;
+
     bool_t data_in_available;
     bool_t data_out_available;
     bool_t line_in_busy;
     bool_t line_in_is_saturated;
+
+    /* Connection timer */
+    uint32_t disconnect_timeout_ms;     /* Set 0 to disable */
+    uint32_t disconnect_timer_thres;    /* Time threshold for disconnect timer */
 
     /* Event handlers */
     void * p_instance;
@@ -94,6 +110,8 @@ static result_t _transfer_start( spils_t * p_spils, spils_state_t state );
 static void _listening_start( spils_t * p_spils, spil_mess_type_t result_mess_type );
 static void _data_receive_start( spils_t * p_spils, spil_mess_type_t result_mess_type );
 static void _data_send_start( spils_t * p_spils );
+
+static INLINE void _disconnect_timer_reset( spils_t * p_spils );
 
 /* Prototypes */
 static result_t buffer_init( buffer_t ** pp_buffer, uint8_t buffer_size );
@@ -206,10 +224,18 @@ static result_t _init( spils_t * p_spils, const spils_conf_t * p_conf )
     mutex_init( &p_spils->p_mutex_out );
 
     /* Flags */
+    p_spils->connection_detected = false;
+
     p_spils->data_in_available = false;
     p_spils->data_out_available = false;
     p_spils->line_in_busy = false;
     p_spils->line_in_is_saturated = false;
+
+    /* Connection timer */
+    p_spils->disconnect_timeout_ms = p_conf->disconnect_timeout_ms;
+    p_spils->disconnect_timer_thres = 0;
+
+    _disconnect_timer_reset( p_spils );
 
     /* Event handlers */
     p_spils->p_instance = p_conf->p_instance;
@@ -217,6 +243,7 @@ static result_t _init( spils_t * p_spils, const spils_conf_t * p_conf )
 
     /* Initial state */
     p_spils->state = SPILS_STATE_IDLE;
+    p_spils->con_state = SPILS_CON_STATE_UNKNOWN;
 
 _EXIT:
     return result;
@@ -282,7 +309,7 @@ static void _set_state( spils_t * p_spils, spils_state_t state )
     }
 }
 
-static void _event_handler( spils_t * p_spils, spils_event_type_t event_type )
+static INLINE void _event_handler( spils_t * p_spils, spils_event_type_t event_type )
 {
     if( p_spils->event_handler == NULL )
     {
@@ -291,6 +318,26 @@ static void _event_handler( spils_t * p_spils, spils_event_type_t event_type )
 
     p_spils->event_handler( p_spils->p_instance, event_type );
 }
+
+static INLINE void _disconnect_timer_reset( spils_t * p_spils )
+{
+    if( p_spils->disconnect_timeout_ms != 0 )
+    {
+        p_spils->disconnect_timer_thres = millis() + p_spils->disconnect_timeout_ms;
+    }
+}
+
+static INLINE bool_t _disconnect_timer_check( spils_t * p_spils )
+{
+    if( p_spils->disconnect_timeout_ms == 0 )
+    {
+        /* The disconnect timer is off - never goes to disconnected state after the connection has been detected once */
+        return false;
+    }
+
+    return ( millis() >= p_spils->disconnect_timer_thres ) ? true : false;
+}
+
 
 /*************************/
 /*        Mutexes        */
@@ -968,6 +1015,9 @@ static void _spi_slave_buffers_set_done_handler( spils_t * p_spils )
 
 static void _spi_slave_transfer_done_handler( spils_t * p_spils, hal_mcu_spi_transfer_result_t * p_transfer_result )
 {
+    /* Set the connection_detected flag */
+    p_spils->connection_detected = true;
+
     /* Reset the INT signal - the SPI interface is not active now */
     _int_signal_reset( p_spils );
 
@@ -1053,6 +1103,101 @@ static void _data_send_start( spils_t * p_spils )
     ASSERT_DYGMA( result == RESULT_OK, "The start of the SPI slave listening failed. This should not happen." );
 
     UNUSED( result );
+}
+
+/*************************/
+/*  Connection machine   */
+/*************************/
+
+static INLINE void _con_state_set( spils_t * p_spils, spils_con_state_t con_state )
+{
+    p_spils->con_state = con_state;
+}
+
+static INLINE void _con_state_set_connected( spils_t * p_spils )
+{
+    /* Set the connected state */
+    _disconnect_timer_reset( p_spils );
+    _con_state_set( p_spils, SPILS_CON_STATE_CONNECTED );
+
+    /* Report the connection event */
+    _event_handler( p_spils, SPILS_EVENT_TYPE_CONNECTED );
+}
+
+static INLINE void _con_state_set_disconnected( spils_t * p_spils )
+{
+    /* Reset the connection_detected flag */
+    p_spils->connection_detected = false;
+
+    /* Set the disconnected state */
+    _con_state_set( p_spils, SPILS_CON_STATE_DISCONNECTED );
+
+    /* Report the disconnection event */
+    _event_handler( p_spils, SPILS_EVENT_TYPE_DISCONNECTED );
+}
+
+static INLINE void _con_state_unknown( spils_t * p_spils )
+{
+    if( p_spils->connection_detected == true )
+    {
+        _con_state_set_connected( p_spils );
+    }
+    else if( _disconnect_timer_check( p_spils ) == true )
+    {
+        _con_state_set_disconnected( p_spils );
+    }
+}
+
+static INLINE void _con_state_disconnected( spils_t * p_spils )
+{
+    if( p_spils->connection_detected == true )
+    {
+        _con_state_set_connected( p_spils );
+    }
+}
+
+static INLINE void _con_state_connected( spils_t * p_spils )
+{
+    if( p_spils->connection_detected == true )
+    {
+        /* Refresh the disconnect timer */
+        _disconnect_timer_reset( p_spils );
+        p_spils->connection_detected = false;
+    }
+    if( _disconnect_timer_check( p_spils ) == true )
+    {
+        _con_state_set_disconnected( p_spils );
+    }
+}
+
+static void _con_machine( spils_t * p_spils )
+{
+    switch( p_spils->con_state )
+    {
+        case SPILS_CON_STATE_UNKNOWN:
+
+            _con_state_unknown( p_spils );
+
+            break;
+
+        case SPILS_CON_STATE_DISCONNECTED:
+
+            _con_state_disconnected( p_spils );
+
+            break;
+
+        case SPILS_CON_STATE_CONNECTED:
+
+            _con_state_connected( p_spils );
+
+            break;
+
+        default:
+
+            ASSERT_DYGMA( false, "Invalid SPILS connection state detected" );
+
+            break;
+    }
 }
 
 /*************************/
@@ -1152,4 +1297,9 @@ _EXIT:
     _mutex_out_unlock( p_spils );
 
     return result;
+}
+
+void spils_poll( spils_t * p_spils )
+{
+    _con_machine( p_spils );
 }

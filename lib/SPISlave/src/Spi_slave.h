@@ -92,6 +92,8 @@ class Spi_slave {
     //void deinit(void);
     void run(void);
 
+    bool_t is_connected(void);
+
     Fifo_buffer *rx_fifo;
     Fifo_buffer *tx_fifo;
 
@@ -106,6 +108,9 @@ class Spi_slave {
     uint8_t spi_mode;                // NRF_SPIS_MODE_0, NRF_SPIS_MODE_1, ..
 
     spils_t * p_spils;
+
+    /* Flags */
+    bool_t is_connected_ = false;
 
     bool_t spils_data_in_received = false;
     bool_t spils_data_out_sending = false;

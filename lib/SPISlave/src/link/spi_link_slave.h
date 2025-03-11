@@ -36,7 +36,10 @@ extern "C" {
 
 typedef enum
 {
-    SPILS_EVENT_TYPE_DATA_IN_READY = 1,
+    SPILS_EVENT_TYPE_CONNECTED = 1,
+    SPILS_EVENT_TYPE_DISCONNECTED,
+
+    SPILS_EVENT_TYPE_DATA_IN_READY,
     SPILS_EVENT_TYPE_DATA_OUT_SENT,
 } spils_event_type_t;
 
@@ -69,6 +72,9 @@ typedef struct
     /* Messages */
     uint8_t message_size_max;
 
+    /* Connection */
+    uint32_t disconnect_timeout_ms;     /* Set 0 to disable */
+
     /* Event handlers */
     void * p_instance;
     spils_event_handler_t event_handler;
@@ -81,6 +87,8 @@ extern result_t spils_init( spils_t ** pp_spils, const spils_conf_t * p_conf );
 extern bool_t spils_data_read_available( spils_t * p_spils );
 extern result_t spils_data_read( spils_t * p_spils, uint8_t * p_data, uint16_t * p_data_size );
 extern result_t spils_data_send( spils_t * p_spils, const uint8_t * p_data, uint16_t data_size );
+
+extern void spils_poll( spils_t * p_spils );
 
 #ifdef __cplusplus
 }

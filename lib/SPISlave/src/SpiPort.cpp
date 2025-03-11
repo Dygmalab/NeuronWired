@@ -88,6 +88,12 @@ void SpiPort::run() {
     spi_slave->run();
 }
 
+bool SpiPort::is_connected() {
+    if (spi_slave == nullptr) return false;
+
+    return spi_slave->is_connected();
+}
+
 bool SpiPort::sendPacket(Packet &packet) {
     if (spi_slave == nullptr) return false;
 
