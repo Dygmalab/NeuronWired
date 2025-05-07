@@ -127,6 +127,7 @@ target_link_libraries(${NEURONWIRED}
         kaleidoscope
         PluginUpgrade
         SPISlave
+        Time_counter
         FIFO_BUFFER
         )
 # Create map/bin/hex/uf2 files
