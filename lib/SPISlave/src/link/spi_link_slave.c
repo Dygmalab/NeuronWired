@@ -23,11 +23,11 @@
  * SOFTWARE.
  */
 
-#include "Arduino.h"
 
 #include "middleware/utils/mutex.h"
 #include "spi_link_def.h"
 #include "spi_link_slave.h"
+#include "Time_counter.h"
 
 typedef enum
 {
@@ -95,7 +95,7 @@ struct spils
 
     /* Connection timer */
     uint32_t disconnect_timeout_ms;     /* Set 0 to disable */
-    uint32_t disconnect_timer_thres;    /* Time threshold for disconnect timer */
+    dl_timer_t disconnect_timer;        /* Time threshold for disconnect timer */
 
     /* Event handlers */
     void * p_instance;
@@ -233,7 +233,7 @@ static result_t _init( spils_t * p_spils, const spils_conf_t * p_conf )
 
     /* Connection timer */
     p_spils->disconnect_timeout_ms = p_conf->disconnect_timeout_ms;
-    p_spils->disconnect_timer_thres = 0;
+    p_spils->disconnect_timer = 0;
 
     _disconnect_timer_reset( p_spils );
 
@@ -321,21 +321,12 @@ static INLINE void _event_handler( spils_t * p_spils, spils_event_type_t event_t
 
 static INLINE void _disconnect_timer_reset( spils_t * p_spils )
 {
-    if( p_spils->disconnect_timeout_ms != 0 )
-    {
-        p_spils->disconnect_timer_thres = millis() + p_spils->disconnect_timeout_ms;
-    }
+    timer_set_ms( &p_spils->disconnect_timer, p_spils->disconnect_timeout_ms );
 }
 
 static INLINE bool_t _disconnect_timer_check( spils_t * p_spils )
 {
-    if( p_spils->disconnect_timeout_ms == 0 )
-    {
-        /* The disconnect timer is off - never goes to disconnected state after the connection has been detected once */
-        return false;
-    }
-
-    return ( millis() >= p_spils->disconnect_timer_thres ) ? true : false;
+    return timer_check( &p_spils->disconnect_timer );
 }
 
 
