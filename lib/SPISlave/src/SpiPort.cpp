@@ -130,3 +130,12 @@ bool SpiPort::readPacket(Packet &packet) {
     return true;
 }
 
+bool SpiPort::peekPacket(Packet &packet) {
+    if (spi_slave == nullptr) return false;
+
+    if (spi_slave->rx_fifo->is_empty()) return false;
+
+    spi_slave->rx_fifo->peek(&packet);
+
+    return true;
+}

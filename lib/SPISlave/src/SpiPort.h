@@ -72,7 +72,8 @@ class SpiPort
 
         bool is_connected();
 
-        bool readPacket(Packet &packet);
+        bool readPacket(Packet &packet);    /* Function will provide current packet and discard it from the queue*/
+        bool peekPacket(Packet &packet);    /* Function will provide current packet but keeps it in the queue */
 
         bool sendPacket(Packet &packet);
 
