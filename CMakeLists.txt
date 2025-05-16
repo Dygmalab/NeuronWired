@@ -160,7 +160,7 @@ target_compile_definitions(${NEURONWIRED} PUBLIC
 
 # Defy Neuron version
 target_compile_definitions(${NEURONWIRED} PUBLIC
-        -DDEFY_NEURON_FW_VERSION=\"v2.1.0-beta.4\"
+        -DDEFY_NEURON_FW_VERSION=\"v2.1.0-beta.5\"
        )
 
 
