@@ -578,21 +578,31 @@ static result_t _buffer_in_cache_data_move( spils_t * p_spils )
      * The swap will be done only if there is valid data in cache and the previous data have been processed
      */
 
-    if( buffer_get_loadsize( p_spils->p_buffer_in_cache ) != 0 )
+    if( buffer_get_loadsize( p_spils->p_buffer_in_cache ) == 0 )
     {
-        /* There is valid data in the cache, so let's try the swap */
+        /* There is no data in the cache */
 
-        if( buffer_get_loadsize( p_spils->p_buffer_in ) != 0 )
-        {
-            /* There is still unprocessed data in the buffer_in. So the line is getting saturated */
+        p_spils->line_in_busy = false;
 
-            result = RESULT_BUSY;
-            goto _EXIT;
-        }
-
-        _buffer_in_cache_swap( p_spils );
-
+        result = RESULT_ERR;
+        goto _EXIT;
     }
+
+    if( buffer_get_loadsize( p_spils->p_buffer_in ) != 0 )
+    {
+        /* There is still unprocessed data in the buffer_in. So the line is getting saturated */
+
+        result = RESULT_BUSY;
+        goto _EXIT;
+    }
+
+    /* There is valid data in the cache and space in the buffer_in. So let's do the swap */
+
+    _buffer_in_cache_swap( p_spils );
+
+    /* Modify the flags */
+    p_spils->data_in_available = true;
+    p_spils->line_in_busy = false;
 
     result = RESULT_OK;
 
@@ -625,6 +635,9 @@ static result_t _buffer_out_cache_data_move( spils_t * p_spils )
     {
         _buffer_out_cache_swap( p_spils );
     }
+
+    /* Modify the flags */
+    p_spils->data_out_available = false;
 
     /* Unlock the output stream */
     _mutex_out_unlock( p_spils );
@@ -795,7 +808,6 @@ static INLINE void _transfer_send_data_start( spils_t * p_spils )
     }
     else
     {
-        p_spils->data_out_available = false;
         transfer_result = SPIL_MESS_TYPE_RESULT_OK;
     }
 
@@ -858,7 +870,8 @@ static INLINE void _transfer_receive_data( spils_t * p_spils )
 
     /* Move the input cache data into the process space */
     result = _buffer_in_cache_data_move( p_spils );
-    if( result != RESULT_OK )
+
+    if( result == RESULT_BUSY )
     {
         /* The input line got saturated */
 
@@ -867,7 +880,14 @@ static INLINE void _transfer_receive_data( spils_t * p_spils )
     }
     else
     {
-        p_spils->data_in_available = true;
+        ASSERT_DYGMA( result == RESULT_OK, "Unexpected SPI Link _buffer_in_cache_data_move result" );
+
+        /*
+         * NOTE: RESULT_ERR is not expected due to the head.len check above. However, if this happens for whatever
+         * reason in the release build, let's report OK and move on to the next message. Possible trouble (if any)
+         * should be searched in the debug build version.
+         */
+
         transfer_result = SPIL_MESS_TYPE_RESULT_OK;
     }
 
@@ -883,7 +903,7 @@ _EXIT:
     _listening_start( p_spils, transfer_result );
 
     /* Notify the new data available */
-    if( transfer_result == SPIL_MESS_TYPE_RESULT_OK || transfer_result == SPIL_MESS_TYPE_RESULT_OK_BUSY )
+    if( transfer_result == SPIL_MESS_TYPE_RESULT_OK )
     {
         _event_handler( p_spils, SPILS_EVENT_TYPE_DATA_IN_READY );
     }
@@ -1192,6 +1212,27 @@ static void _con_machine( spils_t * p_spils )
 }
 
 /*************************/
+/*     Line IN Busy      */
+/*************************/
+
+static INLINE void _line_in_busy_process( spils_t * p_spils )
+{
+    result_t result = RESULT_ERR;
+
+    if( p_spils->line_in_busy == false )
+    {
+        return;
+    }
+
+    /* The line is busy, let's try to move the cache to buffer_in */
+    result = _buffer_in_cache_data_move( p_spils );
+    if( result == RESULT_OK )
+    {
+        _event_handler( p_spils, SPILS_EVENT_TYPE_DATA_IN_READY );
+    }
+}
+
+/*************************/
 /*          API          */
 /*************************/
 
@@ -1225,13 +1266,6 @@ result_t spils_data_read( spils_t * p_spils, uint8_t * p_data, uint16_t * p_data
     _buffer_recycle( p_spils->p_buffer_in );
     p_spils->data_in_available = false;
 
-    /* Possibly move the cache */
-    if( p_spils->line_in_busy == true )
-    {
-        _buffer_in_cache_swap( p_spils );
-        p_spils->data_in_available = true;
-        p_spils->line_in_busy = false;
-    }
 
 _EXIT:
     /* Unlock the input stream */
@@ -1293,4 +1327,5 @@ _EXIT:
 void spils_poll( spils_t * p_spils )
 {
     _con_machine( p_spils );
+    _line_in_busy_process( p_spils );
 }
