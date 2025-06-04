@@ -160,7 +160,7 @@ target_compile_definitions(${NEURONWIRED} PUBLIC
 
 # Defy Neuron version
 target_compile_definitions(${NEURONWIRED} PUBLIC
-        -DDEFY_NEURON_FW_VERSION=\"v2.1.0-beta.7\"
+        -DDEFY_NEURON_FW_VERSION=\"v2.1.0\"
        )
 
 
@@ -171,7 +171,7 @@ target_compile_definitions(${NEURONWIRED} PUBLIC
        )
 else ()
 target_compile_definitions(${NEURONWIRED} PUBLIC
-        -DDEFY_FW_VERSION=\"v2.1.0-beta.7\"          # Fixed value to be used until we have proper GitHub build system
+        -DDEFY_FW_VERSION=\"v2.1.0\"          # Fixed value to be used until we have proper GitHub build system
        )
 endif ()
 
