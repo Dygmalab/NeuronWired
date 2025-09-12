@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "hal\mcu\hal_mcu_mutex_ll.h"
+#include "hal/mcu/hal_mcu_mutex_ll.h"
 
 #include <stdio.h>
 #include <stdlib.h>

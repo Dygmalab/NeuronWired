@@ -7,9 +7,9 @@ set(BUILD_GTEST OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-if (DEFINED ENV{FIRMWARE_VERSION})
-    set(ENV_FW_VERSION $ENV{FIRMWARE_VERSION})
-    message("Using FIRMWARE_VERSION from environment ('${ENV_FW_VERSION}')")
+if (DEFINED ENV{DEFY_FW_VERSION})
+    set(ENV_FW_VERSION $ENV{DEFY_FW_VERSION})
+    message("Using DEFY_FW_VERSION from environment ('${ENV_FW_VERSION}')")
 endif ()
 
 # Include build functions from Pico SDK
@@ -160,7 +160,7 @@ target_compile_definitions(${NEURONWIRED} PUBLIC
 
 # Defy Neuron version
 target_compile_definitions(${NEURONWIRED} PUBLIC
-        -DDEFY_NEURON_FW_VERSION=\"v2.1.0\"
+        -DDEFY_NEURON_FW_VERSION=\"v2.1.1\"
        )
 
 
@@ -171,7 +171,7 @@ target_compile_definitions(${NEURONWIRED} PUBLIC
        )
 else ()
 target_compile_definitions(${NEURONWIRED} PUBLIC
-        -DDEFY_FW_VERSION=\"v2.1.0\"          # Fixed value to be used until we have proper GitHub build system
+        -DDEFY_FW_VERSION=\"v2.1.1-alpha\"          # Fixed "alpha" value to recognize local builds
        )
 endif ()
 

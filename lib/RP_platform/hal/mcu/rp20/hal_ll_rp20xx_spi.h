@@ -24,7 +24,7 @@
 #ifndef __HAL_LL_RP20XX_SPI_H_
 #define __HAL_LL_RP20XX_SPI_H_
 
-#include "middleware\halsep\hal_mcu_gpio.h"
+#include "middleware/halsep/hal_mcu_gpio.h"
 
 /* configuration */
 typedef enum

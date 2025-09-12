@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "hal\mcu\hal_mcu_dma_ll.h"
+#include "hal/mcu/hal_mcu_dma_ll.h"
 
 result_t hal_mcu_dma_init( hal_mcu_dma_channel_t ** pp_channel , const hal_mcu_dma_channel_config_t *p_config )
 {
