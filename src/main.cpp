@@ -30,7 +30,7 @@
 #include "Kaleidoscope-EEPROM-Keymap.h"
 #include "Kaleidoscope-IdleLEDs.h"
 #include "Kaleidoscope-LED-Palette-Theme.h"
-#include "Kaleidoscope-SuperkeysHandler.h"
+#include "Kaleidoscope-KeyRoleManager.h"
 #include "Kaleidoscope-DynamicMacros.h"
 #include "Kaleidoscope-MagicCombo.h"
 #include "Kaleidoscope-USB-Quirks.h"
@@ -200,8 +200,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,stalkerDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
   PersistentIdleLEDs,
   SettingsConfigurator,
-  Qukeys,
-  SuperkeysHandler,
+  keyRoleManager,
   DynamicMacros,
   Focus,
   MouseKeys,
@@ -233,8 +232,8 @@ void setup() {
   EEPROMKeymap.setup(10);
   // Reserve space for the number of Colormap layers we will use
   ColormapEffectDefy.max_layers(10);
+  keyRoleManager.setup_superkeys(10);   // Initialize the keyRoleManager plugin.
 
-  SuperkeysHandler.setup();
   DynamicMacros.reserve_storage(2048);
   EEPROMUpgrade.reserveStorage();
   EEPROMUpgrade.upgrade();

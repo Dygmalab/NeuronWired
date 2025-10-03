@@ -17,6 +17,7 @@ target_sources(kaleidoscope
         kaleidoscope/src/kaleidoscope/plugin/Superkeys/Timeline/Timeline.cpp
         kaleidoscope/src/kaleidoscope/plugin/Superkeys/Actions/ActionsDriver.cpp
         kaleidoscope/src/kaleidoscope/plugin/Superkeys/Superkey/Superkey.cpp
+        kaleidoscope/src/kaleidoscope/plugin/KeyRoleManager.cpp
         kaleidoscope/src/kaleidoscope/plugin/EEPROM-Keymap.cpp
         kaleidoscope/src/kaleidoscope/plugin/EEPROM-Settings.cpp
         kaleidoscope/src/kaleidoscope/plugin/EEPROM-Settings/crc.cpp
