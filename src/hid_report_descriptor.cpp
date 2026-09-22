@@ -21,7 +21,7 @@
 
 #include "hidDefy.h"
 
-const uint8_t hid_report_descriptor_defy[] = HID_DEFY_REPORT_DESCRIPTOR( RAW_USAGE_DEFY );
+const uint8_t hid_report_descriptor_defy[] = HID_DEFY_REPORT_DESCRIPTOR( RAW_USAGE_HOST );
 
 void hid_report_descriptor_get( const uint8_t ** pp_desc, uint32_t * p_desc_len )
 {

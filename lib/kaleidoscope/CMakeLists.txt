@@ -33,6 +33,7 @@ target_sources(kaleidoscope
         kaleidoscope/src/kaleidoscope/plugin/MouseKeys.cpp
         kaleidoscope/src/kaleidoscope/plugin/MouseKeys/MouseWrapper.cpp
         kaleidoscope/src/kaleidoscope/plugin/OneShot.cpp
+        kaleidoscope/src/kaleidoscope/plugin/OverlayKeyDygma.cpp
         kaleidoscope/src/kaleidoscope/plugin/PersistentLEDMode.cpp
         kaleidoscope/src/kaleidoscope/plugin/Qukeys.cpp
         kaleidoscope/src/kaleidoscope/plugin/USB-Quirks.cpp

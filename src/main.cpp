@@ -43,6 +43,7 @@
 
 #include "Kaleidoscope-OneShot.h"
 #include "Kaleidoscope-Qukeys.h"
+#include "kaleidoscope/plugin/OverlayKeyDygma.h"
 #include "Kaleidoscope-Escape-OneShot.h"
 
 #include "LED-CapsLockLight.h"
@@ -181,6 +182,8 @@ static kaleidoscope::plugin::LEDStalkerDefy stalkerDefy{};
 
 // clang-format off
 KALEIDOSCOPE_INIT_PLUGINS(
+  /*Overlay key plugin - must precede the key-handling plugins to consume OVERLAY events first*/
+  OverlayKey,
   FirmwareVersion,
   Upgrade,
   USBQuirks,

@@ -151,6 +151,42 @@ HID_COLLECTION_END                            \
 /*Enable back clang*/
 // clang-format on
 
+// clang-format off
+// Raw HID (vendor) Report Descriptor Template - feeds the Dygma Lens app
+#define TUD_HID_REPORT_DESC_GENERIC_INOUT_DYGMA(report_size, usage, ...) \
+    HID_USAGE_PAGE_N ( HID_USAGE_PAGE_VENDOR, 2   ),\
+    HID_USAGE        ( usage                      ),\
+    HID_COLLECTION   ( HID_COLLECTION_APPLICATION ),\
+      /* Report ID if any */\
+      __VA_ARGS__ \
+      /* Input */ \
+      HID_USAGE       ( 0x02                                   ),\
+      HID_LOGICAL_MIN ( 0x00                                   ),\
+      HID_LOGICAL_MAX_N ( 0xff, 2                              ),\
+      HID_REPORT_SIZE ( 8                                      ),\
+      HID_REPORT_COUNT( report_size                            ),\
+      HID_INPUT       ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ),\
+      /* Output */ \
+      HID_USAGE       ( 0x03                                    ),\
+      HID_LOGICAL_MIN ( 0x00                                    ),\
+      HID_LOGICAL_MAX_N ( 0xff, 2                               ),\
+      HID_REPORT_SIZE ( 8                                       ),\
+      HID_REPORT_COUNT( report_size                             ),\
+      HID_OUTPUT      ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE  ),\
+    HID_COLLECTION_END \
+/*Enable back clang*/
+// clang-format on
+
+/* USB Full Speed interrupt endpoints carry 64 bytes per packet (CFG_TUD_HID_EP_BUFSIZE)
+ * and the report ID takes the first one, so 63 data bytes is the largest report that
+ * fits. OverlayKeyDygma.cpp picks this up to size its Raw HID buffers. */
+#define USB_RAW_HID_REPORT_SIZE     63
+
+/* Usage of the vendor collection. Every Dygma keyboard reports 0x01; the per-layout
+ * RAW_USAGE_* values above stay dormant until Bazecor supports them. Dygma Lens finds
+ * the device by usage page 0xFF00 + usage 0x01, so this value is host-visible API. */
+#define RAW_USAGE_HOST              0x01
+
 #if (KEY_BITS % 8)
     /* Padding to round up the report to byte boundary. */
 #define KEYBITS_PADDING    D_REPORT_SIZE, (8 - (KEY_BITS % 8)), D_REPORT_COUNT, 0x01, D_INPUT, (D_CONSTANT),
@@ -189,6 +225,7 @@ HID_COLLECTION_END                            \
     TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(REPORT_ID_MOUSE)),                                                                                  \
     TUD_HID_REPORT_DESC_CONSUMER_DYGMA(HID_REPORT_ID(REPORT_ID_CONSUMER_CONTROL)),                                                              \
     TUD_HID_REPORT_DESC_SYSTEM_CONTROL(HID_REPORT_ID(REPORT_ID_SYSTEM_CONTROL)),                                                                \
+    TUD_HID_REPORT_DESC_GENERIC_INOUT_DYGMA(USB_RAW_HID_REPORT_SIZE, usage_raw, HID_REPORT_ID(REPORT_ID_RAW)),                                  \
 }
 
 #endif // HID_h
