@@ -44,6 +44,9 @@
 #include "Kaleidoscope-OneShot.h"
 #include "Kaleidoscope-Qukeys.h"
 #include "kaleidoscope/plugin/OverlayKeyDygma.h"
+#include "kaleidoscope/plugin/AutoshiftDygma.h"
+#include "kaleidoscope/plugin/CapsWordDygma.h"
+#include "kaleidoscope/plugin/CombosDygma.h"
 #include "Kaleidoscope-Escape-OneShot.h"
 
 #include "LED-CapsLockLight.h"
@@ -182,6 +185,10 @@ static kaleidoscope::plugin::LEDStalkerDefy stalkerDefy{};
 
 // clang-format off
 KALEIDOSCOPE_INIT_PLUGINS(
+  /*Combos goes first of all: it matches on physical position, so it must see
+    raw keyswitch events before any plugin can consume them -- including
+    OverlayKey and Autoshift, which own their own ranges.*/
+  Combos,
   /*Overlay key plugin - must precede the key-handling plugins to consume OVERLAY events first*/
   OverlayKey,
   FirmwareVersion,
@@ -203,6 +210,11 @@ KALEIDOSCOPE_INIT_PLUGINS(
   LEDRainbowWaveEffectDefy,LEDRainbowEffectDefy,stalkerDefy,solidRedDefy, solidGreenDefy, solidBlueDefy,solidWhiteDefy,
   PersistentIdleLEDs,
   SettingsConfigurator,
+  /*CapsWord trigger and Autoshift - must precede keyRoleManager so their own
+    ranges are consumed before the Qukeys queue and the SuperKeys timeline see
+    them. That keeps them out of both delay stages and of the timeline's
+    double delivery.*/
+  CapsWordTrigger, Autoshift,
   keyRoleManager,
   DynamicMacros,
   Focus,
@@ -212,7 +224,10 @@ KALEIDOSCOPE_INIT_PLUGINS(
   LayerFocus,
   EEPROMUpgrade,
   IntegrationTest,
-  HostPowerManagement);
+  HostPowerManagement,
+  /*CapsWord shift - must stay last, so every plugin that matches keys by their
+    exact raw value sees the key before SHIFT_HELD is added to it*/
+  CapsWordShift);
 // clang-format on
 
 
@@ -239,6 +254,10 @@ void setup() {
 
   DynamicMacros.reserve_storage(2048);
   EEPROMUpgrade.reserveStorage();
+  // New blocks go after every existing slice, so no stored offset moves
+  Combos.reserveStorage();
+  Autoshift.reserveStorage();
+  CapsWordTrigger.reserveStorage();
   EEPROMUpgrade.upgrade();
 
   // Keep the HID begin after the Kaleidoscope setup.

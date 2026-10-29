@@ -12,6 +12,9 @@ target_sources(kaleidoscope
         kaleidoscope/src/kaleidoscope/device/dygma/defyWN/DefyWN.cpp
         kaleidoscope/src/kaleidoscope/key_events.cpp
         kaleidoscope/src/kaleidoscope/layers.cpp
+        kaleidoscope/src/kaleidoscope/plugin/AutoshiftDygma.cpp
+        kaleidoscope/src/kaleidoscope/plugin/CapsWordDygma.cpp
+        kaleidoscope/src/kaleidoscope/plugin/CombosDygma.cpp
         kaleidoscope/src/kaleidoscope/plugin/DynamicMacros.cpp
         kaleidoscope/src/kaleidoscope/plugin/SuperkeysHandler.cpp
         kaleidoscope/src/kaleidoscope/plugin/Superkeys/Timeline/Timeline.cpp
